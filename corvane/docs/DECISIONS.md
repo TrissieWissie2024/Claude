@@ -7,8 +7,9 @@ De brief vraagt om autonoom te werken en aannames hier vast te leggen. Elke besl
 - **D01. Brief als Markdown.** De brief is aangeleverd als PDF. Ik heb hem ongewijzigd overgezet naar `CORVANE-BRIEF.md` in de hoofdmap van de repository, zoals de brief zelf aangeeft.
 - **D02. Mapstructuur.** De repository bestond al (leeg). Het project staat in `corvane/`. `docs/`, `content/`, `lib/` en `reference/` staan binnen `corvane/`, omdat de brief deze paden relatief aan het project noemt.
 - **D03. Referentie niet bereikbaar.** penroseskin.com is vanuit de bouwomgeving niet te bereiken (netwerkbeleid en een kapotte WebFetch). `docs/REFERENCE.md` legt uit wat er wel en niet is bekeken. Ik heb niets verzonnen; de structuur volgt §6 van de brief.
-- **D04. Stack.** Next.js 16.4.3 (App Router), React 19.3, TypeScript 5.9 in strict mode, Tailwind CSS 4. TypeScript 7 bestaat al, maar Next.js 16 rekent nog op de JavaScript-API van TypeScript 5. Daarom blijft het project op 5.9.
-- **D05. Lint.** `next lint` bestaat niet meer in Next.js 16. `npm run lint` draait ESLint 9 met `eslint-config-next`.
+- **D04. Stack.** Next.js 16.4.3 (App Router), React 19.3, TypeScript 5.9 in strict mode, Tailwind CSS 4. TypeScript 7 bestaat al. Ik blijf op 5.9, de versie die `create-next-app` installeert en waarop `typescript-eslint` en `eslint-config-next` zijn getest.
+- **D05. Lint en typecheck.** `next lint` bestaat niet meer in Next.js 16. `npm run lint` draait ESLint 9 met `eslint-config-next`. `npm run typecheck` draait eerst `next typegen`, omdat de routetypen (`PageProps`, `LayoutProps`) anders in een schone checkout ontbreken.
+- **D05b. Cache Components blijft aan.** Next.js 16.4 zet `cacheComponents` en `partialPrefetching` standaard aan. Alle content komt uit lokale modules, dus alle pagina's zijn statisch. Tijdafhankelijke onderdelen (campagnetimer, verzenddag) lezen de tijd pas in de browser via `useNow()`. De build faalt als een component tijdens het renderen de tijd leest; dat bewaakt regel 3 extra.
 - **D06. Fase 1 zonder screenshots.** Omdat de referentie niet bereikbaar was (D03), staat `reference/` leeg. Het opnieuw bekijken van de referentie staat op `docs/TODO-LAUNCH.md`.
 
 ## Prijzen en aanbod
