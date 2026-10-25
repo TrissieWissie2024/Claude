@@ -39,7 +39,7 @@ export const cartCopy = {
       remaining: (amount: string) => `${amount} away from free shipping`,
       unlocked: "Free shipping on this order",
       /** Gift cards only: nothing ships. */
-      notNeeded: "Gift cards are delivered by email. No shipping needed.",
+      notNeeded: "Delivered by email. No shipping needed.",
       meterLabel: "Progress to free shipping",
       /** Sentence form used in the drawer, e.g. "You are €12.05 away from free shipping". */
       away: (amount: string) => `You are ${amount} away from free shipping`,
@@ -57,13 +57,16 @@ export const cartCopy = {
       /** e.g. "2 of 3 sticks". */
       step: (count: number, target: number) => `${Math.min(count, target)} of ${sticks(target)}`,
       meterLabel: "Progress to a free Travel Pouch",
-      /** Drawer sentence, with the one-per-order condition (D11). */
+      /** Drawer sentence; the one-per-order condition (D11) follows as its own line (perOrder). */
       away: (count: number) =>
         count === 1
-          ? "Add 1 more stick for a free Travel Pouch (one per order)"
-          : `Add ${count} more sticks for a free Travel Pouch (one per order)`,
+          ? "Add 1 more stick for a free Travel Pouch"
+          : `Add ${count} more sticks for a free Travel Pouch`,
+      /** Muted second line under `away` (D11). */
+      perOrder: "One per order",
       unlockedShort: "Free Travel Pouch unlocked (one per order)",
     },
+    /** One plain line once both goals are met (the block collapses). */
     bothUnlocked: "Free shipping and a free Travel Pouch. All set.",
   },
 
@@ -126,6 +129,8 @@ export const cartCopy = {
       extra: (price: string) => `+${price}`,
       note: "Completes a set of three.",
       notePouch: "Completes a set of three. Unlocks the free Travel Pouch.",
+      /** A Travel Pouch is already in the cart: the extra stick makes it free, and the card price is the net change. */
+      notePouchInCart: "Completes a set of three. Your Travel Pouch becomes free.",
       addItem: (name: string) => `Add 1 ${name} stick to cart`,
     },
     pouch: (price: string) => `Travel Pouch, ${price}`,
@@ -139,6 +144,21 @@ export const cartCopy = {
     subscriptionSavings: "Subscribe & save",
     pouchSavings: "Free Travel Pouch",
     discount: (code: string) => `Code ${code}`,
+    /**
+     * Note under Subtotal when sticks from several lines (or a line with a
+     * quantity above one) are priced as sets: the lines show their own tile
+     * prices, the subtotal the grouped price (D13, D34), e.g. "Sticks grouped into sets: −€14.90".
+     */
+    groupedSets: (amount: string) => `Sticks grouped into sets: −${amount}`,
+    /** Short labels for the line under "You save", e.g. "Sets €14.90 · Travel Pouch €9.95". */
+    savingsParts: {
+      bundles: "Sets",
+      subscription: "Subscription",
+      pouch: "Travel Pouch",
+      code: "Code",
+    },
+    /** One part of that line, e.g. "Sets €14.90". */
+    savingsPart: (label: string, amount: string) => `${label} ${amount}`,
     shipping: "Shipping",
     shippingAtCheckout: "Calculated at checkout",
     shippingFree: "Free",

@@ -9,8 +9,11 @@ import { useNow } from "@/lib/hooks/useNow";
 
 /**
  * Promo bar above the sticky header (brief §6.1, docs/PLAN.md §8). In normal
- * flow, so it scrolls away while the header sticks. Always exactly
- * var(--promo-height) tall, whatever it shows, so nothing shifts.
+ * flow, so it scrolls away while the header sticks. At least
+ * var(--promo-height) tall (48 px below lg, 40 px from lg), whatever it shows,
+ * so nothing shifts. It only grows past that when its text cannot fit (for
+ * example with user text-spacing overrides on a 320 px screen): it never clips
+ * text (WCAG 1.4.12).
  *
  * - Before mount (server, prerender, hydration) `now` is null: the USP bar,
  *   whose text is true on every day.
@@ -28,11 +31,11 @@ export function PromoBar() {
   return (
     <section
       aria-label={site.promoBar.regionLabel}
-      className="focus-on-dark relative h-promo overflow-hidden bg-deep text-xs leading-4 font-medium tracking-[0.01em] text-fog lg:text-[13px]"
+      className="focus-on-dark relative flex min-h-promo bg-deep text-xs leading-4 font-medium tracking-[0.01em] text-fog lg:text-[13px]"
     >
       <PromoMotion />
       {/* Container width, with a 16 px gutter on phones so the longest USP line fits on one line. */}
-      <div className="mx-auto h-full w-full max-w-[1240px] px-4 md:px-8">
+      <div className="mx-auto flex w-full max-w-[1240px] px-4 md:px-8">
         {campaign && now ? <CampaignMessage campaign={campaign} now={now} /> : <UspBar />}
       </div>
     </section>

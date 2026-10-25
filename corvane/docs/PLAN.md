@@ -240,8 +240,9 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 - **Levering:** verzenddag plus de levertijd van het land in werkdagen (NL 1, BE 1–2), zonder feestdagen van dat land.
 - **Geen afteltimer naar de cut-off.** De leverbalk en de leverschatting tonen vaste tekst ("Order before 15:00, ships today" of "Ships Monday"). Een timer die elke dag opnieuw begint, mag niet volgens regel 3.
 - **Campagne:** `endsAt` is een vaste ISO-tekst met tijdzone in `content/offers.ts` (`2026-11-01T23:59:59+01:00`, zeven dagen na de builddatum, wintertijd). Hij wordt nooit berekend uit `Date.now()` of de buildtijd. De campagne is actief als `active` waar is en `now` tussen `startsAt` en `endsAt` ligt. De balk noemt alleen wat er echt eindigt: de code LAUNCH15. Vaste aanbiedingen (bundels, pouch, verzending) worden nooit als aflopend gepresenteerd.
-- **Weergave:** `useNow(1000)` in de promobalk. Vóór mount en na `endsAt` staat in dezelfde hoogte de USP-balk, met alleen tekst die altijd klopt. Wordt `endsAt` bereikt terwijl de pagina open is, dan verdwijnt de balk vanzelf en wordt de code ongeldig. Cijfers in `tabular-nums`; de timer zelf zit niet in een live-regio.
-- **USP-balk:** roteert drie regels. Met `prefers-reduced-motion` staat er één regel stil. Rotatie pauzeert bij hover en focus en heeft een pauzeknop (WCAG 2.2.2).
+- **Weergave:** `useNow(1000)` in de promobalk. Vóór mount en na `endsAt` staat in dezelfde hoogte de USP-balk, met alleen tekst die altijd klopt. Wordt `endsAt` bereikt terwijl de pagina open is, dan verdwijnt de balk vanzelf en wordt de code ongeldig. Cijfers in `tabular-nums`; de timer zelf zit niet in een live-regio. De knop "Pause countdown" zet de aftelling stil en toont dan de vaste eindtijd ("Ends 1 November, 23:59"); met `prefers-reduced-motion` staat die vaste eindtijd er meteen en is er geen knop (WCAG 2.2.2, D32).
+- **USP-balk:** roteert drie regels. Met `prefers-reduced-motion` roteert hij ook, maar zonder fade, zodat alle drie de regels zichtbaar blijven. Rotatie pauzeert bij hover en focus en heeft een pauzeknop (WCAG 2.2.2).
+- **Hoogte:** de balk is minstens 48 px onder `lg` (twee regels campagnetekst) en 40 px vanaf `lg`. Past de tekst niet (bijv. met eigen tekstafstand op 320 px), dan wordt de balk hoger in plaats van tekst af te knippen (WCAG 1.4.12).
 
 ## 9. Productpagina
 
@@ -256,7 +257,7 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 
 ## 10. Cart drawer, e-mailpopup en vaste elementen
 
-**Cart drawer** (Radix Dialog, rechts): twee indicatoren boven elkaar: een balk in euro's naar gratis verzending (zelfde basis als regel 7) en een stap 0–3 sticks naar de gratis pouch. Daaronder de regels met geur(en), aankooptype, stepper en verwijderen; upsell (pouch als die nog niet gratis is, Discovery Set, "+1 stick" als er één stick mist tot de volgende bundel); subtotaal, "You save", "Taxes included", checkoutknop (vuurt `begin_checkout`), betaaliconen. Nette lege staat. De teller in de header telt artikelen (elke stick telt één).
+**Cart drawer** (Radix Dialog, rechts): twee indicatoren boven elkaar: een balk in euro's naar gratis verzending (zelfde basis als regel 7) en een stap 0–3 sticks naar de gratis pouch. Daaronder de regels met geur(en), aankooptype, stepper en verwijderen; upsell (pouch als die nog niet gratis is, Discovery Set, "+1 stick" als er één stick mist tot de volgende bundel); subtotaal, "You save", "Taxes included", checkoutknop (vuurt `begin_checkout`), betaaliconen (onderaan de scrollende inhoud). Stickregels tonen hun eigen tegelprijs; groepering over regels staat als notitie onder het subtotaal (D34). Nette lege staat. De teller in de header telt artikelen (elke stick telt één).
 
 **E-mailpopup** (`email/EmailCapture`):
 1. De pill linksonder is zichtbaar na mount en opent altijd de modal.

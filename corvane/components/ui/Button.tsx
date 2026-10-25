@@ -13,6 +13,10 @@ import { cn } from "@/lib/cn";
  * - on-dark / outline-on-dark / ghost-on-dark: for deep and kelp surfaces
  *   (fog focus ring included).
  *
+ * Filled variants carry a transparent 1px border: invisible normally, but
+ * forced colors (Windows High Contrast) paints it, so the button keeps its
+ * shape there when the background is dropped.
+ *
  * Renders a Next <Link> when `href` is set (and not disabled), otherwise a
  * <button type="button">. Spreads extra props and `ref`, so it works with
  * Radix `asChild`.
@@ -46,11 +50,11 @@ const base =
   "duration-200 ease-out motion-safe:active:scale-[0.98]";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-signal text-ink hover:bg-signal-hover active:bg-signal-hover",
-  secondary: "bg-ink text-fog hover:bg-ink/85 active:bg-ink/85",
+  primary: "border border-transparent bg-signal text-ink hover:bg-signal-hover active:bg-signal-hover",
+  secondary: "border border-transparent bg-ink text-fog hover:bg-ink/85 active:bg-ink/85",
   outline: "border border-ink/80 text-ink hover:border-ink hover:bg-ink hover:text-fog active:bg-ink active:text-fog",
   ghost: "text-ink hover:bg-ink/[0.06] active:bg-ink/10",
-  "on-dark": "bg-fog text-ink hover:bg-white active:bg-white focus-visible:outline-fog",
+  "on-dark": "border border-transparent bg-fog text-ink hover:bg-white active:bg-white focus-visible:outline-fog",
   "outline-on-dark":
     "border border-fog/45 text-fog hover:border-fog hover:bg-fog hover:text-deep active:bg-fog active:text-deep focus-visible:outline-fog",
   "ghost-on-dark": "text-fog hover:bg-fog/10 active:bg-fog/15 focus-visible:outline-fog",
@@ -58,11 +62,11 @@ const variants: Record<ButtonVariant, string> = {
 
 /** Disabled look per variant: neutral and quiet, no hover change. */
 const disabledVariants: Record<ButtonVariant, string> = {
-  primary: "bg-ink/[0.08] text-ink/40",
-  secondary: "bg-ink/[0.08] text-ink/40",
+  primary: "border border-transparent bg-ink/[0.08] text-ink/40",
+  secondary: "border border-transparent bg-ink/[0.08] text-ink/40",
   outline: "border border-ink/15 text-ink/40",
   ghost: "text-ink/35",
-  "on-dark": "bg-fog/10 text-fog/40",
+  "on-dark": "border border-transparent bg-fog/10 text-fog/40",
   "outline-on-dark": "border border-fog/15 text-fog/40",
   "ghost-on-dark": "text-fog/35",
 };

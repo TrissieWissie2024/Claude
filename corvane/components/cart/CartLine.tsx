@@ -20,9 +20,12 @@ import type { CartLine as CartLineData, PricedLine, PurchasePlan, StickProduct }
  * the scents with their ring colours (stick sets), the plan, a quantity
  * stepper, a Remove button and the line total from PricingSummary.lines.
  *
- * Honest pricing (brief §2.4): no struck-through prices. When grouping makes
- * a stick line cheaper than its sticks at the single price, a short text note
- * says "Bundle price".
+ * Honest pricing (brief §2.4): no struck-through prices. A stick line shows
+ * its own tile price (PricedLine.standaloneTotal: what the product page
+ * quoted, e.g. €59.95 for a set of three), never an allocated share; when
+ * sticks from several lines are priced as sets, CartSummary shows that
+ * saving as one note under Subtotal (D13, D34). A set line, cheaper than its
+ * sticks at the single price, gets a short "Bundle price" note.
  */
 
 /* ------------------------------------------------------------------ */
@@ -178,7 +181,11 @@ export interface CartLineProps {
   className?: string;
 }
 
-/** A cart line as an <li>. The name is focusable (tabIndex -1, data-cart-line-focus) so focus can land on it after a removal. */
+/**
+ * A cart line as an <li>. The name is focusable (tabIndex -1, data-cart-line-focus,
+ * data-cart-line-id) so focus can land on it after a removal or an upsell add;
+ * it then shows the normal :focus-visible ring.
+ */
 export function CartLine({ line, priced, readOnly = false, onRemove, className }: CartLineProps) {
   const { products, findStick, findProduct } = useCatalog();
   const { setQuantity, removeLine } = useCart();
@@ -201,14 +208,15 @@ export function CartLine({ line, priced, readOnly = false, onRemove, className }
   else if (line.kind === "gift-card") detail = copy.giftCardNote;
   else if (line.kind === "pouch") detail = findProduct(line.slug)?.tagline ?? null;
 
-  // "Bundle price": the line costs less than its sticks at the single price for its plan.
+  // Stick lines show their own tile price; grouping across lines is one note under Subtotal (CartSummary).
+  const total = line.kind === "stick" ? priced?.standaloneTotal : priced?.total;
+
+  // "Bundle price": the line's tile costs less than its sticks at the single price for its plan.
   const bundled =
     line.kind === "stick" &&
     priced !== undefined &&
     priced.stickCount > 0 &&
-    priced.total < priced.stickCount * bundleUnitPrice(1, purchaseTypeOf(line.plan));
-
-  const total = priced?.total;
+    priced.standaloneTotal < priced.stickCount * bundleUnitPrice(1, purchaseTypeOf(line.plan));
 
   return (
     <li className={cn("flex gap-4 py-5", className)}>
@@ -220,14 +228,15 @@ export function CartLine({ line, priced, readOnly = false, onRemove, className }
             <h3
               tabIndex={-1}
               data-cart-line-focus=""
-              className="flex items-center gap-2 font-sans text-[15px] leading-snug font-semibold tracking-normal text-ink focus:outline-none"
+              data-cart-line-id={line.id}
+              className="flex items-center gap-2 font-sans text-[15px] leading-snug font-semibold tracking-normal text-ink"
             >
               {line.kind === "stick" && !isSet && scents[0] ? <ScentDot color={scents[0].color} /> : null}
               <span className="min-w-0">{title}</span>
             </h3>
 
             {isSet ? (
-              <ul aria-label={copy.scentsLabel} className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+              <ul aria-label={copy.scentsLabel} className="mt-1.5 flex flex-col gap-1">
                 {scents.map((scent) => (
                   <li key={scent.slug} className="flex items-center gap-1.5 text-[13px] leading-snug text-ink">
                     <ScentDot color={scent.color} />
@@ -296,7 +305,7 @@ export function FreePouchLine({ className }: { className?: string }) {
             {copy.title}
             <span className="sr-only">{`, ${copy.label}`}</span>
           </h3>
-          <p className="mt-1 text-[13px] leading-snug text-ink-soft">{copy.note}</p>
+          <p className="mt-1 text-[13px] leading-snug text-balance text-ink-soft">{copy.note}</p>
         </div>
         <p className="shrink-0 text-[15px] leading-snug font-semibold text-kelp">{copy.price}</p>
       </div>

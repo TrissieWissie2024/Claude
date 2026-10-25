@@ -478,4 +478,5 @@ export const legalCheckpoints: string[] = [
   "Retention periods marked as placeholder, processors and transfers outside the EEA (Privacy Policy).",
   "Complaints and dispute options for NL and BE consumers (Terms article 16).",
   "Model withdrawal form text on /shipping-returns (Annex I(B), Directive 2011/83/EU).",
+  "VAT on e-gift cards: usable in NL and BE, so probably multi-purpose vouchers, taxed when redeemed rather than when sold. The cart drawer leaves out \"Taxes included.\" for an order with only gift cards; confirm the treatment and any wording for gift cards in the cart, checkout and invoice.",
 ];

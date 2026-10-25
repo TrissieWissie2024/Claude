@@ -9,6 +9,7 @@ import { CartSummary } from "@/components/cart/CartSummary";
 import { CartUpsell } from "@/components/cart/CartUpsell";
 import { ShippingProgress } from "@/components/cart/ShippingProgress";
 import { useCatalog } from "@/components/catalog/CatalogProvider";
+import { PaymentIcons } from "@/components/layout/PaymentIcons";
 import { StickRender } from "@/components/media/StickRender";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
@@ -45,11 +46,8 @@ function EmptyState({ onNavigate }: { onNavigate: () => void }) {
           ))}
         </div>
       ) : null}
-      <h3
-        id={EMPTY_STATE_HEADING_ID}
-        tabIndex={-1}
-        className="text-[1.75rem] leading-tight text-ink focus:outline-none"
-      >
+      {/* Focusable for focus after the last removal; it then shows the normal :focus-visible ring. */}
+      <h3 id={EMPTY_STATE_HEADING_ID} tabIndex={-1} className="text-[1.75rem] leading-tight text-ink">
         {copy.headline}
       </h3>
       <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-ink-soft">{copy.line}</p>
@@ -133,6 +131,9 @@ export function CartDrawer() {
             </ul>
 
             <CartUpsell className="border-t border-line pt-6 pb-2" />
+
+            {/* In the scrolling body, not the sticky footer, so the totals take less of a phone screen. */}
+            <PaymentIcons tone="light" size="sm" className="mt-auto justify-center pt-6" />
           </>
         )}
       </div>

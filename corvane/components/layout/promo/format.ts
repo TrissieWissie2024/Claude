@@ -20,16 +20,31 @@ export function formatCountdown({ days, hours, minutes, seconds }: Countdown): s
 
 const monthName = new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" });
 
+/** Date ("1 November") and time ("23:59") of the fixed campaign end in warehouse time; null when unparseable. */
+function campaignEndParts(endsAt: string): { date: string; time: string } | null {
+  const ms = Date.parse(endsAt);
+  if (Number.isNaN(ms)) return null;
+  const parts = getZonedParts(new Date(ms), shipping.timeZone);
+  const month = monthName.format(new Date(Date.UTC(parts.year, parts.month - 1, 1)));
+  return { date: `${parts.day} ${month}`, time: `${pad(parts.hour)}:${pad(parts.minute)}` };
+}
+
 /**
  * The fixed campaign end in warehouse time, for screen readers:
  * "Offer ends 1 November at 23:59 Amsterdam time." Null when `endsAt` cannot be parsed.
  */
 export function formatCampaignEnd(endsAt: string): string | null {
-  const ms = Date.parse(endsAt);
-  if (Number.isNaN(ms)) return null;
-  const parts = getZonedParts(new Date(ms), shipping.timeZone);
-  const month = monthName.format(new Date(Date.UTC(parts.year, parts.month - 1, 1)));
-  return site.promoBar.endsAtFull(`${parts.day} ${month}`, `${pad(parts.hour)}:${pad(parts.minute)}`);
+  const parts = campaignEndParts(endsAt);
+  return parts ? site.promoBar.endsAtFull(parts.date, parts.time) : null;
+}
+
+/**
+ * The fixed campaign end as a short visible line, shown instead of the
+ * countdown while it is paused or with reduced motion: "Ends 1 November, 23:59".
+ */
+export function formatCampaignEndShort(endsAt: string): string | null {
+  const parts = campaignEndParts(endsAt);
+  return parts ? site.promoBar.endsAtShort(parts.date, parts.time) : null;
 }
 
 export interface CampaignMessageParts {
@@ -60,5 +75,19 @@ export function splitCampaignMessage(message: string, code?: string): CampaignMe
     code,
     codeSuffix: match?.[1] ?? "",
     tail: (match?.[2] ?? "").trim(),
+  };
+}
+
+/**
+ * Visible form of the split message for the bar, where the code is a pill and
+ * the parts are separated by thin dividers: punctuation-only suffixes are
+ * dropped (no stray "." after the pill) and a trailing full stop comes off the
+ * tail. The screen reader sentence always keeps the full message.
+ */
+export function visibleCampaignParts(parts: CampaignMessageParts): CampaignMessageParts {
+  return {
+    ...parts,
+    codeSuffix: /[\p{L}\p{N}]/u.test(parts.codeSuffix) ? parts.codeSuffix : "",
+    tail: parts.tail.replace(/\.$/, ""),
   };
 }

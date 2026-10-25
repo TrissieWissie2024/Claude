@@ -129,11 +129,12 @@ export function NewsletterForm({ source = "footer", className }: NewsletterFormP
           onChange={handleChange}
           aria-invalid={invalid || undefined}
           aria-describedby={`${messageId} ${consentId}`}
+          // A real border (fog/45 is about 4:1 on deep, WCAG 1.4.11), not a box-shadow ring, so the field also shows in forced colors.
           className={cn(
-            "h-12 w-0 min-w-0 flex-1 rounded-full bg-fog/[0.06] px-5 text-[15px] text-fog ring-1 ring-inset",
-            "transition-[box-shadow,background-color] duration-200 placeholder:text-mist",
+            "h-12 w-0 min-w-0 flex-1 rounded-full border bg-fog/[0.06] px-5 text-[15px] text-fog",
+            "transition-[border-color,background-color] duration-200 placeholder:text-mist",
             "hover:bg-fog/[0.09] focus-visible:bg-fog/[0.09]",
-            invalid ? "ring-signal" : "ring-line-on-deep hover:ring-fog/35",
+            invalid ? "border-signal" : "border-fog/45 hover:border-fog/70",
           )}
         />
         <Button

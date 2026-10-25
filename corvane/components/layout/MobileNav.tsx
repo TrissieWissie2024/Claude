@@ -1,29 +1,72 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { ArrowRight, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { VaneIcon } from "@/components/brand/VaneIcon";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { useCatalog } from "@/components/catalog/CatalogProvider";
 import { isCurrentPage } from "@/components/layout/header/nav";
 import { DESKTOP_QUERY, useMediaQuery } from "@/components/layout/promo/useMediaQuery";
+import { DiscoverySetRender } from "@/components/media/DiscoverySetRender";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
+import { offers } from "@/content/offers";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
+import { formatMoney } from "@/lib/money";
 
 /**
  * Mobile menu (< lg): the hamburger button and a Sheet from the left with the
- * main links (site.nav) in large serif, the help links (site.helpLinks) and
- * the tagline. Radix provides the focus trap, Esc, overlay click and focus
- * return to the hamburger.
+ * main links (site.nav) in large serif, the help links (site.helpLinks), a
+ * Discovery Set card (site.header.menuFeature; name, tagline and price from
+ * the catalog and offers) and the tagline, stacked from the top. Radix
+ * provides the focus trap, Esc, overlay click and focus return to the hamburger.
  *
  * Open state is remembered together with the pathname it was opened on, so
  * the menu closes by itself on any route change (link, back button) without
  * an effect, and also when the viewport grows to lg (the button is hidden there).
  */
+function MenuFeature({ onNavigate }: { onNavigate: () => void }) {
+  const { findProduct, sticks } = useCatalog();
+  const feature = site.header.menuFeature;
+  const product = findProduct(feature.productSlug);
+  if (!product) return null;
+
+  return (
+    <Link
+      href={feature.href}
+      onClick={onNavigate}
+      className="group mt-8 flex items-center gap-4 rounded-card bg-sand py-3 pr-4 pl-3"
+    >
+      <span aria-hidden="true" className="flex h-[5.5rem] w-[4.4rem] shrink-0 items-center justify-center">
+        <DiscoverySetRender
+          decorative
+          className="h-full w-auto"
+          scents={sticks.map((stick) => ({ name: stick.name, ringColor: stick.ringColor }))}
+        />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="label-caps block text-ink-soft">{feature.eyebrow}</span>
+        <span className="mt-1 block font-serif text-xl leading-tight font-semibold tracking-[-0.015em] text-ink decoration-1 underline-offset-4 group-hover:underline">
+          {product.name}
+        </span>
+        <span className="mt-0.5 block text-[13px] leading-snug text-ink-soft">{product.tagline}</span>
+        <span className="tabular mt-1.5 block text-sm font-semibold text-ink">
+          {formatMoney(offers.prices.discoverySet)}
+        </span>
+      </span>
+      <ArrowRight
+        aria-hidden="true"
+        className="size-4 shrink-0 text-ink motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-0.5"
+        strokeWidth={1.75}
+      />
+    </Link>
+  );
+}
+
 export function MobileNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const desktop = useMediaQuery(DESKTOP_QUERY, false);
@@ -92,7 +135,9 @@ export function MobileNav({ className }: { className?: string }) {
         </ul>
       </nav>
 
-      <p className="mt-auto flex items-center gap-2.5 pt-10 text-sm text-ink-soft">
+      <MenuFeature onNavigate={close} />
+
+      <p className="mt-8 flex items-center gap-2.5 pb-2 text-sm text-ink-soft">
         <VaneIcon className="size-5 text-ink" />
         {site.tagline}
       </p>

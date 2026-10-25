@@ -169,6 +169,12 @@ export const site = {
     cart: (count: number) => (count === 1 ? "Cart, 1 item" : `Cart, ${count} items`),
     /** Accessible name of the help links in the mobile menu. */
     helpNavLabel: "Help",
+    /** Card under the help links in the mobile menu; name, tagline and price come from the catalog and offers. */
+    menuFeature: {
+      eyebrow: "Not sure yet?",
+      href: "/products/discovery-set",
+      productSlug: "discovery-set",
+    },
   },
 
   skipLink: "Skip to content",
@@ -187,11 +193,18 @@ export const site = {
     units: { days: "d", hours: "h", minutes: "m", seconds: "s" },
     /** Label of the USP rotation toggle. Constant; its state is aria-pressed (D32). */
     pause: "Pause messages",
+    /** Label of the campaign countdown toggle. Constant; its state is aria-pressed (D32). */
+    pauseCountdown: "Pause countdown",
     /**
      * Screen reader text for the fixed campaign end (the visible countdown is
      * aria-hidden), e.g. "Offer ends 1 November at 23:59 Amsterdam time."
      */
     endsAtFull: (date: string, time: string) => `Offer ends ${date} at ${time} ${facts.timeZoneLabel}.`,
+    /**
+     * Visible fixed end, shown instead of the ticking countdown while it is
+     * paused or with prefers-reduced-motion, e.g. "Ends 1 November, 23:59".
+     */
+    endsAtShort: (date: string, time: string) => `Ends ${date}, ${time}`,
     /**
      * Shorter wording for the one-line rotating USP bar on mobile, by usp id.
      * Same facts as site.usps; items without an entry use their normal text.
@@ -315,6 +328,7 @@ export const site = {
         heading: "Shop",
         links: [
           { label: "All scents", href: "/collections/all" },
+          { label: "Find your scent", href: "/#scent-finder" },
           { label: "Discovery Set", href: "/products/discovery-set" },
           { label: "Travel Pouch", href: "/products/travel-pouch" },
           { label: "Gift Cards", href: "/products/e-gift-card" },
@@ -325,7 +339,6 @@ export const site = {
         links: [
           { label: "FAQ", href: "/faq" },
           { label: "Shipping & Returns", href: "/shipping-returns" },
-          { label: "Contact", href: "/contact" },
           { label: "Account", href: "/account" },
         ] satisfies NavLink[],
       },
@@ -333,7 +346,7 @@ export const site = {
         heading: "Company",
         links: [
           { label: "About", href: "/about" },
-          { label: "Find your scent", href: "/#scent-finder" },
+          { label: "Contact", href: "/contact" },
         ] satisfies NavLink[],
       },
       {

@@ -17,13 +17,14 @@ import { site } from "@/content/site";
  * - mobile: hamburger | wordmark | account + cart
  * - lg+:    main nav  | wordmark | account + cart
  *
+ * Solid fog, not translucent: dark sections never show through as a grey band.
  * Exactly var(--header-height) tall, z-30 (PLAN §10). Must be rendered inside
  * <CartProvider> and must not sit in an ancestor with overflow other than
  * visible, or `sticky` stops working.
  */
 export function Header() {
   return (
-    <header className="sticky top-0 z-30 h-header border-b border-line bg-fog/90 backdrop-blur-md backdrop-saturate-150">
+    <header className="sticky top-0 z-30 h-header border-b border-line bg-fog">
       <Container className="grid h-full grid-cols-[1fr_auto_1fr] items-center gap-4">
         <div className="flex min-w-0 items-center justify-start">
           <MobileNav className="-ml-3" />

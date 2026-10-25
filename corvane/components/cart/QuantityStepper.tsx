@@ -63,7 +63,12 @@ export function QuantityStepper({
     <div
       role="group"
       aria-label={labels.label(itemName)}
-      className={cn("inline-flex items-center rounded-full ring-1 ring-inset ring-line", s.box, className)}
+      // The ring is a box-shadow, which forced colors drops; an outline takes its place there.
+      className={cn(
+        "inline-flex items-center rounded-full ring-1 ring-inset ring-line forced-colors:outline-1 forced-colors:-outline-offset-1",
+        s.box,
+        className,
+      )}
     >
       <button
         type="button"

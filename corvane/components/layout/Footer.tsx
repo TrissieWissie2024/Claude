@@ -99,7 +99,7 @@ export function Footer() {
 
           <div className="flex flex-col gap-1 lg:shrink-0 lg:items-end lg:text-right">
             <p className="text-fog">{footer.copyright}</p>
-            <p>{footer.demoNotice}</p>
+            <p className="text-balance">{footer.demoNotice}</p>
             {site.analytics.enabled ? <CookieSettingsButton className="w-fit text-left lg:ml-auto" /> : null}
           </div>
         </div>
