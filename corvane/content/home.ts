@@ -130,10 +130,11 @@ const sortOptions: { value: HomeSortValue; label: string }[] = [
 
 /** "From CORVANE": our own films. Never framed as customers, reviews or testimonials. */
 const videoSlots: VideoSlotCopy[] = [
-  { id: "ugc-01", title: "Gym bag", label: "VIDEO: Gym bag, 9:16" },
-  { id: "ugc-02", title: "Desk drawer", label: "VIDEO: Desk drawer, 9:16" },
-  { id: "ugc-03", title: "Weekend bag", label: "VIDEO: Weekend bag, 9:16" },
-  { id: "ugc-04", title: "Night out", label: "VIDEO: Night out, 9:16" },
+  // Labels stay short so every placeholder label fits on one or two lines; the 9:16 spec is in docs/PLAN.md §14.
+  { id: "ugc-01", title: "Gym bag", label: "VIDEO: Gym bag" },
+  { id: "ugc-02", title: "Desk drawer", label: "VIDEO: Desk drawer" },
+  { id: "ugc-03", title: "Weekend bag", label: "VIDEO: Weekend bag" },
+  { id: "ugc-04", title: "Night out", label: "VIDEO: Night out" },
 ];
 
 const guaranteeDays = offers.guaranteeDays;
@@ -211,6 +212,11 @@ export const home = {
       /** Gift cards have several amounts, so the card links to the product page instead of adding. */
       chooseAmount: "Choose amount",
       chooseAmountLabel: (name: string) => `Choose amount for the ${name}`,
+      /**
+       * Accessible name of quick add while it shows "Added", e.g. "Added: North Swell".
+       * Starts with the visible text (WCAG 2.5.3).
+       */
+      addedLabel: (name: string) => `Added: ${name}`,
     },
   },
 
@@ -221,6 +227,8 @@ export const home = {
     heading: "Twist. Swipe. Go.",
     intro: "From pocket to skin and back.",
     steps: howItWorksSteps,
+    /** The scent whose ring colour the step renders show (one stick through all three steps). */
+    renderScent: "north-swell" as ScentSlug,
   },
 
   /** Section 7. A fair comparison with spray in general. No brands, no performance numbers. */
@@ -239,6 +247,8 @@ export const home = {
     },
     rows: comparisonRows,
     note: "A general comparison of formats, not of any product or brand. Sprays differ.",
+    /** The intro as shown. The hedge lives in the "Spray (in general)" column and the note. */
+    introShort: "Two formats. Both have their place.",
   },
 
   /** Section 8. The quiz copy itself lives in content/finder.ts. */
@@ -248,6 +258,14 @@ export const home = {
     label: "Scent finder",
     heading: "Find your scent",
     intro: "Three questions, one suggestion. No email needed.",
+    /**
+     * Shown under the heading until the quiz ships (phase 7, D38): something
+     * to do now, without promising a quiz that is not on the page yet.
+     */
+    interim: {
+      text: "Not sure yet? Try all six first.",
+      link: { label: "Discovery Set", href: "/products/discovery-set" } satisfies NavLink,
+    },
   },
 
   /** Section 9a. Real reviews only (content/reviews.ts). Empty at launch, so the empty state shows. */
@@ -266,6 +284,8 @@ export const home = {
     ratingLabel: (rating: number) => `Rated ${rating} out of 5`,
     /** Where a review was collected (Review.source), e.g. "Collected by judge.me". */
     source: (source: string) => `Collected by ${source}`,
+    /** Section heading while there are no reviews; "From verified buyers" waits for real ones. */
+    emptyTitle: "No reviews yet.",
   },
 
   /** Section 9b. Our own 9:16 films (docs/PLAN.md §14). Never "customer" or "review". */
@@ -314,6 +334,10 @@ export const home = {
     seal: { value: String(guaranteeDays), unit: "days" },
     /** Plain information link under the "rights" point. The statutory right is never a perk. */
     rightsLink: { label: "Your right of withdrawal", href: "/shipping-returns#withdrawal" } satisfies NavLink,
+    /** The section h2; `heading` ("30-day guarantee") is the eyebrow above it. */
+    title: "Wrong scent? Send it back.",
+    /** The lead under `title`: each fact once (the days are in the eyebrow and here). */
+    leadShort: `Tell us within ${guaranteeDays} days of delivery. Opened or not.`,
   },
 
   /** Section 11. Questions come from content/faq.ts (onHome). */
@@ -324,6 +348,15 @@ export const home = {
     link: { label: "All questions", href: "/faq" } satisfies NavLink,
     /** Small line under the link: where to go when the answer is not here. */
     contact: { text: "Something else?", link: { label: "Contact us", href: "/contact" } satisfies NavLink },
+    /**
+     * Homepage answers that replace the content/faq.ts answer of the same id
+     * until the scent finder ships (phase 7, D38): faq.ts "which-scent" points
+     * to the quiz, which is not on the page yet. Phase 7 drops this override.
+     */
+    interimAnswers: {
+      "which-scent":
+        "Start with the notes on each card, from fresh to dark. Still not sure? The Discovery Set has six 3 g mini sticks, one of each scent, so you can try them all first.",
+    } as Partial<Record<string, string>>,
   },
 
   /** Section 12. Fictional brand story (brief §3). No founding years or numbers we cannot back. */

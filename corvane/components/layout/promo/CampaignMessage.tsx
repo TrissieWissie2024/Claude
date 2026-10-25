@@ -26,11 +26,17 @@ import type { Campaign } from "@/lib/types";
  * time. Rendered only after mount (PromoBar passes `now` from useNow), so it
  * never affects hydration.
  *
- * Pause, stop, hide (WCAG 2.2.2): the countdown ticks every second, so a
+ * The countdown shows days and hours ("6d 4h") while more than a day is
+ * left, and hours, minutes and seconds only in the final 24 hours
+ * (formatCountdown): less motion and less pressure, still a real timer to the
+ * fixed `endsAt` (brief §2.3, D32).
+ *
+ * Pause, stop, hide (WCAG 2.2.2): the countdown updates by itself, so a
  * toggle after it ("Pause countdown", constant label, state in aria-pressed)
  * swaps it for the fixed end ("Ends 1 November, 23:59"). With
  * prefers-reduced-motion the fixed end is shown from the start and nothing
- * ticks, so there is no toggle.
+ * ticks, so there is no toggle. The toggle draws 24 px but its hit area is
+ * 44 px (a ::before overlay), so the bar keeps its height.
  *
  * Mobile: two lines (message and code; conditions, countdown and toggle).
  * Both wrap rather than clip when the text cannot fit (WCAG 1.4.12).
@@ -114,8 +120,9 @@ export function CampaignMessage({ campaign, now }: CampaignMessageProps) {
             aria-label={site.promoBar.pauseCountdown}
             aria-pressed={paused}
             onClick={() => setPaused((value) => !value)}
-            // -my-1 keeps the 24 px target from making the 16 px line taller.
-            className="-my-1 -ml-1 inline-flex size-6 shrink-0 items-center justify-center rounded-full text-mist transition-colors hover:bg-fog/10 hover:text-fog lg:ml-0"
+            // -my-1 keeps the 24 px circle from making the 16 px line taller; the
+            // ::before overlay grows the hit area to 44 x 44 without changing the layout.
+            className="relative -my-1 -ml-1 inline-flex size-6 shrink-0 items-center justify-center rounded-full text-mist transition-colors before:absolute before:-inset-2.5 before:rounded-full hover:bg-fog/10 hover:text-fog lg:ml-0"
           >
             {paused ? (
               <Play aria-hidden="true" className="size-3" strokeWidth={2} fill="currentColor" />

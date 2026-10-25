@@ -15,6 +15,11 @@ import { ArrowRightIcon, ReturnIcon, SwapIcon, type LineIcon } from "./icons";
  * means and its main condition, each with an icon, plus a link to the full
  * conditions on /shipping-returns#guarantee.
  *
+ * Opener: eyebrow "30-day guarantee", h2 "Wrong scent? Send it back." and a
+ * short lead, so each fact is said once. The decorative "30 days" seal only
+ * shows from lg, where it anchors the left column; on phones it would push
+ * the heading down without adding anything.
+ *
  * The statutory right of withdrawal is not a perk (docs/PLAN.md §13): it is
  * not one of the guarantee points, has no icon and no emphasis. It sits under
  * them as a quiet note ("On top of your rights") that says the guarantee comes
@@ -31,7 +36,7 @@ const pointIcons: Partial<Record<string, LineIcon>> = {
 };
 
 export function GuaranteeBlock({ className }: GuaranteeBlockProps) {
-  const { id, label, heading, lead, points, link, seal, rightsLink } = home.guarantee;
+  const { id, heading, title, leadShort, points, link, seal, rightsLink } = home.guarantee;
   const headingId = `${id}-heading`;
   const rights = points.find((point) => point.id === "rights");
   const mainPoints = points.filter((point) => point.id !== "rights");
@@ -40,16 +45,16 @@ export function GuaranteeBlock({ className }: GuaranteeBlockProps) {
     <section id={id} aria-labelledby={headingId} className={cn("focus-on-dark bg-kelp text-fog", className)}>
       <Container className="grid gap-12 py-20 md:py-28 lg:grid-cols-12 lg:gap-8 lg:py-32">
         <div className="lg:col-span-5">
-          {/* Decorative seal: the heading says the same in words. */}
+          {/* Decorative seal (lg+): the eyebrow says the same in words. */}
           <div
             aria-hidden="true"
-            className="mb-10 flex size-28 flex-col items-center justify-center rounded-full border border-fog/30 md:mb-12 md:size-32"
+            className="mb-12 hidden size-32 flex-col items-center justify-center rounded-full border border-fog/30 lg:flex"
           >
             <span className="tabular font-serif text-[2.75rem] leading-none md:text-[3.25rem]">{seal.value}</span>
             <span className="label-caps mt-1.5 text-mist">{seal.unit}</span>
           </div>
 
-          <SectionHeading id={headingId} tone="dark" eyebrow={label} title={heading} intro={lead} />
+          <SectionHeading id={headingId} tone="dark" eyebrow={heading} title={title} intro={leadShort} />
 
           <Button
             href={link.href}

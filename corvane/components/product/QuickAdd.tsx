@@ -20,6 +20,11 @@ import type { NewCartLine, Product } from "@/lib/types";
  * polite live region; the button shows "Added" for a moment.
  *
  * Sits above the card's stretched link (relative z-10), so it stays clickable.
+ * The button draws 36 px (size sm) but its hit area is 44 px tall: a ::before
+ * overlay 5 px past its padding box (inside the 1 px border) above and below,
+ * so the look and the card rhythm stay the same.
+ * While it shows "Added", its accessible name starts with that word too
+ * ("Added: North Swell", WCAG 2.5.3).
  */
 
 /** How long the button shows "Added", in ms. */
@@ -61,7 +66,7 @@ export function QuickAdd({ product, variant = "outline", size = "sm", fullWidth 
   }, []);
 
   const line = getQuickAddLine(product);
-  const classes = cn("relative z-10 min-w-[5.75rem]", className);
+  const classes = cn("relative z-10 min-w-[5.75rem] before:absolute before:inset-x-0 before:-inset-y-[5px]", className);
 
   if (!line) {
     return (
@@ -91,7 +96,7 @@ export function QuickAdd({ product, variant = "outline", size = "sm", fullWidth 
       size={size}
       fullWidth={fullWidth}
       onClick={handleClick}
-      aria-label={productCard.quickAddLabel(product.name)}
+      aria-label={added ? home.productGrid.card.addedLabel(product.name) : productCard.quickAddLabel(product.name)}
       iconStart={
         added ? (
           <Check aria-hidden="true" className="size-4" strokeWidth={2} />

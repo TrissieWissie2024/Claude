@@ -18,8 +18,10 @@ import { cn } from "@/lib/cn";
  * shape there when the background is dropped.
  *
  * Renders a Next <Link> when `href` is set (and not disabled), otherwise a
- * <button type="button">. Spreads extra props and `ref`, so it works with
- * Radix `asChild`.
+ * <button type="button">. An in-page anchor ("#scent-finder") renders a plain
+ * <a> instead: a native fragment jump moves the focus starting point to the
+ * target, so the next Tab continues there (WCAG 2.4.3); <Link> only scrolls.
+ * Spreads extra props and `ref`, so it works with Radix `asChild`.
  */
 
 export type ButtonVariant =
@@ -150,6 +152,11 @@ function ButtonContent({
   );
 }
 
+/** True for a same-document fragment link such as "#scent-finder". */
+export function isInPageAnchor(href: string): boolean {
+  return href.startsWith("#");
+}
+
 export function Button(props: ButtonProps) {
   if (props.href !== undefined && !props.disabled) {
     const {
@@ -168,16 +175,44 @@ export function Button(props: ButtonProps) {
       ...rest
     } = props;
     void disabled;
+    const classes = cn(buttonClasses({ variant, size, fullWidth, iconOnly }), loading && "pointer-events-none", className);
+    const content = (
+      <ButtonContent loading={loading} loadingLabel={loadingLabel} iconStart={iconStart} iconEnd={iconEnd}>
+        {children}
+      </ButtonContent>
+    );
+
+    if (isInPageAnchor(href)) {
+      // Drop the props only <Link> understands; the rest are plain anchor attributes.
+      const {
+        as,
+        replace,
+        scroll,
+        shallow,
+        passHref,
+        prefetch,
+        locale,
+        legacyBehavior,
+        onNavigate,
+        transitionTypes,
+        ...anchorRest
+      } = rest;
+      void [as, replace, scroll, shallow, passHref, prefetch, locale, legacyBehavior, onNavigate, transitionTypes];
+      return (
+        <a href={href} aria-busy={loading || undefined} className={classes} {...anchorRest}>
+          {content}
+        </a>
+      );
+    }
+
     return (
       <Link
         href={href}
         aria-busy={loading || undefined}
-        className={cn(buttonClasses({ variant, size, fullWidth, iconOnly }), loading && "pointer-events-none", className)}
+        className={classes}
         {...rest}
       >
-        <ButtonContent loading={loading} loadingLabel={loadingLabel} iconStart={iconStart} iconEnd={iconEnd}>
-          {children}
-        </ButtonContent>
+        {content}
       </Link>
     );
   }

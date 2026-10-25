@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { PromoBar } from "@/components/layout/PromoBar";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { StickDefs } from "@/components/media/StickRender";
 import { commerce } from "@/lib/commerce";
 
 import "./globals.css";
@@ -42,7 +43,8 @@ export const viewport: Viewport = {
  * Root layout (docs/PLAN.md §2, §10). A server component; the chrome around
  * every page, in DOM order:
  *   SkipLink (z-70, only visible on focus) · PromoBar (in flow, scrolls away) ·
- *   Header (sticky, z-30) · <main id="main"> · Footer · CartDrawer (portal, z-60)
+ *   Header (sticky, z-30) · <main id="main"> · Footer · CartDrawer (portal, z-60) ·
+ *   StickDefs (a zero-size <svg> with the gradients every product render shares)
  *
  * Pages render their content without their own <main>. No ancestor of the
  * header may set overflow, or `sticky` stops working.
@@ -68,6 +70,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <CartDrawer />
           </CartProvider>
         </CatalogProvider>
+        <StickDefs />
       </body>
     </html>
   );

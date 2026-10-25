@@ -3,6 +3,7 @@ import { getSticks } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/lib/types";
 
+import { productGridClassName, wideGridItemClassName } from "./gridClasses";
 import { ProductCard } from "./ProductCard";
 
 /**
@@ -50,19 +51,12 @@ export function ProductGrid({
     <ul
       role="list"
       aria-label={label}
-      className={cn(
-        "grid grid-cols-2 gap-x-(--card-gap) gap-y-10 [--card-gap:0.75rem]",
-        "sm:[--card-gap:1rem] md:grid-cols-3 md:gap-y-14 md:[--card-gap:1.5rem] xl:grid-cols-4 xl:gap-y-16",
-        className,
-      )}
+      className={cn(productGridClassName, className)}
     >
       {products.map((product, index) => {
         const wide = product.slug === wideSlug;
         return (
-          <li
-            key={product.slug}
-            className={cn(wide && "col-span-2 [--card-span:2] md:col-span-3 md:[--card-span:3] xl:col-span-2 xl:[--card-span:2]")}
-          >
+          <li key={product.slug} className={cn(wide && wideGridItemClassName)}>
             <ProductCard
               product={product}
               layout={wide ? "wide" : "default"}

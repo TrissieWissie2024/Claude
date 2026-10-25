@@ -118,7 +118,11 @@ export function SlotPlaceholder({
       className={cn("overflow-hidden", frame.className, t.text, className)}
       style={{ ...frame.style, backgroundImage: t.background }}
     >
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+      {/*
+        The icon sits at a fixed height (centred for a one-line label) and the label hangs below
+        it, so the icons line up across a row of slots whose labels wrap to different line counts.
+      */}
+      <div className="absolute inset-x-0 top-[calc(50%-1.625rem)] flex flex-col items-center gap-3 px-5 text-center">
         <VaneIcon className="size-6 opacity-50" />
         <p className="label-caps max-w-[22ch] text-balance">{text}</p>
       </div>

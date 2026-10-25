@@ -20,8 +20,14 @@ import { cn } from "@/lib/cn";
  * Coordinates: the stick stands with the centre of its base at (0, 0) and
  * grows upwards (negative y). <StickArt> draws one stick in these local
  * coordinates; GroupRender, DiscoverySetRender and PouchRender place it with a
- * transform. Gradient ids come from React useId(), so any number of renders can
- * share a page.
+ * transform.
+ *
+ * Paint servers: the gradients do not depend on the scent or the size (they
+ * use objectBoundingBox units), so they are defined once per document in
+ * <StickDefs> (mounted in app/layout.tsx) under fixed ids (STICK_PAINT) and
+ * every stick references them. Only the clip paths, which follow each stick's
+ * geometry, stay per instance, with ids from React useId(). That keeps a page
+ * with a dozen renders from repeating the same ~13 gradients per stick.
  */
 
 export type StickVariant = "closed" | "open";
@@ -84,7 +90,7 @@ export const MINI_STICK: StickGeometry = {
  */
 const ALU = "#202327";
 const ENGRAVING = "#6a7178";
-const WAX = "#ECE5D5";
+const WAX = "#E9DFCA";
 
 /** An id from React useId() that is safe inside url(#...). */
 export function useSvgId(prefix: string): string {
@@ -125,7 +131,7 @@ function knurlPath(g: StickGeometry): string {
 }
 
 export interface StickArtProps {
-  /** Unique id prefix for gradients (from useSvgId). */
+  /** Unique id prefix for the clip paths (from useSvgId). */
   id: string;
   ringColor: string;
   variant?: StickVariant;
@@ -169,65 +175,13 @@ export function StickArt({
   const lip = round(g.engraveSize / 40);
 
   const ids = {
-    shade: `${id}-shade`,
-    ao: `${id}-ao`,
-    rim: `${id}-rim`,
-    sheen: `${id}-sheen`,
-    top: `${id}-top`,
-    capTop: `${id}-captop`,
     clip: `${id}-clip`,
     engrave: `${id}-eng`,
-    floor: `${id}-floor`,
-    contact: `${id}-contact`,
-    waxShade: `${id}-wax`,
-    waxAo: `${id}-waxao`,
-    dome: `${id}-dome`,
   };
 
   return (
     <g>
       <defs>
-        {/* Cylindrical shading over the whole side: key light left, reflected light right. */}
-        <linearGradient id={ids.shade} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
-          <stop offset="0.1" stopColor="#000" stopOpacity="0.2" />
-          <stop offset="0.3" stopColor="#fff" stopOpacity="0.08" />
-          <stop offset="0.5" stopColor="#000" stopOpacity="0" />
-          <stop offset="0.8" stopColor="#000" stopOpacity="0.34" />
-          <stop offset="0.93" stopColor="#000" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.58" />
-        </linearGradient>
-        {/* Top a touch brighter, occlusion towards the floor. */}
-        <linearGradient id={ids.ao} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="#fff" stopOpacity="0.04" />
-          <stop offset="0.5" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.94" stopColor="#000" stopOpacity="0.06" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.28" />
-        </linearGradient>
-        {/* Satin sheen on the coloured ring (anodised, a touch brighter than the tube). */}
-        <linearGradient id={ids.sheen} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0.18" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.29" stopColor="#fff" stopOpacity="0.2" />
-          <stop offset="0.4" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id={ids.rim} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0" stopColor="#D3E4EC" stopOpacity="0.8" />
-          <stop offset="0.05" stopColor="#D3E4EC" stopOpacity="0" />
-          <stop offset="0.95" stopColor="#D3E4EC" stopOpacity="0" />
-          <stop offset="1" stopColor="#D3E4EC" stopOpacity="0.45" />
-        </linearGradient>
-        {/* Wall face of the open tube. */}
-        <linearGradient id={ids.top} x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor="#40454b" />
-          <stop offset="0.55" stopColor="#272a2f" />
-          <stop offset="1" stopColor="#16181b" />
-        </linearGradient>
-        {/* Closed cap top, lit from above: the brightest plane of the stick, so it reads as a solid lid. */}
-        <linearGradient id={ids.capTop} x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor="#5a6067" />
-          <stop offset="0.55" stopColor="#383c42" />
-          <stop offset="1" stopColor="#212428" />
-        </linearGradient>
         {/* Silhouette (side plus top face), for clipping edge strokes. */}
         <clipPath id={ids.clip}>
           <path d={side} />
@@ -236,45 +190,13 @@ export function StickArt({
         <clipPath id={ids.engrave}>
           <path d={VANE_PATH} transform={iconAt(0)} />
         </clipPath>
-        <radialGradient id={ids.floor}>
-          <stop offset="0" stopColor="#000" stopOpacity="0.3" />
-          <stop offset="0.55" stopColor="#000" stopOpacity="0.12" />
-          <stop offset="1" stopColor="#000" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id={ids.contact}>
-          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
-          <stop offset="0.75" stopColor="#000" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#000" stopOpacity="0" />
-        </radialGradient>
-        {open ? (
-          <>
-            <linearGradient id={ids.waxShade} x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0" stopColor="#5b5347" stopOpacity="0.5" />
-              <stop offset="0.12" stopColor="#5b5347" stopOpacity="0.14" />
-              <stop offset="0.3" stopColor="#fff" stopOpacity="0.3" />
-              <stop offset="0.46" stopColor="#fff" stopOpacity="0.06" />
-              <stop offset="0.72" stopColor="#5b5347" stopOpacity="0.12" />
-              <stop offset="0.93" stopColor="#5b5347" stopOpacity="0.32" />
-              <stop offset="1" stopColor="#5b5347" stopOpacity="0.5" />
-            </linearGradient>
-            <linearGradient id={ids.waxAo} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#000" stopOpacity="0" />
-              <stop offset="1" stopColor="#000" stopOpacity="0.3" />
-            </linearGradient>
-            <radialGradient id={ids.dome} cx="0.36" cy="0.3" r="0.85">
-              <stop offset="0" stopColor="#FCFAF5" />
-              <stop offset="0.55" stopColor="#ECE5D6" />
-              <stop offset="1" stopColor="#D2C8B5" />
-            </radialGradient>
-          </>
-        ) : null}
       </defs>
 
       {shadow ? (
         <>
           {/* Falls a little to the right, away from the key light; stays inside the single-stick viewBox (x up to 52). */}
-          <ellipse cx={round(r * 0.12)} cy={round(ry * 0.6)} rx={round(r * 1.6)} ry={round(ry * 2)} fill={`url(#${ids.floor})`} />
-          <ellipse cx="0" cy={round(ry * 0.35)} rx={round(r * 1.06)} ry={round(ry * 1.15)} fill={`url(#${ids.contact})`} />
+          <ellipse cx={round(r * 0.12)} cy={round(ry * 0.6)} rx={round(r * 1.6)} ry={round(ry * 2)} fill={paint(STICK_PAINT.floor)} />
+          <ellipse cx="0" cy={round(ry * 0.35)} rx={round(r * 1.06)} ry={round(ry * 1.15)} fill={paint(STICK_PAINT.contact)} />
         </>
       ) : null}
 
@@ -300,33 +222,48 @@ export function StickArt({
       ) : null}
 
       {/* Shading over everything on the side */}
-      <path d={side} fill={`url(#${ids.shade})`} />
-      <path d={side} fill={`url(#${ids.ao})`} />
+      <path d={side} fill={paint(STICK_PAINT.shade)} />
+      <path d={side} fill={paint(STICK_PAINT.ao)} />
 
-      <path d={band(g.ringTop, g.ringBottom, r, ry)} fill={`url(#${ids.sheen})`} />
+      <path d={band(g.ringTop, g.ringBottom, r, ry)} fill={paint(STICK_PAINT.sheen)} />
 
-      {/* Ring edges */}
+      {/* Ring edges (both dark edges in one path, to keep the DOM small) */}
       <g clipPath={`url(#${ids.clip})`}>
-        <path d={frontArc(g.ringTop, r, ry)} stroke="#000" strokeOpacity="0.5" strokeWidth="0.7" fill="none" />
-        <path d={frontArc(g.ringBottom, r, ry)} stroke="#000" strokeOpacity="0.55" strokeWidth="0.7" fill="none" />
+        <path
+          d={`${frontArc(g.ringTop, r, ry)}${frontArc(g.ringBottom, r, ry)}`}
+          stroke="#000"
+          strokeOpacity="0.52"
+          strokeWidth="0.7"
+          fill="none"
+        />
         <path d={frontArc(g.ringTop + 0.9, r, ry)} stroke="#fff" strokeOpacity="0.12" strokeWidth="0.5" fill="none" />
       </g>
 
       {open ? (
         <>
           {/* Tube opening: wall face, dark inside */}
-          <ellipse cx="0" cy={g.seam} rx={r} ry={ry} fill={`url(#${ids.top})`} />
+          <ellipse cx="0" cy={g.seam} rx={r} ry={ry} fill={paint(STICK_PAINT.top)} />
           <ellipse cx="0" cy={g.seam} rx={round(holeR)} ry={round(holeRy)} fill="#060708" />
           {/* Solid cologne, twisted up */}
           <path d={band(waxTop, g.seam, round(waxR), round(waxRy))} fill={WAX} />
-          <path d={band(waxTop, g.seam, round(waxR), round(waxRy))} fill={`url(#${ids.waxShade})`} />
+          <path d={band(waxTop, g.seam, round(waxR), round(waxRy))} fill={paint(STICK_PAINT.waxShade)} />
+          {/* Light through the top of the wax: it reads as a translucent balm, not as plastic. */}
+          <path d={band(waxTop, g.seam, round(waxR), round(waxRy))} fill={paint(STICK_PAINT.waxGlow)} />
           <path
             d={band(round(g.seam - g.wax * 0.16), g.seam, round(waxR), round(waxRy))}
-            fill={`url(#${ids.waxAo})`}
+            fill={paint(STICK_PAINT.waxAo)}
           />
           <path
             d={`M${round(-waxR)} ${waxTop}A${round(waxR)} ${g.dome} 0 0 1 ${round(waxR)} ${waxTop}A${round(waxR)} ${round(waxRy)} 0 0 1 ${round(-waxR)} ${waxTop}Z`}
-            fill={`url(#${ids.dome})`}
+            fill={paint(STICK_PAINT.dome)}
+          />
+          {/* Soft highlight on the dome, towards the key light */}
+          <ellipse
+            cx={round(-waxR * 0.28)}
+            cy={round(waxTop - g.dome * 0.42)}
+            rx={round(waxR * 0.42)}
+            ry={round(g.dome * 0.34)}
+            fill={paint(STICK_PAINT.waxSpec)}
           />
           <path
             d={frontArc(waxTop, round(waxR), round(waxRy))}
@@ -348,13 +285,18 @@ export function StickArt({
       ) : (
         <>
           {/* Cap top face, lit from above, with a fine bevel highlight */}
-          <ellipse cx="0" cy={g.top} rx={r} ry={ry} fill={`url(#${ids.capTop})`} />
+          <ellipse cx="0" cy={g.top} rx={r} ry={ry} fill={paint(STICK_PAINT.capTop)} />
           <g clipPath={`url(#${ids.clip})`}>
             <path d={frontArc(g.top, r, ry)} stroke="#fff" strokeOpacity="0.16" strokeWidth="0.7" fill="none" />
-            {/* Seam between cap and body */}
-            <path d={frontArc(g.seam - 0.9, r, ry)} stroke="#fff" strokeOpacity="0.06" strokeWidth="0.6" fill="none" />
+            {/* Seam between cap and body: a dark groove with a faint light edge above and below (one path) */}
+            <path
+              d={`${frontArc(g.seam - 0.9, r, ry)}${frontArc(g.seam + 1, r, ry)}`}
+              stroke="#fff"
+              strokeOpacity="0.07"
+              strokeWidth="0.6"
+              fill="none"
+            />
             <path d={frontArc(g.seam, r, ry)} stroke="#050607" strokeOpacity="0.95" strokeWidth="0.9" fill="none" />
-            <path d={frontArc(g.seam + 1, r, ry)} stroke="#fff" strokeOpacity="0.08" strokeWidth="0.6" fill="none" />
           </g>
         </>
       )}
@@ -373,7 +315,7 @@ export function StickArt({
 
       {rimLight ? (
         <>
-          <path d={side} fill={`url(#${ids.rim})`} />
+          <path d={side} fill={paint(STICK_PAINT.rim)} />
           {/* A hint of the cap's back edge; when open the pale cologne already reads on dark. */}
           {open ? null : (
             <path d={backArc(sideTop, r, ry)} stroke="#D3E4EC" strokeOpacity="0.3" strokeWidth="0.6" fill="none" />
@@ -417,7 +359,7 @@ export function StickRender({ ringColor, name, className, variant = "closed", an
     >
       {lean ? (
         <>
-          <StickShadow id={`${id}-shadow`} />
+          <StickShadow />
           <g transform={`rotate(${lean} 0 -145)`}>
             <StickArt id={id} ringColor={ringColor} variant={variant} rimLight={rimLight} shadow={false} />
           </g>
@@ -430,18 +372,141 @@ export function StickRender({ ringColor, name, className, variant = "closed", an
 }
 
 /** A loose floor shadow, for sticks drawn without their own (leaning or lifted). */
-export function StickShadow({ id, geometry: g = FULL_STICK }: { id: string; geometry?: StickGeometry }) {
+export function StickShadow({ geometry: g = FULL_STICK }: { geometry?: StickGeometry }) {
   const r = g.width / 2;
   return (
-    <>
+    <ellipse cx="0" cy={round(g.ry * 0.8)} rx={round(r * 1.8)} ry={round(g.ry * 2)} fill={paint(STICK_PAINT.looseShadow)} />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared paint servers                                                */
+/* ------------------------------------------------------------------ */
+
+/** Fixed ids of the shared stick gradients, defined once per document by <StickDefs>. */
+export const STICK_PAINT = {
+  shade: "corvane-stick-shade",
+  ao: "corvane-stick-ao",
+  sheen: "corvane-stick-sheen",
+  rim: "corvane-stick-rim",
+  top: "corvane-stick-top",
+  capTop: "corvane-stick-captop",
+  floor: "corvane-stick-floor",
+  contact: "corvane-stick-contact",
+  waxShade: "corvane-stick-wax",
+  waxAo: "corvane-stick-waxao",
+  dome: "corvane-stick-dome",
+  waxGlow: "corvane-stick-waxglow",
+  waxSpec: "corvane-stick-waxspec",
+  looseShadow: "corvane-stick-shadow",
+} as const;
+
+function paint(id: string): string {
+  return `url(#${id})`;
+}
+
+/**
+ * The gradients every stick render references (STICK_PAINT), in a hidden
+ * zero-size <svg>. Mount it once per document (app/layout.tsx). It must not be
+ * display: none, or browsers stop resolving the gradients. All use
+ * objectBoundingBox units, so one set serves every stick at every size.
+ */
+export function StickDefs() {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width="0"
+      height="0"
+      className="pointer-events-none absolute size-0 overflow-hidden"
+    >
       <defs>
-        <radialGradient id={id}>
+        {/* Cylindrical shading over the whole side: key light left, reflected light right. */}
+        <linearGradient id={STICK_PAINT.shade} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
+          <stop offset="0.1" stopColor="#000" stopOpacity="0.2" />
+          <stop offset="0.3" stopColor="#fff" stopOpacity="0.08" />
+          <stop offset="0.5" stopColor="#000" stopOpacity="0" />
+          <stop offset="0.8" stopColor="#000" stopOpacity="0.34" />
+          <stop offset="0.93" stopColor="#000" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.58" />
+        </linearGradient>
+        {/* Top a touch brighter, occlusion towards the floor. */}
+        <linearGradient id={STICK_PAINT.ao} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.04" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.94" stopColor="#000" stopOpacity="0.06" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.28" />
+        </linearGradient>
+        {/* Satin sheen on the coloured ring (anodised, a touch brighter than the tube). */}
+        <linearGradient id={STICK_PAINT.sheen} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0.18" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.29" stopColor="#fff" stopOpacity="0.2" />
+          <stop offset="0.4" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={STICK_PAINT.rim} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#D3E4EC" stopOpacity="0.8" />
+          <stop offset="0.05" stopColor="#D3E4EC" stopOpacity="0" />
+          <stop offset="0.95" stopColor="#D3E4EC" stopOpacity="0" />
+          <stop offset="1" stopColor="#D3E4EC" stopOpacity="0.45" />
+        </linearGradient>
+        {/* Wall face of the open tube. */}
+        <linearGradient id={STICK_PAINT.top} x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#40454b" />
+          <stop offset="0.55" stopColor="#272a2f" />
+          <stop offset="1" stopColor="#16181b" />
+        </linearGradient>
+        {/* Closed cap top, lit from above: the brightest plane of the stick, so it reads as a solid lid. */}
+        <linearGradient id={STICK_PAINT.capTop} x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#5a6067" />
+          <stop offset="0.55" stopColor="#383c42" />
+          <stop offset="1" stopColor="#212428" />
+        </linearGradient>
+        <radialGradient id={STICK_PAINT.floor}>
+          <stop offset="0" stopColor="#000" stopOpacity="0.3" />
+          <stop offset="0.55" stopColor="#000" stopOpacity="0.12" />
+          <stop offset="1" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={STICK_PAINT.contact}>
+          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
+          <stop offset="0.75" stopColor="#000" stopOpacity="0.35" />
+          <stop offset="1" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+        {/* Solid cologne (open variant). */}
+        <linearGradient id={STICK_PAINT.waxShade} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#5b5347" stopOpacity="0.5" />
+          <stop offset="0.12" stopColor="#5b5347" stopOpacity="0.14" />
+          <stop offset="0.3" stopColor="#fff" stopOpacity="0.3" />
+          <stop offset="0.46" stopColor="#fff" stopOpacity="0.06" />
+          <stop offset="0.72" stopColor="#5b5347" stopOpacity="0.12" />
+          <stop offset="0.93" stopColor="#5b5347" stopOpacity="0.32" />
+          <stop offset="1" stopColor="#5b5347" stopOpacity="0.5" />
+        </linearGradient>
+        <linearGradient id={STICK_PAINT.waxAo} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#000" stopOpacity="0" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.3" />
+        </linearGradient>
+        <linearGradient id={STICK_PAINT.waxGlow} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#FFF4DC" stopOpacity="0.6" />
+          <stop offset="0.3" stopColor="#FFF4DC" stopOpacity="0.14" />
+          <stop offset="1" stopColor="#FFF4DC" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id={STICK_PAINT.dome} cx="0.36" cy="0.3" r="0.85">
+          <stop offset="0" stopColor="#FFFAF0" />
+          <stop offset="0.55" stopColor="#EEE3CC" />
+          <stop offset="1" stopColor="#D5C6A9" />
+        </radialGradient>
+        <radialGradient id={STICK_PAINT.waxSpec}>
+          <stop offset="0" stopColor="#fff" stopOpacity="0.75" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
+        {/* Loose floor shadow (StickShadow). */}
+        <radialGradient id={STICK_PAINT.looseShadow}>
           <stop offset="0" stopColor="#000" stopOpacity="0.28" />
           <stop offset="0.6" stopColor="#000" stopOpacity="0.1" />
           <stop offset="1" stopColor="#000" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <ellipse cx="0" cy={round(g.ry * 0.8)} rx={round(r * 1.8)} ry={round(g.ry * 2)} fill={`url(#${id})`} />
-    </>
+    </svg>
   );
 }

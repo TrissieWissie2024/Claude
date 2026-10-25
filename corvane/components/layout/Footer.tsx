@@ -26,8 +26,9 @@ import { site } from "@/content/site";
  *    name is in the copyright line).
  */
 
+/** 44 px tall targets; the link lists have no gap, so the 44 px pitch is the rhythm. */
 const linkClass =
-  "inline-flex min-h-6 items-center text-[15px] leading-6 text-fog underline-offset-4 decoration-fog/40 hover:underline";
+  "inline-flex min-h-11 items-center text-[15px] leading-6 text-fog underline-offset-4 decoration-fog/40 hover:underline";
 
 export function Footer() {
   const { footer, newsletter, company } = site;
@@ -58,12 +59,20 @@ export function Footer() {
           {footer.columns.map((column) => (
             <div key={column.heading}>
               <h2 className="label-caps text-mist">{column.heading}</h2>
-              <ul className="mt-5 flex flex-col gap-3">
+              <ul className="mt-3 flex flex-col">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className={linkClass}>
-                      {link.label}
-                    </Link>
+                    {link.href.includes("#") ? (
+                      // A fragment link ("/#scent-finder") as a plain <a>: on "/" a native jump that
+                      // moves the focus starting point to the target (WCAG 2.4.3); elsewhere a normal load.
+                      <a href={link.href} className={linkClass}>
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className={linkClass}>
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -8,6 +8,7 @@ import * as cartModule from "./cart";
 import { claims } from "./claims";
 import * as faqModule from "./faq";
 import * as finderModule from "./finder";
+import { home } from "./home";
 import * as legalModule from "./legal";
 import * as offersModule from "./offers";
 import * as pagesModule from "./pages";
@@ -273,5 +274,32 @@ describe("launch guards", () => {
     for (const claim of claims) {
       expect(claim.verified, `content/claims.ts ${claim.id}: verified`).toBe(false);
     }
+  });
+});
+
+describe("homepage copy added after the phase 5 review", () => {
+  it("has an honest reviews empty state: no score, no stars, no count", () => {
+    expect(home.reviews.emptyTitle.trim()).not.toBe("");
+    expect(home.reviews.emptyTitle).not.toMatch(/\d|star|rating/i);
+  });
+
+  it("does not promise the scent finder quiz before it ships (D38)", () => {
+    const interim = home.scentFinder.interim;
+    expect(interim.text).not.toMatch(/quiz|question|finder/i);
+    expect(interim.link.href).toBe("/products/discovery-set");
+    const answer = home.faq.interimAnswers["which-scent"];
+    expect(answer, "home.faq.interimAnswers.which-scent").toBeTruthy();
+    expect(answer).not.toMatch(/quiz|question|finder/i);
+  });
+
+  it("states the guarantee days from offers.ts and keeps the short intros short", () => {
+    expect(home.guarantee.title.trim()).not.toBe("");
+    expect(home.guarantee.leadShort).toContain(`${offersModule.offers.guaranteeDays} days`);
+    expect(home.comparison.introShort.length).toBeLessThan(home.comparison.intro.length);
+    expect(home.comparison.introShort).not.toMatch(/in general/i);
+  });
+
+  it("gives quick add an accessible name that starts with its visible text", () => {
+    expect(home.productGrid.card.addedLabel("North Swell").startsWith("Added")).toBe(true);
   });
 });

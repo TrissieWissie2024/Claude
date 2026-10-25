@@ -135,7 +135,7 @@ corvane/
 | 5 | Productgrid met sorteren | `home/ProductGridSection` | zes geuren en Discovery Set |
 | 6 | How it works | `home/HowItWorks` | `home.howItWorks` |
 | 7 | Solid vs spray | `home/SolidVsSpray` | `home.comparison` |
-| 8 | Scent finder | `finder/ScentFinder` (fase 7; tot dan een sectie met alleen eyebrow en kop in `app/page.tsx`, D38) | `content/finder.ts` |
+| 8 | Scent finder | `finder/ScentFinder` (fase 7; tot dan een sectie in `app/page.tsx` met eyebrow, kop en een regel met een knop naar de Discovery Set, D38 en D43) | `content/finder.ts` |
 | 9 | Reviews en video-rij | `home/ReviewsSection`, `home/VideoRow` | `content/reviews.ts`, `content/assets.ts` |
 | 10 | Garantie | `home/GuaranteeBlock` | `offers.guaranteeDays` |
 | 11 | FAQ | `home/FaqSection` | `content/faq.ts` (selectie) |

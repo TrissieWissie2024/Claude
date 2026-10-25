@@ -7,9 +7,17 @@ import { cn } from "@/lib/cn";
  * `level` sets the heading element; `size` defaults from it (1 -> xl,
  * 2 -> lg, 3 -> md). `action` is an optional slot (a link or a select) that
  * sits to the right of the heading from md up.
+ *
+ * Sizes step up at md and lg, so a section h2 never outranks the homepage
+ * h1 (Hero: 40-44 / 48 / 68 / 78 px at base / md / lg / xl):
+ * - xl: page h1s, 42 / 56 / 68 px.
+ * - display: an h2 set as a display line (one per page at most),
+ *   38 / 46 / 60 / 64 px.
+ * - lg: section h2s, 34 / 44 / 52 px.
+ * - md: 26 / 34 px.
  */
 
-export type SectionHeadingSize = "xl" | "lg" | "md";
+export type SectionHeadingSize = "xl" | "display" | "lg" | "md";
 
 export interface SectionHeadingProps {
   eyebrow?: ReactNode;
@@ -27,8 +35,9 @@ export interface SectionHeadingProps {
 }
 
 const titleSizes: Record<SectionHeadingSize, string> = {
-  xl: "text-[2.625rem] leading-[1.04] md:text-[4.25rem]",
-  lg: "text-[2.125rem] leading-[1.08] md:text-[3.25rem]",
+  xl: "text-[2.625rem] leading-[1.04] md:text-[3.5rem] lg:text-[4.25rem]",
+  display: "text-[2.375rem] leading-[1.02] tracking-[-0.02em] md:text-[2.875rem] lg:text-[3.75rem] xl:text-[4rem]",
+  lg: "text-[2.125rem] leading-[1.08] md:text-[2.75rem] lg:text-[3.25rem]",
   md: "text-[1.625rem] leading-[1.15] md:text-[2.125rem]",
 };
 

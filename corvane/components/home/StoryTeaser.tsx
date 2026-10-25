@@ -12,10 +12,15 @@ import { ArrowRightIcon } from "./icons";
  * coast origin in two short paragraphs, the name as a small dictionary entry
  * (Cor + vane, with the pronunciation), the tagline, and a link to /about.
  *
- * The photo is the `story.coast` slot from content/assets.ts: a 4:5 PhotoSlot
- * placeholder ("PHOTO: North Sea coast, dunes ...") until real photography
- * exists. Photo first on mobile; on lg+ photo left
- * (5 columns), text right.
+ * The photo is the `story.coast` slot from content/assets.ts (4:5, 1600 x
+ * 2000): a PhotoSlot placeholder ("PHOTO: North Sea coast, dunes ...") until
+ * real photography exists.
+ * - Phones: photo first, cropped to 5:4 (object-cover), so it does not fill
+ *   the first screen of the section before any text.
+ * - md+: two columns, the photo at its own 4:5 on the left (5 columns), text
+ *   on the right. On tablets the text runs much longer than the photo, so the
+ *   photo is top-aligned and sticky; from lg both are centred.
+ * The tagline closes the text as a serif pull line above the link.
  */
 
 export interface StoryTeaserProps {
@@ -33,20 +38,22 @@ export function StoryTeaser({ divider = false, className }: StoryTeaserProps) {
       <Container>
         <div
           className={cn(
-            "grid gap-12 py-20 md:py-28 lg:grid-cols-12 lg:items-center lg:gap-8 lg:py-32",
+            "grid gap-10 py-20 md:grid-cols-12 md:items-start md:gap-x-8 md:py-28 lg:items-center lg:py-32",
             divider && "border-t border-line",
           )}
         >
-          <PhotoSlot
-            assetKey="story.coast"
-            label={photoLabel}
-            aspect="4:5"
-            tone="sand"
-            className="rounded-card lg:col-span-5"
-            sizes="(min-width: 1024px) 40vw, 100vw"
-          />
+          {/* On tablets the text column is much taller than the photo, so the photo stays in view (sticky). */}
+          <div className="relative aspect-[5/4] overflow-hidden rounded-card md:sticky md:top-[calc(var(--header-height)+2rem)] md:col-span-5 md:aspect-[4/5] lg:relative lg:top-auto">
+            <PhotoSlot
+              assetKey="story.coast"
+              label={photoLabel}
+              aspect="fill"
+              tone="sand"
+              sizes="(min-width: 768px) 40vw, 100vw"
+            />
+          </div>
 
-          <div className="lg:col-span-6 lg:col-start-7">
+          <div className="md:col-span-7 lg:col-span-6 lg:col-start-7">
             <SectionHeading id={headingId} eyebrow={label} title={heading} />
 
             <div className="mt-6 flex max-w-[34rem] flex-col gap-4 text-base leading-relaxed text-ink-soft md:mt-8 md:text-lg">
@@ -76,12 +83,18 @@ export function StoryTeaser({ divider = false, className }: StoryTeaserProps) {
               </dl>
             </div>
 
-            <div className="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between md:mt-12 lg:max-w-[34rem]">
-              <Button href={link.href} variant="outline" iconEnd={<ArrowRightIcon className="size-[18px]" />}>
-                {link.label}
-              </Button>
-              <p className="font-serif text-lg text-ink-soft">{tagline}</p>
-            </div>
+            <p className="mt-10 font-serif text-[1.75rem] leading-[1.1] tracking-[-0.015em] text-ink md:mt-12 md:text-[2rem] lg:text-[2.5rem]">
+              {tagline}
+            </p>
+
+            <Button
+              href={link.href}
+              variant="outline"
+              className="mt-6 md:mt-8"
+              iconEnd={<ArrowRightIcon className="size-[18px]" />}
+            >
+              {link.label}
+            </Button>
           </div>
         </div>
       </Container>

@@ -136,7 +136,12 @@ function BarItem({
   );
 }
 
-/** Segmented NL/BE control: native radios, so arrow keys and screen readers work as expected. */
+/**
+ * Segmented NL/BE control: native radios, so arrow keys and screen readers work as expected.
+ * The selected option is an ink pill with fog text (well above 3:1 against the track, WCAG
+ * 1.4.11), not only a text colour. Each label draws 28 px but its hit area is 44 px tall (a
+ * ::before overlay; the label toggles its radio).
+ */
 function CountrySwitch({ value, onChange }: { value: CountryCode; onChange: (code: CountryCode) => void }) {
   const name = useId();
   return (
@@ -149,11 +154,16 @@ function CountrySwitch({ value, onChange }: { value: CountryCode; onChange: (cod
             <label
               key={entry.code}
               className={cn(
-                "flex h-7 min-w-11 cursor-pointer items-center justify-center rounded-full px-2.5 text-[0.8125rem] font-semibold tracking-[0.02em] transition-colors",
+                "relative flex h-7 min-w-11 cursor-pointer items-center justify-center rounded-full text-[0.8125rem] font-semibold tracking-[0.02em] transition-colors",
+                // 44 px hit area: 8 px past the 28 px pill, 9 px for the bordered (selected) one.
+                "before:absolute before:inset-x-0",
+                selected ? "before:-inset-y-[9px]" : "before:-inset-y-2",
                 "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink",
+                // Only the selected pill has a (transparent) border: forced colors paints it, so the
+                // selection stays visible there. 10 px + 1 px border = the 11 px padding of the other.
                 selected
-                  ? "bg-fog text-ink shadow-[0_1px_2px_rgb(16_20_24/0.14)] ring-1 ring-line"
-                  : "text-ink-soft hover:text-ink",
+                  ? "border border-transparent bg-ink px-2.5 text-fog"
+                  : "px-[0.6875rem] text-ink-soft hover:text-ink",
               )}
             >
               <input

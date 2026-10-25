@@ -31,8 +31,11 @@ import { QuickAdd } from "./QuickAdd";
  *   ring colour or a photo (AA). With the render, the stick stands tall on the
  *   left and the label sits bottom right ("specimen" layout), so the ring at
  *   the base of the stick is never covered; badges sit top right.
- * - Name (serif), tagline, price (getFromPrice; "From €25" for gift cards) and
- *   QuickAdd. Stars only with real reviews (getRatingSummary is null at launch).
+ * - Name (serif), one line, price (getFromPrice; "From €25" for gift cards)
+ *   and QuickAdd. For sticks the line is `mood` (when to wear it), because the
+ *   label on the media already says what it smells of; the tagline stays on
+ *   the product page. Other products show their tagline. Stars only with real
+ *   reviews (getRatingSummary is null at launch).
  * - The whole card links to /products/[slug]: the name link has a stretched
  *   ::after over the card (z-1, above the media, so a tap on the image
  *   navigates too); QuickAdd sits above that (relative z-10), so no
@@ -115,7 +118,9 @@ export function ProductCard({
 
       <div className="order-3 flex flex-1 flex-col">
         {rating ? <Stars rating={rating} className="mt-2" /> : null}
-        <p className="mt-1.5 text-sm leading-snug text-ink-soft md:text-[0.9375rem]">{product.tagline}</p>
+        <p className="mt-1.5 text-sm leading-snug text-ink-soft md:text-[0.9375rem]">
+          {isStick(product) ? product.mood : product.tagline}
+        </p>
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-4">
           <CardPrice product={product} />
           <QuickAdd product={product} />
@@ -180,7 +185,7 @@ function CardMedia({
       {product.badges.length > 0 ? (
         <div className="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1.5 md:top-3.5 md:right-3.5">
           {product.badges.map((badge) => (
-            <Badge key={badge} badge={badge} />
+            <Badge key={badge} badge={badge} size="sm" />
           ))}
         </div>
       ) : null}
@@ -196,11 +201,16 @@ function NotesLabel({ stick }: { stick: StickProduct }) {
   const notes = getCardNotes(stick);
   return (
     <div className="absolute right-2 bottom-2 w-[62%] rounded-[10px] bg-fog px-2 py-2 shadow-[0_1px_2px_rgb(16_20_24/0.08)] md:right-3 md:bottom-3 md:w-[54%] md:px-3 md:py-2.5 xl:px-3.5 xl:py-3">
-      {/* Below 360 px the label is narrow: slightly smaller type so "AROMATIC" still fits. */}
-      <p className="label-caps flex items-center gap-2 text-ink-soft max-[359px]:text-[0.6875rem] max-[359px]:tracking-[0.08em]">
+      {/*
+        The ring-colour dot ties the label to the stick (on phones the six tubes differ only by
+        their ring). The label is narrow on phones, so "AROMATIC" plus the dot must fit: below md
+        the dot and gap are smaller, below 390 px the type is slightly smaller, and below 360 px
+        the dot gives way.
+      */}
+      <p className="label-caps flex items-center gap-1 text-ink-soft max-[389px]:text-[0.6875rem] max-[389px]:tracking-[0.08em] md:gap-2">
         <span
           aria-hidden="true"
-          className="hidden size-2 shrink-0 rounded-full ring-1 ring-ink-soft/60 md:inline-block"
+          className="inline-block size-1.5 shrink-0 rounded-full ring-1 ring-ink-soft/60 max-[359px]:hidden md:size-2"
           style={{ backgroundColor: stick.ringColor }}
         />
         {stick.family}

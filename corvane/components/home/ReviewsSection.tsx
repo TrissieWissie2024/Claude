@@ -6,14 +6,15 @@ import { cn } from "@/lib/cn";
 import { getRatingSummary, getReviews } from "@/lib/reviews";
 import type { Review } from "@/lib/types";
 
-import { ReviewIcon } from "./icons";
-
 /**
  * Reviews (brief §6.10, §2.2; docs/PLAN.md §4.9). Real reviews only, from
  * content/reviews.ts via lib/reviews.ts.
  *
- * - No reviews (launch): an honest empty state from home.reviews.empty. No
- *   stars, no zero score, no count, no prompt to write one.
+ * - No reviews (launch): an honest empty state. The heading itself says it
+ *   ("No reviews yet.", home.reviews.emptyTitle) with home.reviews.empty.body
+ *   as the intro, in a shorter section: no card, no icon, no stars, no zero
+ *   score, no count, no prompt to write one. "From verified buyers" (or the
+ *   `heading` prop) waits for real reviews.
  * - With reviews: the rating summary (Stars + count) beside the heading and a
  *   list of review cards with stars, title, text, author, date, the
  *   verified-purchase label and the source.
@@ -75,33 +76,26 @@ export function ReviewsSection({
   const headingId = `${id}-heading`;
   const SubHeading = `h${headingLevel + 1}` as "h3" | "h4";
 
+  const empty = shown.length === 0 || !summary;
+
   return (
     <section id={id} aria-labelledby={headingId} className={cn("bg-fog text-ink", className)}>
       <Container>
-        <div className={cn("py-20 md:py-28 lg:py-32", divider && "border-t border-line")}>
-          {shown.length === 0 || !summary ? (
-            <div className="grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-8">
-              <SectionHeading
-                id={headingId}
-                level={headingLevel}
-                eyebrow={eyebrow}
-                title={heading}
-                className="lg:col-span-6"
-              />
-              <div className="flex gap-5 rounded-card border border-line p-6 md:items-center md:gap-6 md:p-8 lg:col-span-6 lg:col-start-7">
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-sand text-ink md:size-14">
-                  <ReviewIcon className="size-6 md:size-7" />
-                </span>
-                <div className="min-w-0">
-                  <SubHeading className="font-sans text-base font-semibold tracking-normal md:text-[1.0625rem]">
-                    {copy.empty.heading}
-                  </SubHeading>
-                  <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-soft md:text-base">
-                    {copy.empty.body}
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div
+          className={cn(
+            // Empty: one statement, so a shorter section (no dead zone between its neighbours).
+            empty ? "py-14 md:py-20 lg:py-24" : "py-20 md:py-28 lg:py-32",
+            divider && "border-t border-line",
+          )}
+        >
+          {empty ? (
+            <SectionHeading
+              id={headingId}
+              level={headingLevel}
+              eyebrow={eyebrow}
+              title={copy.emptyTitle}
+              intro={copy.empty.body}
+            />
           ) : (
             <>
               <SectionHeading

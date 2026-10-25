@@ -12,10 +12,14 @@ function pad(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-/** "6d 04:12:09"; on the last day "04:12:09". */
+/**
+ * "6d 4h" while more than a day is left (it changes once an hour, so the bar
+ * stays calm); "04:12:09" with seconds only in the final 24 hours.
+ */
 export function formatCountdown({ days, hours, minutes, seconds }: Countdown): string {
-  const clock = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-  return days > 0 ? `${days}${site.promoBar.units.days} ${clock}` : clock;
+  const { units } = site.promoBar;
+  if (days > 0) return `${days}${units.days} ${hours}${units.hours}`;
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
 const monthName = new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" });

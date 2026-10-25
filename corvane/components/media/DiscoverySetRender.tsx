@@ -75,17 +75,22 @@ export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, classNam
           <stop offset="0.12" stopColor="#D9CEBA" />
           <stop offset="1" stopColor="#DDD3C0" />
         </linearGradient>
-        <filter id={`${id}-soft`} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="7" />
-        </filter>
-        <filter id={`${id}-tight`} x="-30%" y="-10%" width="160%" height="120%">
-          <feGaussianBlur stdDeviation="2.2" />
-        </filter>
+        {/*
+          Soft drop shadow under the lid and the tray: a radial falloff on a rect a little larger
+          than the box, instead of a blur filter (cheaper to paint, e.g. while a card's hover
+          shadow animates). The box covers the centre; only the soft edge shows.
+        */}
+        <radialGradient id={`${id}-drop`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#000" stopOpacity="1" />
+          <stop offset="0.72" stopColor="#000" stopOpacity="0.85" />
+          <stop offset="0.9" stopColor="#000" stopOpacity="0.3" />
+          <stop offset="1" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       {/* Lid, behind */}
       <g transform="translate(200 150) rotate(-4)">
-        <rect x="-136" y="-92" width="272" height="184" rx="6" fill="#000" opacity="0.28" filter={`url(#${id}-soft)`} transform="translate(4 10)" />
+        <rect x="-156" y="-112" width="312" height="224" fill={`url(#${id}-drop)`} opacity="0.28" transform="translate(4 10)" />
         <rect x="-136" y="-92" width="272" height="184" rx="6" fill={`url(#${id}-box)`} />
         <rect x="-127" y="-83" width="254" height="166" rx="3" fill="none" stroke="#F7F5F1" strokeOpacity="0.14" strokeWidth="0.8" />
         <path
@@ -118,7 +123,7 @@ export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, classNam
 
       {/* Tray, in front */}
       <g transform="translate(200 352) rotate(1.5)">
-        <rect x="-150" y="-104" width="300" height="208" rx="8" fill="#000" opacity="0.3" filter={`url(#${id}-soft)`} transform="translate(3 12)" />
+        <rect x="-170" y="-124" width="340" height="248" fill={`url(#${id}-drop)`} opacity="0.3" transform="translate(3 12)" />
         <rect x="-150" y="-104" width="300" height="208" rx="8" fill={`url(#${id}-box)`} />
         <rect x="-142" y="-96" width="284" height="192" rx="4" fill={`url(#${id}-insert)`} />
         <rect x="-142" y="-96" width="284" height="192" rx="4" fill="none" stroke="#000" strokeOpacity="0.18" strokeWidth="1.2" />
@@ -130,7 +135,8 @@ export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, classNam
               <rect x="-20" y="-82" width="40" height="164" rx="7" fill="none" stroke="#000" strokeOpacity="0.1" strokeWidth="0.8" />
               {scent ? (
                 <>
-                  <rect x="-15" y="-71" width="34" height="150" rx="3" fill="#000" opacity="0.35" filter={`url(#${id}-tight)`} />
+                  {/* Contact shadow: a soft-cornered rect (no blur filter; at this size the edge reads as soft). */}
+                  <rect x="-16" y="-72" width="36" height="152" rx="5" fill="#000" opacity="0.24" />
                   <g transform="translate(0 76)">
                     <StickArt id={`${id}-m${i}`} ringColor={scent.ringColor} geometry={LYING_MINI} shadow={false} />
                   </g>

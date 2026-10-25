@@ -23,14 +23,15 @@ export interface SolidVsSprayProps {
 }
 
 export function SolidVsSpray({ className }: SolidVsSprayProps) {
-  const { id, label, heading, intro, caption, columns, rows, note } = home.comparison;
+  // introShort, not intro: the hedge ("in general") is in the spray column header and the note.
+  const { id, label, heading, introShort, caption, columns, rows, note } = home.comparison;
   const headingId = `${id}-heading`;
   const lastIndex = rows.length - 1;
 
   return (
     <section id={id} aria-labelledby={headingId} className={cn("bg-sand text-ink", className)}>
       <Container className="py-20 md:py-28 lg:py-32">
-        <SectionHeading id={headingId} eyebrow={label} title={heading} intro={intro} />
+        <SectionHeading id={headingId} eyebrow={label} title={heading} intro={introShort} />
 
         {/* Mobile: two value columns, a header row per feature */}
         <table className="mt-12 -mx-1.5 w-[calc(100%+0.75rem)] table-fixed border-separate border-spacing-x-1.5 border-spacing-y-0 md:hidden">
