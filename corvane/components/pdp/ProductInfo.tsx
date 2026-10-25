@@ -13,9 +13,10 @@ import { NotesChips } from "./NotesChips";
 /**
  * Title block of the product page (docs/PLAN.md §9): family (or an eyebrow
  * for products without one) in label caps, the product name as the page h1,
- * the tagline, a price line and the short description. Sticks add their notes
- * as chips and the two indicative intensity meters; the Discovery Set lists
- * the six scents it holds.
+ * the tagline, a price line and the short description. The Discovery Set
+ * lists the six scents it holds. A stick's notes and intensity meters are
+ * ScentProfile, which the page renders under the buy box (D50), so the scent
+ * picker and Add to cart follow the description directly.
  *
  * The price line is the single-stick price (offers.stickPricing[1] via
  * getFromPrice), the Discovery Set and pouch prices, or "From €25" for the
@@ -60,7 +61,7 @@ export function ProductInfo({ product, sticks = [], className }: ProductInfoProp
         ) : null}
       </div>
 
-      <h1 className="mt-3 text-[2.5rem] leading-[1.02] tracking-[-0.02em] md:mt-4 md:text-[3rem] lg:text-[3.375rem]">
+      <h1 className="mt-3 text-[2.5rem] leading-[1.02] tracking-[-0.02em] md:mt-4 lg:text-[3.375rem]">
         {product.name}
       </h1>
       <p className="mt-3 text-lg leading-snug text-ink md:text-xl">{product.tagline}</p>
@@ -76,16 +77,23 @@ export function ProductInfo({ product, sticks = [], className }: ProductInfoProp
 
       <p className="mt-5 max-w-[34rem] text-base leading-relaxed text-ink-soft">{product.description}</p>
 
-      {stick ? (
-        <>
-          <NotesChips notes={stick.notes} className="mt-8 border-t border-line pt-6" />
-          <IntensityMeters intensity={stick.intensity} className="mt-7 border-t border-line pt-6" />
-        </>
-      ) : null}
-
       {product.kind === "discovery-set" && sticks.length > 0 ? (
         <SetContents sticks={sticks} className="mt-8 border-t border-line pt-6" />
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * A stick's notes (chips per tier) and its two indicative intensity meters,
+ * each under a hairline. The page puts this after the trust row and before
+ * the accordions (D50). Server-compatible.
+ */
+export function ScentProfile({ product, className }: { product: StickProduct; className?: string }) {
+  return (
+    <div className={className}>
+      <NotesChips notes={product.notes} className="border-t border-line pt-6" />
+      <IntensityMeters intensity={product.intensity} className="mt-7 border-t border-line pt-6" />
     </div>
   );
 }

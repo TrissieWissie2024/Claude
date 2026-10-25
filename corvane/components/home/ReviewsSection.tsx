@@ -22,6 +22,12 @@ import type { Review } from "@/lib/types";
  * Works on the homepage (all reviews) and on the product page
  * (`productSlug`, `headingLevel` 2 or 3). No hooks and no server-only APIs,
  * so it renders in server and client trees alike.
+ *
+ * `variant="inline"` (product page): without reviews, the empty state is one
+ * quiet row instead of a section with a display heading (label-caps eyebrow,
+ * a small serif heading and one line), aligned to the 4 / 7 column split of
+ * the cross-sell and FAQ around it. Same id and heading, so real reviews can
+ * take its place; with reviews it renders the full section.
  */
 
 export interface ReviewsSectionProps {
@@ -37,6 +43,12 @@ export interface ReviewsSectionProps {
   limit?: number;
   /** Hairline above the section, aligned to the container. */
   divider?: boolean;
+  /** "section" (default) or "inline": a compact empty state (product page). */
+  variant?: "section" | "inline";
+  /** Empty state heading. Default home.reviews.emptyTitle ("No reviews yet."). */
+  emptyHeading?: string;
+  /** Empty state line. Default home.reviews.empty.body. */
+  emptyBody?: string;
   /**
    * Review data. Defaults to content/reviews.ts; only tests and previews pass
    * this. Never pass invented reviews on a live page (brief §2.2).
@@ -66,6 +78,9 @@ export function ReviewsSection({
   heading = home.reviews.heading,
   limit = 6,
   divider = false,
+  variant = "section",
+  emptyHeading,
+  emptyBody,
   source,
   className,
 }: ReviewsSectionProps) {
@@ -77,6 +92,33 @@ export function ReviewsSection({
   const SubHeading = `h${headingLevel + 1}` as "h3" | "h4";
 
   const empty = shown.length === 0 || !summary;
+  const Heading = `h${headingLevel}` as "h2" | "h3";
+
+  if (empty && variant === "inline") {
+    return (
+      <section id={id} aria-labelledby={headingId} className={cn("bg-fog text-ink", className)}>
+        <Container>
+          <div
+            className={cn(
+              "grid gap-y-2 py-8 md:py-10 lg:grid-cols-12 lg:items-baseline lg:gap-x-8",
+              divider && "border-t border-line",
+            )}
+          >
+            <p className="label-caps flex items-center gap-3 text-ink-soft lg:col-span-4">
+              <span aria-hidden="true" className="h-px w-6 bg-ink-soft/50" />
+              {eyebrow}
+            </p>
+            <div className="lg:col-span-7 lg:col-start-6">
+              <Heading id={headingId} className="font-serif text-xl leading-snug text-ink">
+                {emptyHeading ?? copy.emptyTitle}
+              </Heading>
+              <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-soft">{emptyBody ?? copy.empty.body}</p>
+            </div>
+          </div>
+        </Container>
+      </section>
+    );
+  }
 
   return (
     <section id={id} aria-labelledby={headingId} className={cn("bg-fog text-ink", className)}>

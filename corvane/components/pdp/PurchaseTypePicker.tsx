@@ -16,8 +16,9 @@ import { optionTileClasses, RadioMark } from "./BundlePicker";
  * "One-time purchase" and "Subscribe & save 15%", each with its price for the
  * chosen set. With Subscribe & save the tile opens an interval group
  * (offers.subscription.intervalsMonths, default defaultIntervalMonths, from
- * PdpStateProvider), "Delivered and billed every N months" and the honest note
- * that recurring billing is not connected yet (content/pdp.ts).
+ * PdpStateProvider), "Delivered and billed every N months" and that it can be
+ * cancelled before the next delivery. That the demo takes no payment is said at
+ * the checkout and in the FAQ, not in the buy box (D50).
  *
  * The interval panel sits inside the subscription tile but outside its
  * <label> (a label holds one control), so the tile is a container: its
@@ -139,7 +140,7 @@ export function PurchaseTypePicker({
                 <p className="mt-3 text-[0.8125rem] leading-5 font-medium text-ink">
                   {copy.deliveredAndBilled(intervalMonths)}
                 </p>
-                <p className="mt-1 text-xs leading-[1.125rem] text-ink-soft">{copy.subscriptionNote}</p>
+                <p className="mt-1 text-xs leading-[1.125rem] text-ink-soft">{copy.subscriptionNoteShort}</p>
               </div>
             </div>
           ) : null}

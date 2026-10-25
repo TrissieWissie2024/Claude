@@ -36,6 +36,8 @@ export interface DiscoverySetRenderProps {
   className?: string;
   /** Hide from assistive technology when a caption already describes it. */
   decorative?: boolean;
+  /** Leave out the printed text on the lid (thumbnails, whose button has its own name). */
+  textless?: boolean;
 }
 
 /** Seen from straight above, the ends of a lying stick are almost flat. */
@@ -43,7 +45,12 @@ const LYING_MINI: StickGeometry = { ...MINI_STICK, ry: 1.4 };
 
 const SLOT_X = [-110, -66, -22, 22, 66, 110];
 
-export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, className, decorative = false }: DiscoverySetRenderProps) {
+export function DiscoverySetRender({
+  scents = DEFAULT_DISCOVERY_SCENTS,
+  className,
+  decorative = false,
+  textless = false,
+}: DiscoverySetRenderProps) {
   const id = useSvgId("disc");
   const six = scents.slice(0, 6);
   const wmWidth = 150;
@@ -103,22 +110,26 @@ export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, classNam
           fill="#F7F5F1"
           transform={`translate(${-wmWidth / 2} ${-12}) scale(${wmScale})`}
         />
-        <text
-          x="0"
-          y={-12 + wmHeight + 24}
-          textAnchor="middle"
-          className="font-sans"
-          fontSize="8.5"
-          fontWeight="600"
-          letterSpacing="2.6"
-          fill="#B9C4C9"
-        >
-          {lid.title.toUpperCase()}
-        </text>
-        <text x="0" y={-12 + wmHeight + 40} textAnchor="middle" className="font-sans" fontSize="7" letterSpacing="1.6" fill="#B9C4C9" fillOpacity="0.75">
-          {/* Words in capitals, the unit in lower case: "3 g", never "3 G". */}
-          {`${lid.contents.toUpperCase()} · ${lid.size}`}
-        </text>
+        {textless ? null : (
+          <>
+            <text
+              x="0"
+              y={-12 + wmHeight + 24}
+              textAnchor="middle"
+              className="font-sans"
+              fontSize="8.5"
+              fontWeight="600"
+              letterSpacing="2.6"
+              fill="#B9C4C9"
+            >
+              {lid.title.toUpperCase()}
+            </text>
+            <text x="0" y={-12 + wmHeight + 40} textAnchor="middle" className="font-sans" fontSize="7" letterSpacing="1.6" fill="#B9C4C9" fillOpacity="0.75">
+              {/* Words in capitals, the unit in lower case: "3 g", never "3 G". */}
+              {`${lid.contents.toUpperCase()} · ${lid.size}`}
+            </text>
+          </>
+        )}
       </g>
 
       {/* Tray, in front */}

@@ -118,6 +118,10 @@ export interface StickyAddToCartProps {
   onAdd: () => void;
   /** Ring colour dot before the title (sticks). */
   ringColor?: string;
+  /** One dot per stick of a mixed set, in set order; replaces `ringColor`. */
+  ringColors?: readonly string[];
+  /** Screen reader text for the title line when it differs from `title` (a mixed set names its scents). */
+  titleLabel?: string;
 }
 
 function headerHeight(): number {
@@ -125,12 +129,22 @@ function headerHeight(): number {
   return Number.isFinite(value) ? value : 64;
 }
 
-export function StickyAddToCart({ targetRef, title, summary, price, onAdd, ringColor }: StickyAddToCartProps) {
+export function StickyAddToCart({
+  targetRef,
+  title,
+  summary,
+  price,
+  onAdd,
+  ringColor,
+  ringColors,
+  titleLabel,
+}: StickyAddToCartProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [passed, setPassed] = useState(false);
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const visible = passed && !isDesktop;
   const parts = typeof summary === "string" ? [summary] : summary;
+  const dots = ringColors && ringColors.length > 0 ? ringColors : ringColor ? [ringColor] : [];
 
   useEffect(() => {
     const target = targetRef.current;
@@ -175,14 +189,21 @@ export function StickyAddToCart({ targetRef, title, summary, price, onAdd, ringC
       <div className="mx-auto flex max-w-[1240px] items-center gap-3 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-8">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 font-serif text-base leading-5 text-ink">
-            {ringColor ? (
-              <span
-                aria-hidden="true"
-                className="inline-block size-2.5 shrink-0 rounded-full ring-1 ring-ink-soft"
-                style={{ backgroundColor: ringColor }}
-              />
+            {dots.length > 0 ? (
+              <span aria-hidden="true" className="flex shrink-0 items-center gap-1">
+                {dots.map((color, index) => (
+                  <span
+                    key={`${index}-${color}`}
+                    className="inline-block size-2.5 rounded-full ring-1 ring-ink-soft"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </span>
             ) : null}
-            <span className="truncate">{title}</span>
+            <span aria-hidden={titleLabel ? true : undefined} className="truncate">
+              {title}
+            </span>
+            {titleLabel ? <span className="sr-only">{titleLabel}</span> : null}
           </p>
           <p className="mt-0.5 text-xs leading-4 text-ink-soft">
             {parts.map((part, index) => (

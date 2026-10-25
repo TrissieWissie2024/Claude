@@ -49,19 +49,24 @@ export function TrustRow({ digital = false, className }: TrustRowProps) {
               </span>
               <p className="min-w-0 pt-0.5 text-sm leading-5">
                 <span className="block font-semibold text-ink">{item.title}</span>
-                {item.href ? (
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "mt-0.5 inline-block text-ink-soft underline decoration-ink/25 underline-offset-4",
-                      "hover:text-ink hover:decoration-ink",
-                    )}
-                  >
-                    {item.text}
-                  </Link>
-                ) : (
-                  <span className="mt-0.5 block text-ink-soft">{item.text}</span>
-                )}
+                <span className="mt-0.5 block text-ink-soft">
+                  {item.text}
+                  {item.href && item.linkLabel ? (
+                    <>
+                      {" "}
+                      {/* Only the action is the link. 20 px of text, a 44 px target (::before). */}
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "relative inline-block text-ink underline decoration-ink/30 underline-offset-4",
+                          "before:absolute before:inset-x-0 before:-inset-y-3 hover:decoration-ink",
+                        )}
+                      >
+                        {item.linkLabel}
+                      </Link>
+                    </>
+                  ) : null}
+                </span>
               </p>
             </li>
           );

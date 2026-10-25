@@ -14,13 +14,17 @@ import { cn } from "@/lib/cn";
  * One scroll-snap track serves every width, so each slide exists once in the
  * DOM and the first one is server-rendered in view (no layout shift):
  * - Phones and tablets (below lg): swipe (scroll snap, one slide per swipe),
- *   dot buttons under the image and a polite "Image 1 of 4" status for screen
- *   readers. The track takes keyboard focus there, so arrow keys scroll it.
+ *   dot buttons under the image (6 px marks, 44 px targets) and a polite
+ *   "Image 1 of 4" status for screen readers. The track takes keyboard focus
+ *   there (a labelled group), so arrow keys scroll it.
  * - lg+: the large image with a column of thumbnail buttons on its left
  *   (aria-label "Show image 2 of 4", aria-current on the shown one; one Tab
  *   stop, arrow keys, Home and End move between them) and previous/next
- *   buttons on the image. The track does not scroll by hand there; the
- *   buttons scroll it.
+ *   buttons in the bottom right corner of the image. The track does not
+ *   scroll by hand there; the buttons scroll it. A slide with text of its own
+ *   (the notes card) keeps that corner free.
+ * - Thumbnails carry no text (WCAG 2.5.3: their name is "Show image 2 of 4"),
+ *   so callers pass text-free `thumb` nodes for slides that contain text.
  *
  * Slides and thumbnails arrive as server-rendered nodes, so the renders and
  * the content modules stay out of the client bundle. Smooth scrolling only
@@ -145,9 +149,10 @@ export function ProductGallery({ slides, label = pdp.gallery.label, className }:
           <div
             ref={trackRef}
             onScroll={handleScroll}
-            // Focusable where it scrolls by hand (below lg), so arrow keys scroll it.
+            // Focusable where it scrolls by hand (below lg), so arrow keys scroll it; a named group there.
             tabIndex={isDesktop || total <= 1 ? undefined : 0}
-            aria-label={isDesktop ? undefined : label}
+            role={isDesktop || total <= 1 ? undefined : "group"}
+            aria-label={isDesktop || total <= 1 ? undefined : label}
             className={cn(
               "no-scrollbar flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain md:rounded-card",
               "lg:overflow-x-hidden",
@@ -182,9 +187,9 @@ export function ProductGallery({ slides, label = pdp.gallery.label, className }:
         </div>
       </div>
 
-      {/* Dots (below lg): 6 px marks with a 24 px hit area. */}
+      {/* Dots (below lg): 6 px marks with a 44 px hit area. */}
       {total > 1 ? (
-        <div className="mt-3 flex justify-center lg:hidden">
+        <div className="mt-1 flex justify-center lg:hidden">
           {slides.map((slide, index) => {
             const current = index === active;
             return (
@@ -194,7 +199,7 @@ export function ProductGallery({ slides, label = pdp.gallery.label, className }:
                 aria-label={pdp.gallery.thumbnail(index + 1, total)}
                 aria-current={current ? "true" : undefined}
                 onClick={() => show(index)}
-                className="group flex h-6 min-w-6 items-center justify-center px-1"
+                className="group flex size-11 items-center justify-center"
               >
                 <span
                   aria-hidden="true"
@@ -203,7 +208,7 @@ export function ProductGallery({ slides, label = pdp.gallery.label, className }:
                     "forced-color-adjust-none",
                     current
                       ? "w-5 bg-ink forced-colors:bg-[CanvasText]"
-                      : "w-1.5 bg-ink/25 group-hover:bg-ink/50 forced-colors:bg-[GrayText]",
+                      : "w-1.5 bg-ink/50 group-hover:bg-ink/70 forced-colors:bg-[GrayText]",
                   )}
                 />
               </button>

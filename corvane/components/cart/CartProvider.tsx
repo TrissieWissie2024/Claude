@@ -65,8 +65,12 @@ export interface CartContextValue {
   openCart: () => void;
   closeCart: () => void;
   setOpen: (open: boolean) => void;
-  /** Adds a line, merged with an existing line for the same set and plan (cartLineId). Fires add_to_cart. */
-  addLine: (newLine: NewCartLine, options?: AddLineOptions) => void;
+  /**
+   * Adds a line, merged with an existing line for the same set and plan (cartLineId). A line holds
+   * at most MAX_LINE_QUANTITY: only what fits is added, and the announcement and add_to_cart report
+   * that amount. Returns the quantity actually added (0 when the line is already full).
+   */
+  addLine: (newLine: NewCartLine, options?: AddLineOptions) => number;
   /** Sets the quantity of a line; 0 or less removes it. Capped at MAX_LINE_QUANTITY. */
   setQuantity: (lineId: string, quantity: number) => void;
   removeLine: (lineId: string) => void;
@@ -297,16 +301,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const closeCart = useCallback(() => setOpen(false), []);
 
   const addLine = useCallback(
-    (newLine: NewCartLine, options?: AddLineOptions) => {
+    (newLine: NewCartLine, options?: AddLineOptions): number => {
       const line = parseCartLine({ ...newLine, id: cartLineId(newLine) }, products);
       if (!line) {
         if (process.env.NODE_ENV !== "production") console.warn("addLine: ignored an invalid cart line", newLine);
-        return;
+        return 0;
       }
-      store.update((current) => ({ ...current, lines: mergeLines([...current.lines, line]) }));
-      track("add_to_cart", getLineAnalytics(line, products));
-      announce(site.cartAnnouncements.added(getCartLineName(line, products)));
+      // A line holds at most MAX_LINE_QUANTITY: add only what still fits, and report that amount.
+      let added = 0;
+      store.update((current) => {
+        const existing = current.lines.find((candidate) => candidate.id === line.id)?.quantity ?? 0;
+        added = Math.max(0, Math.min(line.quantity, MAX_LINE_QUANTITY - existing));
+        if (added === 0) return current;
+        return { ...current, lines: mergeLines([...current.lines, { ...line, quantity: added }]) };
+      });
+      const name = getCartLineName(line, products);
+      if (added === 0) {
+        announce(site.cartAnnouncements.limitReached(name, MAX_LINE_QUANTITY));
+      } else {
+        track("add_to_cart", getLineAnalytics({ ...line, quantity: added }, products));
+        announce(
+          added < line.quantity
+            ? site.cartAnnouncements.addedPartly(name, added, MAX_LINE_QUANTITY)
+            : site.cartAnnouncements.added(name),
+        );
+      }
+      // Open the drawer either way: it shows the line, also when it was already full.
       if (options?.open ?? true) setOpen(true);
+      return added;
     },
     [announce, products, store],
   );

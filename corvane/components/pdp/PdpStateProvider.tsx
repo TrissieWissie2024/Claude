@@ -14,9 +14,10 @@ import type { BundleSize, PurchasePlan, PurchaseType, SubscriptionInterval } fro
  * from the defaults again.
  *
  * Stick 1 of a set is always the scent of the page and is not stored here.
- * Sticks 2 and 3 are stored as a slug, or null for "the scent of the page":
- * an untouched slot follows the page when the visitor switches scents, a slot
- * they set to another scent keeps it.
+ * Sticks 2 and 3 are null until the visitor chooses a scent for that slot:
+ * an untouched slot follows the page when the visitor switches scents. Once
+ * they choose, the slot stores that slug and keeps it, also when the choice
+ * is the scent of the page they are on (D45, D50).
  *
  * Defaults: 1 stick, one-time, offers.subscription.defaultIntervalMonths.
  * One stick is the neutral starting point: the 3-stick tile is labelled
@@ -24,7 +25,7 @@ import type { BundleSize, PurchasePlan, PurchaseType, SubscriptionInterval } fro
  * to be noticed.
  */
 
-/** Slugs of sticks 2 and 3; null means "same as the page scent". */
+/** Slugs of sticks 2 and 3; null means "untouched: same as the page scent". */
 export type ExtraScents = readonly [string | null, string | null];
 
 export interface PdpState {
@@ -41,11 +42,11 @@ export interface PdpStateValue extends PdpState {
   setPurchaseType: (type: PurchaseType) => void;
   setIntervalMonths: (months: SubscriptionInterval) => void;
   /**
-   * Sets stick 2 (slot 0) or stick 3 (slot 1). Pass the page slug as
-   * `pageSlug`: choosing the page scent stores null, so the slot keeps
-   * following the page.
+   * Sets stick 2 (slot 0) or stick 3 (slot 1) to a scent the visitor chose.
+   * The slug is always stored, also when it is the page scent, so the choice
+   * stays when they switch scents.
    */
-  setExtraScent: (slot: 0 | 1, slug: string, pageSlug: string) => void;
+  setExtraScent: (slot: 0 | 1, slug: string) => void;
   /** The plan for a cart line: one-time, or subscription with the chosen interval. */
   plan: PurchasePlan;
 }
@@ -81,12 +82,11 @@ export function PdpStateProvider({ children, initialState }: PdpStateProviderPro
     setState((current) => (current.intervalMonths === intervalMonths ? current : { ...current, intervalMonths }));
   }, []);
 
-  const setExtraScent = useCallback((slot: 0 | 1, slug: string, pageSlug: string) => {
-    const value = slug === pageSlug ? null : slug;
+  const setExtraScent = useCallback((slot: 0 | 1, slug: string) => {
     setState((current) => {
-      if (current.extraScents[slot] === value) return current;
+      if (current.extraScents[slot] === slug) return current;
       const extraScents: ExtraScents =
-        slot === 0 ? [value, current.extraScents[1]] : [current.extraScents[0], value];
+        slot === 0 ? [slug, current.extraScents[1]] : [current.extraScents[0], slug];
       return { ...current, extraScents };
     });
   }, []);

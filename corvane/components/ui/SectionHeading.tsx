@@ -6,7 +6,10 @@ import { cn } from "@/lib/cn";
  * Eyebrow (label caps) + serif heading + optional intro.
  * `level` sets the heading element; `size` defaults from it (1 -> xl,
  * 2 -> lg, 3 -> md). `action` is an optional slot (a link or a select) that
- * sits to the right of the heading from md up.
+ * sits to the right of the heading from md up. The short rule before the
+ * eyebrow is signal by default (homepage); `eyebrowRule="neutral"` draws it in
+ * ink-soft (mist on dark), for pages where signal is kept for the one primary
+ * button (product page, collection).
  *
  * Sizes step up at md and lg, so a section h2 never outranks the homepage
  * h1 (Hero: 40-44 / 48 / 68 / 78 px at base / md / lg / xl):
@@ -31,6 +34,8 @@ export interface SectionHeadingProps {
   /** id on the heading, for aria-labelledby on the section. */
   id?: string;
   action?: ReactNode;
+  /** Colour of the short rule before the eyebrow. Default "signal". */
+  eyebrowRule?: "signal" | "neutral";
   className?: string;
 }
 
@@ -53,6 +58,7 @@ export function SectionHeading({
   tone = "light",
   id,
   action,
+  eyebrowRule = "signal",
   className,
 }: SectionHeadingProps) {
   const Heading = `h${level}` as const;
@@ -63,7 +69,10 @@ export function SectionHeading({
     <div className={cn("flex flex-col", centered && "items-center text-center")}>
       {eyebrow ? (
         <p className={cn("label-caps mb-4 flex items-center gap-3", dark ? "text-mist" : "text-ink-soft")}>
-          <span aria-hidden="true" className="h-px w-6 bg-signal" />
+          <span
+            aria-hidden="true"
+            className={cn("h-px w-6", eyebrowRule === "signal" ? "bg-signal" : dark ? "bg-mist/60" : "bg-ink-soft/50")}
+          />
           {eyebrow}
         </p>
       ) : null}

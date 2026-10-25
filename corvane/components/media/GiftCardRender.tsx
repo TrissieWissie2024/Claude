@@ -18,9 +18,11 @@ export interface GiftCardRenderProps {
   className?: string;
   /** Hide from assistive technology when a caption already describes it. */
   decorative?: boolean;
+  /** Leave out the printed text (amount and label), e.g. for a thumbnail whose button has its own name. */
+  textless?: boolean;
 }
 
-export function GiftCardRender({ amount, className, decorative = false }: GiftCardRenderProps) {
+export function GiftCardRender({ amount, className, decorative = false, textless = false }: GiftCardRenderProps) {
   const id = useSvgId("gift");
   const wmWidth = 132;
   const wmScale = wmWidth / WORDMARK_WIDTH;
@@ -67,24 +69,26 @@ export function GiftCardRender({ amount, className, decorative = false }: GiftCa
           fill="#F7F5F1"
           transform={`translate(${-136 - 2.5 * 1.1} ${-62 - VANE_CENTER.y * 1.1}) scale(1.1)`}
         />
-        {amount ? (
+        {amount && !textless ? (
           <text x="136" y="-48" textAnchor="end" className="font-serif" fontSize="34" fontWeight="600" fill="#F7F5F1">
             {amount}
           </text>
         ) : null}
         <path d={WORDMARK_PATH} fill="#F7F5F1" transform={`translate(-136 ${62}) scale(${wmScale})`} />
-        <text
-          x="136"
-          y={62 + WORDMARK_HEIGHT * wmScale}
-          textAnchor="end"
-          className="font-sans"
-          fontSize="8"
-          fontWeight="600"
-          letterSpacing="2.2"
-          fill="#B9C4C9"
-        >
-          {site.renders.giftCardPrint.toUpperCase()}
-        </text>
+        {textless ? null : (
+          <text
+            x="136"
+            y={62 + WORDMARK_HEIGHT * wmScale}
+            textAnchor="end"
+            className="font-sans"
+            fontSize="8"
+            fontWeight="600"
+            letterSpacing="2.2"
+            fill="#B9C4C9"
+          >
+            {site.renders.giftCardPrint.toUpperCase()}
+          </text>
+        )}
       </g>
     </svg>
   );

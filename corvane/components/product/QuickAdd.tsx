@@ -84,7 +84,8 @@ export function QuickAdd({ product, variant = "outline", size = "sm", fullWidth 
   }
 
   const handleClick = () => {
-    addLine(line, { open: true });
+    // 0 when the cart line is already at its limit: the drawer opens, the button does not claim "Added".
+    if (addLine(line, { open: true }) === 0) return;
     setAdded(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setAdded(false), ADDED_MS);

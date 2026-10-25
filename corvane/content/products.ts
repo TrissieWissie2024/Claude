@@ -183,7 +183,7 @@ export const products: Product[] = [
     kind: "gift-card",
     tagline: "They pick the scent.",
     description:
-      "A digital gift card, delivered by email. They choose the scent, you skip the guessing. No shipping, no wrapping.",
+      "For when you know the person, not the scent. You pick the amount, they do the rest.",
     badges: [],
     featuredRank: 9,
     releasedAt: LAUNCH_DATE,

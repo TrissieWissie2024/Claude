@@ -8,8 +8,11 @@ import type { Scale, StickProduct } from "@/lib/types";
  * compare the scents within the range and are not a measurement, so the block
  * carries the "Indicative" label and the explanation from content/pdp.ts.
  *
- * The bars are decoration (aria-hidden); each scale has one text for screen
- * readers, e.g. "Fresh to warm: 2 of 5". Server-compatible.
+ * The "Indicative" tag is part of the heading ("Character, Indicative"). The
+ * bars are decoration (aria-hidden): filled steps in ink, empty steps as an
+ * outline in ink at 50% (about 3.4:1 on fog, WCAG 1.4.11), so "3 of 5" reads
+ * without colour. Each scale has one text for screen readers that names both
+ * ends, e.g. "Fresh to warm: 2 of 5 (1 is fresh, 5 is warm)". Server-compatible.
  */
 
 export interface IntensityMetersProps {
@@ -37,12 +40,13 @@ export function IntensityMeters({ intensity, headingLevel = 2, className }: Inte
 
   return (
     <div className={className}>
-      <div className="flex items-center gap-2.5">
-        <Heading className="label-caps text-ink-soft">{pdp.sections.character}</Heading>
+      <Heading className="label-caps flex items-center gap-2.5 text-ink-soft">
+        <span>{pdp.sections.character}</span>
+        <span className="sr-only">, </span>
         <span className="label-caps inline-flex h-5 items-center rounded-full px-2 text-[0.6875rem] leading-none tracking-[0.12em] text-ink-soft ring-1 ring-ink/20 ring-inset">
           {pdp.intensity.label}
         </span>
-      </div>
+      </Heading>
 
       <ul role="list" className="mt-4 grid grid-cols-2 gap-x-6 sm:gap-x-8">
         {meters.map((meter) => (
@@ -50,7 +54,8 @@ export function IntensityMeters({ intensity, headingLevel = 2, className }: Inte
             <p className="text-sm font-medium text-ink">
               <span aria-hidden="true">{meter.copy.label}</span>
               <span className="sr-only">
-                {meter.copy.label}: {pdp.intensity.valueText(meter.value, MAX)}
+                {meter.copy.label}:{" "}
+                {pdp.intensity.valueTextFull(meter.value, MAX, meter.copy.start, meter.copy.end)}
               </span>
             </p>
             <div aria-hidden="true" className="mt-2.5 flex gap-1">
@@ -60,7 +65,9 @@ export function IntensityMeters({ intensity, headingLevel = 2, className }: Inte
                   className={cn(
                     // Forced colors would drop the backgrounds: system colours keep the steps visible there.
                     "h-1.5 flex-1 rounded-full forced-color-adjust-none",
-                    step <= meter.value ? "bg-ink forced-colors:bg-[CanvasText]" : "bg-ink/12 forced-colors:bg-[GrayText]",
+                    step <= meter.value
+                      ? "bg-ink forced-colors:bg-[CanvasText]"
+                      : "ring-1 ring-ink/50 ring-inset forced-colors:ring-[GrayText]",
                   )}
                 />
               ))}

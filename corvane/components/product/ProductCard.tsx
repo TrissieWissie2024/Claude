@@ -32,7 +32,10 @@ import { QuickAdd } from "./QuickAdd";
  *   left and the label sits bottom right ("specimen" layout), so the ring at
  *   the base of the stick is never covered; badges sit top right.
  * - Name (serif), one line, price (getFromPrice; "From €25" for gift cards)
- *   and QuickAdd. For sticks the line is `mood` (when to wear it), because the
+ *   and QuickAdd. A card narrower than 14.5rem (two columns on a phone, three on a small tablet) stacks
+ *   the price above a full-width QuickAdd, so every card in a row ends the
+ *   same way ("From €25" and "Choose amount" do not fit side by side in a
+ *   170 px card). The card is a size container for that (container query). For sticks the line is `mood` (when to wear it), because the
  *   label on the media already says what it smells of; the tagline stays on
  *   the product page. Other products show their tagline. Stars only with real
  *   reviews (getRatingSummary is null at launch).
@@ -93,7 +96,7 @@ export function ProductCard({
   const href = `/products/${product.slug}`;
 
   return (
-    <article className={cn("group relative flex h-full flex-col", wide && "@container", className)}>
+    <article className={cn("group @container relative flex h-full flex-col", className)}>
       <Heading className="order-2 mt-4 text-[1.1875rem] leading-[1.15] md:mt-5 md:text-[1.375rem]">
         <Link
           href={href}
@@ -121,9 +124,9 @@ export function ProductCard({
         <p className="mt-1.5 text-sm leading-snug text-ink-soft md:text-[0.9375rem]">
           {isStick(product) ? product.mood : product.tagline}
         </p>
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-4">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-4 @max-[14.5rem]:flex-col @max-[14.5rem]:flex-nowrap @max-[14.5rem]:items-stretch @max-[14.5rem]:gap-2.5">
           <CardPrice product={product} />
-          <QuickAdd product={product} />
+          <QuickAdd product={product} className="@max-[14.5rem]:w-full" />
         </div>
       </div>
     </article>
@@ -197,8 +200,13 @@ function CardMedia({
  * Family and the three card notes, one per line, on a solid fog panel at the
  * bottom right of the media (never text on a ring colour or a photo).
  */
+/** Notes are stored lower case; cards show them with a capital, like the product page chips. */
+function capitalise(note: string): string {
+  return note.charAt(0).toUpperCase() + note.slice(1);
+}
+
 function NotesLabel({ stick }: { stick: StickProduct }) {
-  const notes = getCardNotes(stick);
+  const notes = getCardNotes(stick).map(capitalise);
   return (
     <div className="absolute right-2 bottom-2 w-[62%] rounded-[10px] bg-fog px-2 py-2 shadow-[0_1px_2px_rgb(16_20_24/0.08)] md:right-3 md:bottom-3 md:w-[54%] md:px-3 md:py-2.5 xl:px-3.5 xl:py-3">
       {/*

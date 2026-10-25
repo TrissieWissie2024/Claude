@@ -12,7 +12,7 @@ import { getBundleTileQuote } from "@/lib/pricing";
 import type { BundleSize, Product, PurchasePlan, StickProduct } from "@/lib/types";
 
 import { BundlePicker } from "./BundlePicker";
-import { MixAndMatch } from "./MixAndMatch";
+import { describeSet, MixAndMatch } from "./MixAndMatch";
 import { resolveSetScents, usePdpState } from "./PdpStateProvider";
 import { PurchaseTypePicker } from "./PurchaseTypePicker";
 import { ScentSwatches } from "./ScentSwatches";
@@ -20,9 +20,11 @@ import { AddToCartLabel, StickyAddToCart } from "./StickyAddToCart";
 
 /**
  * The buy box of a scent stick page (docs/PLAN.md §9), in this order:
- * scent swatches · bundle tiles · mix & match (2 or 3 sticks) · purchase type
- * (+ interval) · Add to cart · `children` (the page puts DeliveryEstimate and
- * TrustRow here) · the mobile sticky bar.
+ * a visually hidden h2 · scent swatches · bundle tiles · mix & match (2 or 3
+ * sticks) · purchase type (+ interval) · Add to cart · `children` (the page
+ * puts DeliveryEstimate and TrustRow here) · the mobile sticky bar. The bar
+ * names a mixed set "Your set", with one ring-colour dot per stick (the scent
+ * names for screen readers), so it never shows only the page scent.
  *
  * The choices live in PdpStateProvider (app/products/layout.tsx), so they
  * survive switching scents. Stick 1 is always this page's scent. Add to cart
@@ -85,6 +87,8 @@ export function ProductConfigurator({ product, sticks, children, className }: Pr
   );
   const total = getBundleTileQuote(bundleSize, plan).total;
   const price = formatMoney(total);
+  const setSticks = scents.map((slug) => sticks.find((stick) => stick.slug === slug) ?? product);
+  const mixed = new Set(scents).size > 1;
 
   const handleAdd = () => {
     addLine({ kind: "stick", scents, plan, quantity: 1 }, { open: true });
@@ -92,6 +96,7 @@ export function ProductConfigurator({ product, sticks, children, className }: Pr
 
   return (
     <div className={cn("flex flex-col gap-7 md:gap-8", className)}>
+      <h2 className="sr-only">{pdp.sections.buy}</h2>
       <ScentSwatches sticks={sticks} currentSlug={product.slug} />
 
       <div className="flex flex-col gap-3">
@@ -101,7 +106,7 @@ export function ProductConfigurator({ product, sticks, children, className }: Pr
           pageSlug={product.slug}
           bundleSize={bundleSize}
           extraScents={extraScents}
-          onChange={(slot, slug) => state.setExtraScent(slot, slug, product.slug)}
+          onChange={state.setExtraScent}
         />
       </div>
 
@@ -125,11 +130,13 @@ export function ProductConfigurator({ product, sticks, children, className }: Pr
 
       <StickyAddToCart
         targetRef={buttonRef}
-        title={product.name}
+        title={mixed ? pdp.stickyBar.mixedTitle : product.name}
+        titleLabel={mixed ? pdp.stickyBar.mixedLabel(describeSet(setSticks.map((stick) => stick.name))) : undefined}
         summary={selectionParts(bundleSize, plan)}
         price={price}
         onAdd={handleAdd}
         ringColor={product.ringColor}
+        ringColors={mixed ? setSticks.map((stick) => stick.ringColor) : undefined}
       />
     </div>
   );

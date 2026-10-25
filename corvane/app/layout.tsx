@@ -7,6 +7,7 @@ import { CatalogProvider } from "@/components/catalog/CatalogProvider";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { PromoBar } from "@/components/layout/PromoBar";
+import { RouteFocus } from "@/components/layout/RouteFocus";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { StickDefs } from "@/components/media/StickRender";
 import { commerce } from "@/lib/commerce";
@@ -44,6 +45,8 @@ export const viewport: Viewport = {
  * every page, in DOM order:
  *   SkipLink (z-70, only visible on focus) · PromoBar (in flow, scrolls away) ·
  *   Header (sticky, z-30) · <main id="main"> · Footer · CartDrawer (portal, z-60) ·
+ *   RouteFocus (renders nothing; moves focus to <main> after a client navigation
+ *   when the focused link went away with the previous page) ·
  *   StickDefs (a zero-size <svg> with the gradients every product render shares)
  *
  * Pages render their content without their own <main>. No ancestor of the
@@ -68,6 +71,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             </main>
             <Footer />
             <CartDrawer />
+            <RouteFocus />
           </CartProvider>
         </CatalogProvider>
         <StickDefs />

@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { collection } from "@/content/collection";
@@ -25,7 +25,9 @@ import { SortSelect } from "./SortSelect";
  *   Defaults ("all", "featured") are left out of the URL. Unknown values fall
  *   back to the defaults (parseFamily, parseSortKey).
  * - A family shows only the sticks of that family (filterByFamily semantics:
- *   the Discovery Set, pouch and gift card have no family).
+ *   the Discovery Set, pouch and gift card have no family). Each family is one
+ *   scent at launch, so a link card to the Discovery Set ("Not sure yet?",
+ *   `suggestion`) follows the cards; it is not a product card and not counted.
  * - The cards are rendered on the server and arrive as `cards` (one node per
  *   slug), with the slug order per sort key precomputed in `orders`. Sorting
  *   reorders the keyed <li>s, so the DOM and Tab order follow the visible
@@ -36,8 +38,23 @@ import { SortSelect } from "./SortSelect";
  *
  * useSearchParams needs a <Suspense> boundary (the build fails otherwise).
  * The page renders <CollectionViewFallback> (same layout, unfiltered,
- * "featured") as its fallback, so the static HTML holds the full grid.
+ * "featured") as its fallback, so the static HTML holds the full grid for
+ * crawlers and visitors without JavaScript. A deep link with ?family= or
+ * ?sort= would first paint that unfiltered state, so an inline script in the
+ * page marks the wrapper around the boundary (data-collection-query) before
+ * the first paint, and the fallback stays invisible (keeping its space) until
+ * the real view replaces it; CollectionView removes the mark once it is on
+ * screen. The wrapper has suppressHydrationWarning for that attribute.
  */
+
+/** Set on the wrapper around the Suspense boundary by the page's inline script when the URL has ?family= or ?sort=. */
+export const COLLECTION_QUERY_ATTRIBUTE = "data-collection-query";
+
+/**
+ * The inline script, the first child of that wrapper: runs during HTML parsing, before the
+ * fallback after it is parsed or painted.
+ */
+export const COLLECTION_QUERY_SCRIPT = `try{var q=new URLSearchParams(location.search),w=document.currentScript&&document.currentScript.parentElement;if(w&&(q.has("family")||q.has("sort")))w.setAttribute("${COLLECTION_QUERY_ATTRIBUTE}","")}catch(e){}`;
 
 export interface CollectionEntry {
   slug: string;
@@ -58,6 +75,8 @@ export interface CollectionData {
   families: ScentFamily[];
   /** Ring colour per family, for the dot on its chip (each family is one scent at launch). */
   familyColors?: Partial<Record<ScentFamily, string>>;
+  /** Server-rendered link card shown after the cards while a family is selected (the Discovery Set). */
+  suggestion?: ReactNode;
 }
 
 export type CollectionViewProps = CollectionData;
@@ -67,6 +86,11 @@ export function CollectionView(props: CollectionViewProps) {
   const pathname = usePathname();
   const family = parseFamily(searchParams.get("family"));
   const sort = parseSortKey(searchParams.get("sort"));
+
+  // The real view is on screen: the fallback is gone, so the pre-paint mark is no longer needed.
+  useEffect(() => {
+    document.querySelectorAll(`[${COLLECTION_QUERY_ATTRIBUTE}]`).forEach((node) => node.removeAttribute(COLLECTION_QUERY_ATTRIBUTE));
+  }, []);
 
   const update = (next: { family?: ScentFamily | null; sort?: SortKey }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -94,9 +118,16 @@ export function CollectionView(props: CollectionViewProps) {
   );
 }
 
-/** The Suspense fallback: the same layout, unfiltered, sorted "featured", so the static HTML is complete. */
+/**
+ * The Suspense fallback: the same layout, unfiltered, sorted "featured", so the static HTML is
+ * complete. Invisible while its wrapper has data-collection-query (a deep link with a filter or sort).
+ */
 export function CollectionViewFallback(props: CollectionViewProps) {
-  return <CollectionLayout {...props} family={null} sort="featured" />;
+  return (
+    <div className="[[data-collection-query]_&]:invisible">
+      <CollectionLayout {...props} family={null} sort="featured" />
+    </div>
+  );
 }
 
 interface CollectionLayoutProps extends CollectionData {
@@ -112,6 +143,7 @@ function CollectionLayout({
   orders,
   families,
   familyColors,
+  suggestion,
   family,
   sort,
   onFamilyChange,
@@ -127,7 +159,8 @@ function CollectionLayout({
   return (
     <>
       <div className="mt-10 flex flex-col gap-4 border-y border-line py-4 md:mt-12 md:py-5 xl:flex-row xl:items-center xl:justify-between xl:gap-8">
-        <div role="group" aria-labelledby={labelId} className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:gap-4">
+        {/* The label sits above the chips below xl, so the seven chips keep one row on a tablet. */}
+        <div role="group" aria-labelledby={labelId} className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
           <span id={labelId} className="label-caps shrink-0 text-ink-soft">
             {collection.filter.legend}
           </span>
@@ -177,6 +210,7 @@ function CollectionLayout({
               {cards[slug]}
             </li>
           ))}
+          {family !== null && suggestion ? <li key="suggestion">{suggestion}</li> : null}
         </ul>
       ) : (
         <div className="mt-10 flex flex-col items-start gap-5 rounded-card bg-sand/60 px-6 py-12 md:mt-12 md:items-center md:py-16 md:text-center">
@@ -212,7 +246,7 @@ function FilterChip({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium whitespace-nowrap",
+        "inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium whitespace-nowrap",
         "motion-safe:transition-[background-color,border-color,color] motion-safe:duration-200",
         pressed
           ? "border-ink bg-ink text-fog"

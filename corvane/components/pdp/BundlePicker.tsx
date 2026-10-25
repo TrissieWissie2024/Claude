@@ -16,8 +16,9 @@ import type { BundleSize, PurchasePlan, PurchaseType } from "@/lib/types";
  * getBundleTileQuote(size, plan), so the tiles follow the purchase type
  * (subscription totals 2121 / 3821 / 5096).
  *
- * Each tile: label, total, price per stick ("€19.98 per stick"), the saving
- * as text when there is one ("Save €14.90"), "Best value" only where
+ * Each tile: label, total, price per stick ("€19.98 per stick", only for 2
+ * and 3: for one stick it would repeat the total), the saving as text when
+ * there is one ("Save €14.90"), "Best value" only where
  * isBestValue, and "+ Free Travel Pouch (one per order)" where the tile alone
  * reaches the free pouch. Never a struck-through price (brief §2.4). The
  * saving is always measured against single sticks bought one-time
@@ -60,7 +61,8 @@ export function RadioMark({ selected, className }: { selected: boolean; classNam
         "flex size-5 shrink-0 items-center justify-center rounded-full",
         selected
           ? "bg-ink text-fog forced-colors:border forced-colors:border-current"
-          : "border-[1.5px] border-ink/35 group-hover:border-ink/60",
+          // 55% ink: about 4:1 on the white tile (WCAG 1.4.11).
+          : "border-[1.5px] border-ink/55 group-hover:border-ink/80",
         className,
       )}
     >
@@ -94,6 +96,7 @@ export function BundlePicker({ value, onChange, plan, className }: BundlePickerP
         {BUNDLE_SIZES.map((size) => {
           const quote = getBundleTileQuote(size, plan);
           const selected = size === value;
+          const showPerStick = quote.perStick !== quote.total;
           return (
             <label
               key={size}
@@ -121,12 +124,16 @@ export function BundlePicker({ value, onChange, plan, className }: BundlePickerP
                     {formatMoney(quote.total)}
                   </span>
                 </span>
-                <span className="mt-0.5 flex flex-wrap items-baseline justify-between gap-x-3 text-[0.8125rem] leading-5">
-                  <span className="tabular text-ink-soft">{copy.perStick(formatMoney(quote.perStick))}</span>
-                  {quote.totalSavings > 0 ? (
-                    <span className="tabular font-medium text-kelp">{copy.savings(formatMoney(quote.totalSavings))}</span>
-                  ) : null}
-                </span>
+                {showPerStick || quote.totalSavings > 0 ? (
+                  <span className="mt-0.5 flex flex-wrap items-baseline justify-between gap-x-3 text-[0.8125rem] leading-5">
+                    {showPerStick ? (
+                      <span className="tabular text-ink-soft">{copy.perStick(formatMoney(quote.perStick))}</span>
+                    ) : null}
+                    {quote.totalSavings > 0 ? (
+                      <span className="tabular font-medium text-kelp">{copy.savings(formatMoney(quote.totalSavings))}</span>
+                    ) : null}
+                  </span>
+                ) : null}
                 {quote.includesFreePouch ? (
                   <span className="mt-2 flex items-center gap-1.5 text-[0.8125rem] leading-5 font-medium text-ink">
                     <Plus aria-hidden="true" className="size-3.5 shrink-0" strokeWidth={2.25} />

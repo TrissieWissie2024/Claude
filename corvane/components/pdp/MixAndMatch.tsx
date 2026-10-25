@@ -1,10 +1,12 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useId } from "react";
 
 import { cartCopy } from "@/content/cart";
 import { pdp } from "@/content/pdp";
 import { cn } from "@/lib/cn";
+import { markToneOn } from "@/lib/color";
 import type { BundleSize, StickProduct } from "@/lib/types";
 
 import type { ExtraScents } from "./PdpStateProvider";
@@ -14,8 +16,10 @@ import type { ExtraScents } from "./PdpStateProvider";
  * the page (shown, not chosen here). Sticks 2 and 3 each get a compact native
  * radio group of the six scents: a row of swatches in the ring colour with the
  * scent name as the radio's accessible name, the chosen name next to the slot
- * label, and a 2 px ink ring with an offset around the chosen swatch (never
- * colour alone). Each slot defaults to the page scent. A summary line names
+ * label, and a 2 px ink ring with an offset plus a check around and inside
+ * the chosen swatch (never colour alone). Keyboard focus is a rounded square
+ * around the 44 px target, a different shape from the round selected ring.
+ * Each slot defaults to the page scent. A summary line names
  * the whole set the way the cart will ("Your set: 2 × North Swell and Dune Fig").
  */
 
@@ -24,7 +28,7 @@ export interface MixAndMatchProps {
   /** The page scent: stick 1, and the default for sticks 2 and 3. */
   pageSlug: string;
   bundleSize: BundleSize;
-  /** From PdpStateProvider; null means "same as the page scent". */
+  /** From PdpStateProvider; null means "untouched: same as the page scent". */
   extraScents: ExtraScents;
   onChange: (slot: 0 | 1, slug: string) => void;
   className?: string;
@@ -47,13 +51,17 @@ function Swatch({ color, selected, size = "md" }: { color: string; selected: boo
     <span
       aria-hidden="true"
       className={cn(
-        "block shrink-0 rounded-full ring-1 ring-inset ring-ink-soft",
+        "flex shrink-0 items-center justify-center rounded-full ring-1 ring-inset ring-ink-soft",
         size === "md" ? "size-7" : "size-3",
         size === "md" && "outline-2 outline-offset-2",
         size === "md" && (selected ? "outline-ink" : "outline-transparent group-hover:outline-ink/25"),
       )}
       style={{ backgroundColor: color }}
-    />
+    >
+      {size === "md" && selected ? (
+        <Check className={cn("size-3", markToneOn(color) === "fog" ? "text-fog" : "text-ink")} strokeWidth={3} />
+      ) : null}
+    </span>
   );
 }
 
@@ -86,7 +94,7 @@ function SlotPicker({
             <label
               key={stick.slug}
               title={stick.name}
-              className="group relative flex size-11 cursor-pointer items-center justify-center rounded-full has-focus-visible:outline-2 has-focus-visible:outline-offset-0 has-focus-visible:outline-ink"
+              className="group relative flex size-11 cursor-pointer items-center justify-center rounded-[12px] has-focus-visible:outline-2 has-focus-visible:outline-offset-0 has-focus-visible:outline-ink"
             >
               <input
                 type="radio"

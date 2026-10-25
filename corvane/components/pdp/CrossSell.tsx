@@ -10,8 +10,10 @@ import type { Product } from "@/lib/types";
  * Cross-sell on the product page (brief §6, docs/PLAN.md §9): the same
  * ProductCard as the grids, with quick add.
  *
- * - Scent sticks and the e-gift card: the Discovery Set and the Travel Pouch
- *   (pdp.crossSell.slugs).
+ * - Scent sticks: the Discovery Set and the Travel Pouch (pdp.crossSell.slugs).
+ * - The e-gift card ("Or choose for them"): the Discovery Set and the first
+ *   stick in featured order, the two things that work as a gift on their own
+ *   (the pouch holds sticks, sold separately).
  * - The Discovery Set and the Travel Pouch themselves: two scent sticks (the
  *   first two in featured order) instead, so the page never offers itself.
  *
@@ -34,12 +36,17 @@ export interface CrossSellProps {
 
 /** The two products to offer next to `product`. */
 export function getCrossSellProducts(product: Product, products: readonly Product[]): Product[] {
+  const byRank = [...getSticks(products)].sort((a, b) => a.featuredRank - b.featuredRank);
+  if (product.kind === "gift-card") {
+    const set = findProduct(products, "discovery-set");
+    return [...(set ? [set] : []), ...byRank].slice(0, 2);
+  }
   const kit = pdp.crossSell.slugs
     .filter((slug) => slug !== product.slug)
     .map((slug) => findProduct(products, slug))
     .filter((entry): entry is Product => entry !== null);
   if (kit.length === pdp.crossSell.slugs.length) return kit;
-  return [...getSticks(products)].sort((a, b) => a.featuredRank - b.featuredRank).slice(0, 2);
+  return byRank.slice(0, 2);
 }
 
 export function CrossSell({ product, products, divider = false, className }: CrossSellProps) {
@@ -64,6 +71,7 @@ export function CrossSell({ product, products, divider = false, className }: Cro
             id={headingId}
             eyebrow={pdp.crossSellFor.eyebrow}
             title={heading}
+            eyebrowRule="neutral"
             className="lg:col-span-4"
           />
           <ul role="list" className="grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-4 md:gap-x-6 lg:col-span-7 lg:col-start-6">

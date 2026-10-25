@@ -47,8 +47,11 @@ export const ASSET_PRODUCT_SLUGS = [
 
 export type AssetProductSlug = (typeof ASSET_PRODUCT_SLUGS)[number];
 
-/** The three photo slots of every product page gallery. */
+/** The three photo slots of a product page gallery (the e-gift card has only a packshot). */
 export type ProductShot = "packshot" | "inHand" | "lifestyle";
+
+/** The photo slots of one product: always a packshot; in-hand and lifestyle for physical products. */
+export type ProductImageSet = { packshot: ImageAsset } & Partial<Record<Exclude<ProductShot, "packshot">, ImageAsset>>;
 
 export const LIFESTYLE_SCENES = ["gym", "work", "travel", "night"] as const;
 export type LifestyleScene = (typeof LIFESTYLE_SCENES)[number];
@@ -149,8 +152,9 @@ const IN_HAND_BRIEF =
 interface ProductBriefs {
   name: string;
   packshot: { alt: string; shot: string };
-  inHand: { alt: string; shot: string };
-  lifestyle: { alt: string; shot: string; label: string };
+  /** Left out for a digital product (the e-gift card): nothing to hold or to shoot in use. */
+  inHand?: { alt: string; shot: string };
+  lifestyle?: { alt: string; shot: string; label: string };
 }
 
 function stickBriefs(name: string, ring: string, scene: { label: string; alt: string; shot: string }): ProductBriefs {
@@ -231,20 +235,12 @@ const productBriefs: Record<AssetProductSlug, ProductBriefs> = {
       shot: "Open weekend bag from above, daylight. The pouch tucked between folded clothes and a washbag.",
     },
   },
+  // Digital: only the card itself. Its product page shows the render alone (no in-hand or lifestyle slot).
   "e-gift-card": {
     name: "E-gift card",
     packshot: {
       alt: "The CORVANE e-gift card: a deep blue card with the vane icon and the wordmark",
       shot: "Not a photo: the e-gift card is digital. Supply a 1600 x 2000 rendering of the card on sand if the SVG render is replaced.",
-    },
-    inHand: {
-      alt: "A phone in a hand showing the CORVANE e-gift card email",
-      shot: `Phone held in one hand, screen showing the gift card email (use a mock-up, no real names or codes). ${IN_HAND_BRIEF}`,
-    },
-    lifestyle: {
-      label: "E-gift card: sent",
-      alt: "A phone on a table showing the CORVANE e-gift card, next to a coffee cup",
-      shot: "Table in daylight, phone face up showing the gift card email (mock-up), a cup of coffee beside it.",
     },
   },
 };
@@ -254,13 +250,16 @@ function productImage(slug: AssetProductSlug, shot: ProductShot, file: string, l
   return { kind: "image", key: `products.${slug}.${shot}`, path, src: null, ...PORTRAIT, label, alt, shot: brief };
 }
 
-function productImages(slug: AssetProductSlug): Record<ProductShot, ImageAsset> {
+function productImages(slug: AssetProductSlug): ProductImageSet {
   const b = productBriefs[slug];
-  return {
+  const set: ProductImageSet = {
     packshot: productImage(slug, "packshot", "packshot", `${b.name} packshot`, b.packshot.alt, b.packshot.shot),
-    inHand: productImage(slug, "inHand", "in-hand", `${b.name} in hand`, b.inHand.alt, b.inHand.shot),
-    lifestyle: productImage(slug, "lifestyle", "lifestyle", b.lifestyle.label, b.lifestyle.alt, b.lifestyle.shot),
   };
+  if (b.inHand) set.inHand = productImage(slug, "inHand", "in-hand", `${b.name} in hand`, b.inHand.alt, b.inHand.shot);
+  if (b.lifestyle) {
+    set.lifestyle = productImage(slug, "lifestyle", "lifestyle", b.lifestyle.label, b.lifestyle.alt, b.lifestyle.shot);
+  }
+  return set;
 }
 
 /* ------------------------------------------------------------------ */
@@ -299,10 +298,10 @@ function ugcVideo(index: 1 | 2 | 3 | 4, label: string, alt: string, duration: st
 /* ------------------------------------------------------------------ */
 
 export const assets = {
-  /** Product page gallery and product cards: packshot, in-hand scale shot, lifestyle. */
+  /** Product page gallery and product cards: packshot, in-hand scale shot, lifestyle (packshot only for the e-gift card). */
   products: Object.fromEntries(ASSET_PRODUCT_SLUGS.map((slug) => [slug, productImages(slug)])) as Record<
     AssetProductSlug,
-    Record<ProductShot, ImageAsset>
+    ProductImageSet
   >,
 
   /** Lifestyle scenes for the homepage and the About page. */
@@ -415,7 +414,7 @@ export const assets = {
 
 const imageIndex = new Map<string, ImageAsset>();
 for (const shots of Object.values(assets.products)) {
-  for (const asset of Object.values(shots)) imageIndex.set(asset.key, asset);
+  for (const asset of Object.values(shots)) if (asset) imageIndex.set(asset.key, asset);
 }
 for (const asset of Object.values(assets.lifestyle)) imageIndex.set(asset.key, asset);
 imageIndex.set(assets.hero.group.key, assets.hero.group);

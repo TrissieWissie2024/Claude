@@ -35,6 +35,8 @@ export interface FaqSectionProps {
   showContact?: boolean;
   /** Hairline above the section, aligned to the container. For a fog section that follows another fog section. */
   divider?: boolean;
+  /** Rule before the eyebrow (SectionHeading). Default "signal"; the product page uses "neutral". */
+  eyebrowRule?: "signal" | "neutral";
   className?: string;
 }
 
@@ -63,6 +65,7 @@ export function FaqSection({
   link = home.faq.link,
   showContact = true,
   divider = false,
+  eyebrowRule,
   className,
 }: FaqSectionProps) {
   if (items.length === 0) return null;
@@ -83,6 +86,7 @@ export function FaqSection({
             level={headingLevel}
             eyebrow={eyebrow}
             title={heading}
+            eyebrowRule={eyebrowRule}
             className="lg:col-span-4"
           />
 

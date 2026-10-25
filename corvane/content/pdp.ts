@@ -25,8 +25,11 @@ export interface TrustItem {
   /** lucide-react icon name. */
   icon: string;
   title: string;
+  /** Plain text under the title. */
   text: string;
   href?: string;
+  /** Text of the link to `href`, after `text`; only the action is the link (WCAG 2.4.4). */
+  linkLabel?: string;
 }
 
 const transitLine = joinList(facts.transit.map((entry) => entry.text));
@@ -49,8 +52,9 @@ const trustItems: TrustItem[] = [
     id: "guarantee",
     icon: "shield-check",
     title: `${facts.guaranteeDays}-day guarantee`,
-    text: "Opened or not. See the conditions.",
+    text: "Opened or not.",
     href: "/shipping-returns#guarantee",
+    linkLabel: "See the conditions",
   },
 ];
 
@@ -71,6 +75,8 @@ export const pdp = {
     purchaseType: "How to buy",
     delivery: "Delivery",
     details: "Product information",
+    /** Visually hidden heading of the buy box (scent, sets, purchase type, Add to cart). */
+    buy: "Choose and add to cart",
   },
 
   /** Family line under the title, e.g. "Fresh family". */
@@ -100,6 +106,9 @@ export const pdp = {
     },
     /** aria-valuetext for a meter, e.g. "3 of 5". */
     valueText: (value: number, max: number) => `${value} of ${max}`,
+    /** Screen reader text of a meter that names both ends, e.g. "1 of 5 (1 is fresh, 5 is warm)". */
+    valueTextFull: (value: number, max: number, start: string, end: string) =>
+      `${value} of ${max} (1 is ${start.toLowerCase()}, ${max} is ${end.toLowerCase()})`,
   },
 
   scentPicker: {
@@ -168,6 +177,11 @@ export const pdp = {
     } satisfies Record<SubscriptionInterval, string>,
     /** Unit after the subscription price, e.g. "€50.96 per delivery". */
     perDeliveryUnit: "per delivery",
+    /**
+     * The note in the buy box. That no payment is taken yet is said where it matters, at the demo
+     * checkout and in the FAQ, not in the buy box.
+     */
+    subscriptionNoteShort: "Cancel any time before your next delivery.",
   },
 
   addToCart: {
@@ -189,6 +203,10 @@ export const pdp = {
     quantity: (count: number) => `Quantity: ${count}`,
     /** E-gift card, e.g. "€50 · Delivered by email". */
     giftCard: (amount: string) => `${amount} · Delivered by email`,
+    /** Title when the set mixes scents (the ring colours and the scent names follow). */
+    mixedTitle: "Your set",
+    /** Screen reader text of a mixed set, e.g. "Your set: North Swell, Dune Fig and Iron Coast". */
+    mixedLabel: (names: string) => `Your set: ${names}`,
   },
 
   /** Fixed text only. Never a countdown to the cut-off (brief §2.3). */
@@ -279,6 +297,15 @@ export const pdp = {
   faq: {
     heading: "Questions",
     allLink: { label: "All questions", href: "/faq" },
+    /**
+     * Questions per product kind (ids from content/faq.ts, in this order). Scent sticks use the
+     * questions marked `onProduct`. "which-scent" waits for the scent finder (D38).
+     */
+    idsFor: {
+      "discovery-set": ["what-is-solid-cologne", "how-to-apply", "heat", "shipping-cost", "guarantee"],
+      pouch: ["bundle-pricing", "travel", "shipping-cost"],
+      "gift-card": ["gift-cards", "discount-codes", "payment-methods"],
+    } as Partial<Record<string, readonly string[]>>,
   },
 
   gallery: {
@@ -460,6 +487,16 @@ export const pdp = {
 
   /** Screen reader text of the product page skeleton (unknown slugs, before the 404). */
   loading: "Loading product",
+
+  /**
+   * Unknown product slug. The 404 itself comes from notFound(); this is the <title> and the text for
+   * visitors without JavaScript, who never get the client-rendered not-found page.
+   */
+  notFound: {
+    title: "Product not found",
+    body: "This product does not exist, or it has moved.",
+    link: { label: "Browse the shop", href: "/collections/all" },
+  },
 };
 
 export type Pdp = typeof pdp;

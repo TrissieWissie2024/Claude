@@ -49,6 +49,8 @@ export interface ProductMediaProps {
   discoveryScents?: readonly DiscoveryScent[];
   /** Amount on the gift card render, e.g. "€50". */
   giftCardAmount?: string;
+  /** Renders without printed text (thumbnails whose button has its own name, WCAG 2.5.3). */
+  textless?: boolean;
 }
 
 export function ProductMedia({
@@ -62,6 +64,7 @@ export function ProductMedia({
   decorative = false,
   discoveryScents,
   giftCardAmount,
+  textless = false,
 }: ProductMediaProps) {
   const asset = getProductImage(product.slug, SHOTS[variant]);
   const frame = slotFrame(aspect);
@@ -111,6 +114,7 @@ export function ProductMedia({
         decorative={decorative}
         discoveryScents={discoveryScents}
         giftCardAmount={giftCardAmount}
+        textless={textless}
       />
     </div>
   );
@@ -122,12 +126,14 @@ function PackshotRender({
   decorative,
   discoveryScents,
   giftCardAmount,
+  textless,
 }: {
   product: Product;
   dark: boolean;
   decorative: boolean;
   discoveryScents?: readonly DiscoveryScent[];
   giftCardAmount?: string;
+  textless: boolean;
 }) {
   switch (product.kind) {
     case "stick":
@@ -139,7 +145,7 @@ function PackshotRender({
     case "discovery-set":
       return (
         <div className="absolute inset-0 flex justify-center">
-          <DiscoverySetRender scents={discoveryScents} decorative={decorative} />
+          <DiscoverySetRender scents={discoveryScents} decorative={decorative} textless={textless} />
         </div>
       );
     case "pouch":
@@ -153,7 +159,12 @@ function PackshotRender({
         // Fits both ways (the SVG letterboxes itself): width-bound in a 4:5 box, height-bound in a
         // wide collection card, where a full-width card would overrun the box.
         <div className="absolute inset-0 flex items-center justify-center px-[6%] py-[9%]">
-          <GiftCardRender amount={giftCardAmount} decorative={decorative} className="block h-full w-full" />
+          <GiftCardRender
+            amount={giftCardAmount}
+            decorative={decorative}
+            textless={textless}
+            className="block h-full w-full"
+          />
         </div>
       );
   }

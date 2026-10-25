@@ -407,6 +407,11 @@ export const site = {
     discountApplied: (code: string) => `Code ${code} applied`,
     discountRemoved: "Discount code removed",
     cleared: "Cart cleared",
+    /** A line holds at most `max` (MAX_LINE_QUANTITY); only part of the quantity fitted. */
+    addedPartly: (name: string, added: number, max: number) =>
+      `Added ${added} to cart: ${name}. Up to ${max} per item.`,
+    /** The line was already full; nothing was added. */
+    limitReached: (name: string, max: number) => `Not added: ${name}. Up to ${max} per item.`,
   },
 };
 
