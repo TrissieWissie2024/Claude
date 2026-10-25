@@ -36,7 +36,13 @@ export interface ProductBase {
   previousPrice?: { amount: number; lowestPriceLast30Days: true };
   seo: { title: string; description: string };
   /** Mapping for an external commerce backend (see lib/commerce/shopify.ts). */
-  externalIds?: { shopifyHandle?: string; shopifyVariantIds?: Record<string, string> };
+  externalIds?: {
+    shopifyHandle?: string;
+    /** Variant ids keyed by our variant key (e.g. a gift card amount). */
+    shopifyVariantIds?: Record<string, string>;
+    /** Selling plan ids for Subscribe & save, keyed by interval in months. */
+    shopifySellingPlanIds?: Partial<Record<SubscriptionInterval, string>>;
+  };
 }
 
 export interface ScentNotes {
@@ -81,6 +87,9 @@ export type Product = StickProduct | DiscoverySetProduct | PouchProduct | GiftCa
 export type BundleSize = 1 | 2 | 3;
 
 export type SubscriptionInterval = 1 | 2 | 3;
+
+/** Bundle grouping happens per purchase type (brief §4), not per interval (D10). */
+export type PurchaseType = "one-time" | "subscription";
 
 export type PurchasePlan =
   | { type: "one-time" }
@@ -154,6 +163,8 @@ export type CountryCode = "NL" | "BE";
 export interface ShippingCountry {
   code: CountryCode;
   name: string;
+  /** Public holidays in this country on which parcels are not delivered. */
+  deliveryHolidays: Holiday[];
   /** Flat rate in cents. */
   rate: number;
   /** Free shipping from this shippable subtotal (after discounts), in cents. */
@@ -175,7 +186,7 @@ export interface ShippingConfig {
   cutoff: { hour: number; minute: number };
   /** ISO weekdays the warehouse ships on (1 = Monday ... 7 = Sunday). */
   dispatchWeekdays: number[];
-  /** Days the warehouse does not ship. Maintain yearly. */
+  /** Days the warehouse (NL) does not ship. Maintain yearly. */
   holidays: Holiday[];
   defaultCountry: CountryCode;
   countries: ShippingCountry[];
@@ -239,15 +250,14 @@ export interface BundlePart {
 }
 
 export interface PriceGroup {
-  /** "one-time", "sub-1", "sub-2" or "sub-3". */
-  planKey: string;
-  plan: PurchasePlan;
+  purchaseType: PurchaseType;
   stickCount: number;
   bundles: BundlePart[];
   /** Sticks at the single-stick price. */
   listTotal: number;
   /** After bundle pricing, before the subscription discount. */
   bundleTotal: number;
+  /** Subscription discount, applied per bundle price and rounded per bundle (D12). */
   subscriptionDiscount: number;
   /** What the customer pays for this group. */
   total: number;
@@ -259,7 +269,12 @@ export interface PricedLine {
   stickCount: number;
   /** Line at standalone prices (single-stick price for sticks). */
   listTotal: number;
-  /** Line after bundle, subscription and free-pouch pricing, before the order discount code. */
+  /** Line as quoted on the product page: its own bundle tile price (incl. subscription) x quantity. */
+  standaloneTotal: number;
+  /**
+   * Line after grouping across lines, subscription and free-pouch pricing, before
+   * the order discount code. Never above standaloneTotal (allocation by standalone price, D13).
+   */
   total: number;
   /** True when one pouch in this line is the free pouch. */
   includesFreePouch: boolean;
@@ -270,6 +285,8 @@ export type DiscountError = "unknown" | "inactive" | "expired" | "not-started" |
 export interface ShippingQuote {
   country: CountryCode;
   requiresShipping: boolean;
+  /** Amount the free-shipping threshold is measured on: shippable items before the discount code (D14). */
+  basis: number;
   amount: number;
   isFree: boolean;
   freeFrom: number;

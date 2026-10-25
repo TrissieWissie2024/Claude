@@ -11,6 +11,8 @@
   --sand: #eee6d8;
   --fog: #f7f5f1;
   --signal: #e2562b;
+  /* Hover/pressed state of signal: lighter, never darker (ink on darker orange fails AA). */
+  --signal-hover: #e86a43;
   --kelp: #2e4a3f;
   --ink-soft: #4a5259;
   --mist: #b9c4c9;
@@ -32,6 +34,7 @@
   --color-sand: var(--sand);
   --color-fog: var(--fog);
   --color-signal: var(--signal);
+  --color-signal-hover: var(--signal-hover);
   --color-kelp: var(--kelp);
   --color-ink-soft: var(--ink-soft);
   --color-mist: var(--mist);

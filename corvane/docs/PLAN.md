@@ -8,11 +8,11 @@ Fase 2 van de brief. Dit plan is het contract voor de bouw: sitemap, mappen, com
 | --- | --- | --- |
 | `/` | Homepage | Secties in de volgorde van §4 hieronder |
 | `/collections/all` | Collectie | Filter op geurfamilie, sorteren (featured, prijs oplopend en aflopend, nieuwste), via `?family=&sort=` |
-| `/products/[slug]` | Productpagina | Zes geuren, `discovery-set`, `travel-pouch`, `e-gift-card`. Statisch gegenereerd |
+| `/products/[slug]` | Productpagina | Zes geuren, `discovery-set`, `travel-pouch`, `e-gift-card`. Statisch gegenereerd; `app/products/layout.tsx` houdt de keuzes vast bij het wisselen van geur |
 | `/about` | Over CORVANE | Merkverhaal (fictief) |
 | `/faq` | FAQ | Alle vragen uit `content/faq.ts`, per categorie |
 | `/contact` | Contact | Formulier als stub (`POST /api/contact`) |
-| `/shipping-returns` | Shipping & Returns | Tarieven uit `content/shipping.ts`, 14 dagen herroepingsrecht, 30 dagen garantie |
+| `/shipping-returns` | Shipping & Returns | Tarieven uit `content/shipping.ts`, 14 dagen herroepingsrecht, 30 dagen garantie. Juridisch: banner `TODO: laten controleren` |
 | `/privacy-policy` | Privacy Policy | Juridisch: banner `TODO: laten controleren` |
 | `/terms-and-conditions` | Terms & Conditions | Juridisch: banner |
 | `/cookie-policy` | Cookie Policy | Juridisch: banner |
@@ -27,7 +27,7 @@ Fase 2 van de brief. Dit plan is het contract voor de bouw: sitemap, mappen, com
 | OG-beelden | `app/opengraph-image.tsx`, `app/products/[slug]/opengraph-image.tsx` | Met `next/og` |
 | Favicon | `app/icon.svg`, `app/apple-icon.png` | Windvaan-icoon |
 
-Navigatie desktop: Shop (`/collections/all`), Discovery Set (`/products/discovery-set`), Gift Cards (`/products/e-gift-card`), About, FAQ. Mobiel: hamburger links opent een menu (Radix Dialog als drawer van links) met dezelfde links en de Help-links.
+Navigatie desktop: Shop (`/collections/all`), Discovery Set (`/products/discovery-set`), Gift Cards (`/products/e-gift-card`), About, FAQ. Mobiel: hamburger links opent een menu (Radix Dialog als drawer van links) met dezelfde links en de Help-links. Header: hamburger links (alleen mobiel), logo in het midden, account en cart met teller rechts; op desktop staat de nav horizontaal. Sticky.
 
 ## 2. Mappen en bestanden
 
@@ -52,6 +52,7 @@ corvane/
                              BundlePicker, PurchaseTypePicker, StickyAddToCart,
                              NotesChips, IntensityMeters, DeliveryEstimate, TrustRow,
                              ProductAccordions, CrossSell
+    catalog/                 CatalogProvider (productdata voor client components)
     finder/                  ScentFinder
     email/                   EmailCapture (pill, modal, kaarten)
     consent/                 ConsentBanner, AnalyticsLoader
@@ -65,7 +66,7 @@ corvane/
     campaign.ts              actieve campagne en aftellen (+ campaign.test.ts)
     claims.ts                alleen geverifieerde claims doorgeven
     reviews.ts               reviews en ratingsamenvatting (null zonder reviews)
-    catalog.ts               hulpfuncties op de catalogus (geuren, kaartnoten)
+    catalog.ts               pure hulpfuncties op een productlijst (sorteren, filteren, kaartnoten)
     analytics.ts             dataLayer-events en consent
     storage.ts               localStorage in try/catch
     hooks/useNow.ts          huidige tijd pas na mount (geen hydration-verschil)
@@ -115,6 +116,8 @@ corvane/
 
 **Vorm:** cards met 16 px radius (`rounded-card`), pills volledig rond, subtiele schaduw (`shadow-soft`), veel witruimte (secties 64–96 px verticaal op mobiel, 96–128 px op desktop). Geen goud of bruin in de huisstijl. De ringkleuren van de geuren zijn productkleuren en worden alleen bij het product gebruikt.
 
+**Knoppen:** primair `bg-signal text-ink`; hover en pressed worden lichter (#E86A43, contrast 5,8 met ink), nooit donkerder, want ink op een donkerder oranje zakt onder AA. Tekst op ringkleuren kan niet: overlays op productbeelden staan op een vlak van fog of deep.
+
 **Focus en beweging:** zichtbare focusring (2 px `ink` met offset op licht, `fog` op donker). Alle animaties achter `motion-safe:`; bij `prefers-reduced-motion` geen flip, slide of rotatie.
 
 ## 4. Homepage
@@ -142,10 +145,12 @@ De volgorde onder het productgrid is een eigen keuze (zie `docs/REFERENCE.md`).
 
 | Bestand | Inhoud |
 | --- | --- |
-| `site.ts` | merk, tagline, URL, nav, footerkolommen, USP's, betaalmethoden, socials, bedrijfsgegevens (placeholders), analytics-config, e-mailpopup-config, specificaties |
+| `site.ts` | merk (naam, uitspraak, betekenis, tagline, verhaal: zie brief §3), URL, nav, footerkolommen, USP's, betaalmethoden, socials, bedrijfsgegevens (placeholders), analytics-config, e-mailpopup-config, specificaties, badgelabels |
 | `home.ts` | alle copy van de homepage-secties |
 | `products.ts` | zes geuren en de drie overige producten |
-| `offers.ts` | prijstabel sticks, abonnement, gratis pouch, kortingscodes, campagne, garantie |
+| `offers.ts` | alle prijzen (sticks, Discovery Set, pouch, cadeaukaarten), abonnement, gratis pouch, kortingscodes, campagne, garantie |
+| `pdp.ts` | alle UI-copy van de productpagina |
+| `cart.ts` | copy van cart drawer en checkout-stub |
 | `shipping.ts` | landen, tarieven, gratis-grens, cut-off, tijdzone, feestdagen, levertijden |
 | `reviews.ts` | lege array met het `Review`-type |
 | `faq.ts` | vragen en antwoorden per categorie |
@@ -206,60 +211,153 @@ De volledige typen staan in `lib/types.ts`.
 
 ## 7. Rekenregels (`lib/pricing.ts`)
 
-1. **Groeperen per plan.** Sticks worden geteld per plan: eenmalig, abonnement elke maand, elke 2 maanden, elke 3 maanden. Elk plan is een eigen groep, omdat elk abonnementsritme een eigen zending is (D10).
+Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents * pct / 100)`, nooit `cents * 0.85`. Afronden gaat half naar boven.
+
+1. **Groeperen per aankooptype.** Sticks worden geteld per aankooptype: eenmalig of abonnement, ongeacht het interval (D10). Zo staat het in de brief: "Groepering geldt per aankooptype".
 2. **Bundelprijs per groep.** Per 3 sticks €59,95; een rest van 2 €44,95; een rest van 1 €24,95. Dus 4 sticks = €84,90 en 7 sticks = €144,85.
-3. **Abonnement.** −15% op de bundelprijs van de groep, afgerond op hele centen (half naar boven).
-4. **Toewijzen aan regels.** De groepsprijs wordt naar rato van het aantal sticks over de regels verdeeld; het afrondingsverschil gaat naar de laatste regel. Zo klopt de som van de regels altijd met de groep.
-5. **Gratis Travel Pouch.** Bij 3 of meer sticks in de hele bestelling is één Travel Pouch gratis. Zit er al een pouch in de cart, dan wordt één pouch €0. Anders toont de cart een cadeauregel. Eén per bestelling (D11).
-6. **Kortingscode.** Eén code per bestelling. Procentuele korting op het subtotaal na bundel- en abonnementsprijs, zonder cadeaukaarten. Codes met een einddatum (de campagnecode) zijn daarna ongeldig.
-7. **Verzending.** Per land uit `content/shipping.ts`. Gratis als het verzendbare subtotaal na korting minstens €50 is. Een bestelling met alleen cadeaukaarten heeft geen verzending.
-8. **Besparing.** Bundelbesparing (ten opzichte van €24,95 per stick) + abonnementskorting + kortingscode + gratis pouch. Verzending telt niet mee.
-9. **Prijsweergave.** Nooit een doorgestreepte prijs, behalve bij een product met een echte `previousPrice` (regel 4). Besparing staat als tekst ("Save €14.90").
+3. **Abonnement.** −15% per bundelprijs, per bundel afgerond: 3 → €50,96, 2 → €38,21, 1 → €21,21 (D12). De cart klopt daardoor altijd met de tegels op de productpagina. 7 sticks op abonnement = €123,13.
+4. **Toewijzen aan regels.** De groepsprijs wordt over de regels verdeeld naar rato van hun eigen tegelprijs (`standaloneTotal`), naar beneden afgerond, met de rest op de laatste regel (D13). Omdat bundelen nooit duurder is, staat een regel nooit hoger dan op de productpagina beloofd.
+5. **Gratis Travel Pouch.** Bij 3 of meer sticks in de hele bestelling (beide aankooptypes samen) is één Travel Pouch gratis, één per bestelling (D11). Zit er al een pouch in de cart, dan wordt één pouch €0. Anders toont de cart een cadeauregel. Tegels en cart zeggen "Free Travel Pouch (one per order)".
+6. **Kortingscode.** Eén code per bestelling, hoofdletterongevoelig na `trim()`. Procentuele korting op alles behalve cadeaukaarten, na bundel-, abonnements- en pouchprijs: `Math.round(eligible * pct / 100)`. De campagnecode werkt alleen als `campaign.active` waar is en `now` binnen `startsAt`–`endsAt` valt. De korting staat als één regel in het overzicht.
+7. **Verzending.** Per land uit `content/shipping.ts`. Gratis als de verzendbare producten (sticks, Discovery Set, pouch; geen cadeaukaarten) samen minstens €50 kosten, gemeten vóór de kortingscode (D14). Zo betekent "Free shipping from €50" precies wat er staat. Alleen cadeaukaarten: geen verzending.
+8. **Besparing.** Bundelbesparing (ten opzichte van de prijs van 1 stick uit `offers.stickPricing[1]`) + abonnementskorting + gratis pouch + kortingscode. Verzending telt niet mee.
+9. **Prijsweergave.** Nooit een doorgestreepte prijs, behalve bij een product met een echte `previousPrice` (regel 4; bij launch nergens). Besparing staat als tekst ("Save €14.90").
+10. **Tegels.** `getBundleTileQuote(size, plan)` geeft totaal, prijs per stick (alleen ter informatie, half naar boven afgerond: €24,95 / €22,48 / €19,98), besparing zonder pouch (€0 / €4,95 / €14,90) en `isBestValue` (laagste prijs per stick, dus de 3-tegel). Tegels krijgen geen andere badges.
 
-`priceCart({ lines, discountCode, country, now })` geeft een `PricingSummary` terug met regels, groepen, subtotaal, verzending, totaal en besparing. De PDP-tegels gebruiken `getBundleTileQuote(size, plan)`.
+`priceCart({ lines, discountCode, country, now })` geeft een `PricingSummary` terug met regels, groepen, subtotaal, verzending, totaal en besparing.
 
-## 8. Tijd en verzenddag (`lib/delivery.ts`, `lib/campaign.ts`)
+**Vaste testwaarden.** Eenmalig 1–7 sticks: 2495, 4495, 5995, 8490, 10490, 11990, 14485. Abonnement 1, 2, 3, 4, 7, 8: 2121, 3821, 5096, 7217, 12313, 14013. Twee keer eenmalig plus één abonnement: 4495 + 2121.
 
-- Alle tijdlogica neemt `now: Date` als argument en rekent in `Europe/Amsterdam`.
-- Verzenddag: vandaag als het een werkdag is (ma–vr, geen feestdag uit config) en vóór 15:00; anders de eerstvolgende werkdag.
-- Levering: verzenddag plus de levertijd van het land in werkdagen (NL 1, BE 1–2).
-- Campagne: actief als `active` true is en `now` vóór `endsAt` ligt. De timer telt af naar die vaste datum en reset nooit.
-- Componenten lezen de tijd alleen na mount via `useNow()`. Tot die tijd tonen ze tekst die altijd klopt (de USP-balk, een algemene leverbelofte) in dezelfde hoogte, zodat er geen layout shift is.
+## 8. Tijd, verzenddag en campagne (`lib/delivery.ts`, `lib/campaign.ts`)
 
-## 9. Commerce en cart
+- Alle tijdlogica neemt `now: Date` als argument en rekent in `Europe/Amsterdam`, ook rond de wisseling van zomer- naar wintertijd.
+- **Verzenddag:** vandaag als het een werkdag is (ma–vr, geen Nederlandse feestdag) en vóór 15:00; anders de eerstvolgende werkdag.
+- **Levering:** verzenddag plus de levertijd van het land in werkdagen (NL 1, BE 1–2), zonder feestdagen van dat land.
+- **Geen afteltimer naar de cut-off.** De leverbalk en de leverschatting tonen vaste tekst ("Order before 15:00, ships today" of "Ships Monday"). Een timer die elke dag opnieuw begint, mag niet volgens regel 3.
+- **Campagne:** `endsAt` is een vaste ISO-tekst met tijdzone in `content/offers.ts` (`2026-11-01T23:59:59+01:00`, zeven dagen na de builddatum, wintertijd). Hij wordt nooit berekend uit `Date.now()` of de buildtijd. De campagne is actief als `active` waar is en `now` tussen `startsAt` en `endsAt` ligt. De balk noemt alleen wat er echt eindigt: de code LAUNCH15. Vaste aanbiedingen (bundels, pouch, verzending) worden nooit als aflopend gepresenteerd.
+- **Weergave:** `useNow(1000)` in de promobalk. Vóór mount en na `endsAt` staat in dezelfde hoogte de USP-balk, met alleen tekst die altijd klopt. Wordt `endsAt` bereikt terwijl de pagina open is, dan verdwijnt de balk vanzelf en wordt de code ongeldig. Cijfers in `tabular-nums`; de timer zelf zit niet in een live-regio.
+- **USP-balk:** roteert drie regels. Met `prefers-reduced-motion` staat er één regel stil. Rotatie pauzeert bij hover en focus en heeft een pauzeknop (WCAG 2.2.2).
 
-- `lib/commerce/types.ts` definieert `CommerceProvider` met `getProducts()`, `getProduct(slug)` en `createCheckout(input)`.
-- `lib/commerce/local.ts` leest uit `content/` en geeft `/checkout` als checkout-URL.
-- `lib/commerce/shopify.ts` is een gedocumenteerde stub voor de Storefront API.
-- `lib/commerce/index.ts` kiest de provider via `COMMERCE_PROVIDER` (standaard `local`).
+## 9. Productpagina
+
+**Volgorde:** galerij · titel, familie, korte omschrijving · noten als chips · intensiteitsmeters ("Indicative") · geurkiezer · bundeltegels · mix & match (bij 2 of 3) · aankooptype · Add to cart · leverschatting · trustrij · accordions · cross-sell · reviews · FAQ.
+
+- **Galerij:** scroll-snap met swipe op mobiel, vorige/volgende-knoppen en thumbnails (knoppen) op desktop. Dia's: render, schaalbeeld in de hand (placeholder), notenkaart, lifestyle (placeholder).
+- **Geurkiezer:** swatches in de ringkleur, met een rand van 1 px `ink-soft` (enkele ringkleuren halen anders geen 3:1 op fog), de naam als zichtbaar label en een geselecteerde staat die niet alleen op kleur leunt. Elke swatch is een link naar `/products/[slug]` (`scroll={false}`) met `aria-current`. De keuzes (tegel, aankooptype, interval, extra sticks) staan in `PdpStateProvider` in `app/products/layout.tsx` en blijven dus bewaard bij het wisselen van geur. Stick 1 is altijd de geur van de pagina.
+- **Bundeltegels, aankooptype, interval, mix & match:** native radiogroepen. Extra sticks staan standaard op de geur van de pagina.
+- **Abonnement:** "Delivered and billed every N months", met de prijs per levering. Opzeggen staat in de Terms; de koppeling met echte facturering volgt bij launch.
+- **Per producttype:** stick = tegels + aankooptype. Discovery Set en Travel Pouch = aantal, alleen eenmalig. E-gift card = bedrag (€25, €50, €100), "Delivered by email", geen leverschatting en geen verzendregel in de trustrij.
+- **Sticky add-to-cart:** alleen op mobiel, verschijnt zodra de hoofdknop uit beeld is (IntersectionObserver), met `env(safe-area-inset-bottom)`.
+
+## 10. Cart drawer, e-mailpopup en vaste elementen
+
+**Cart drawer** (Radix Dialog, rechts): twee indicatoren boven elkaar: een balk in euro's naar gratis verzending (zelfde basis als regel 7) en een stap 0–3 sticks naar de gratis pouch. Daaronder de regels met geur(en), aankooptype, stepper en verwijderen; upsell (pouch als die nog niet gratis is, Discovery Set, "+1 stick" als er één stick mist tot de volgende bundel); subtotaal, "You save", "Taxes included", checkoutknop (vuurt `begin_checkout`), betaaliconen. Nette lege staat. De teller in de header telt artikelen (elke stick telt één).
+
+**E-mailpopup** (`email/EmailCapture`):
+1. De pill linksonder is zichtbaar na mount en opent altijd de modal.
+2. Automatisch openen gebeurt na 8 seconden of bij exit-intent op desktop (`pointer: fine`, muis verlaat het venster aan de bovenkant). Alleen als `corvane:email-capture:last-shown` ontbreekt of ouder is dan 7 dagen, en nooit meer na aanmelden. Het tijdstip wordt opgeslagen bij automatisch openen. Werkt localStorage niet, dan opent de popup nooit vanzelf.
+3. Vóór het kiezen staat er al: "Every card reveals the same reward: 10% off your first order." Het percentage en de code komen uit `offers.welcomeCode`. De voorwaarden staan erbij: one code per order, excludes gift cards.
+4. De kaarten zijn `<button>`s. Met reduced motion draaien ze niet om maar wisselen ze direct.
+5. Bij het e-mailveld staat waarvoor je je aanmeldt (CORVANE e-mails over nieuwe geuren en aanbiedingen, afmelden kan altijd, link naar de Privacy Policy). Er is geen vinkje; als er ooit een komt, staat het standaard uit.
+6. Na aanmelden (`POST /api/subscribe`, vuurt `sign_up`) staat de code in beeld, kopieerbaar, en kan hij in één klik op de cart worden toegepast. De code werkt echt in `priceCart`.
+7. Dezelfde consenttekst staat bij de nieuwsbrief in de footer.
+
+**Stapelvolgorde** (laag naar hoog): sticky header 30 · sticky add-to-cart 40 · e-mailpill 45 · consentbanner 50 · drawers en modals 60. Is de sticky add-to-cart zichtbaar of staat de consentbanner open, dan is de pill verborgen en opent de popup niet vanzelf. Een Playwright-test controleert dat pill en sticky add-to-cart elkaar op 390×844 niet overlappen.
+
+## 11. Commerce, catalogus en cart
+
+- `lib/commerce/types.ts` definieert `CommerceProvider` met `getProducts()`, `getProduct(slug)` en `createCheckout({ lines, discountCode, country })`.
+- `lib/commerce/local.ts` is het enige bestand dat `content/products.ts` importeert. Het geeft `/checkout` als checkout-URL. `lib/commerce/shopify.ts` is een gedocumenteerde stub voor de Storefront API (handle, variant-id's en selling plans uit `externalIds`).
+- Server components en route handlers halen productdata via `commerce`. Client components krijgen die via `CatalogProvider` (in `app/layout.tsx` gevuld met `commerce.getProducts()`) of via props. `lib/catalog.ts` bevat pure hulpfuncties die een productlijst als argument krijgen.
 - `CartProvider` (React context) bewaart regels, kortingscode en land in localStorage (`corvane:cart:v1`, in try/catch). Zonder storage werkt de cart in het geheugen. De cart rekent met `priceCart`.
+- Collectie: alle negen producten; het familiefilter toont alleen sticks. Gelijke waarden sorteren op `featuredRank`. Card-prijs: stick €24,95, cadeaukaart "From €25". Quick-add voegt 1 stick eenmalig toe en opent de drawer.
 
-## 10. Toegankelijkheid, SEO, analytics
+## 12. Toegankelijkheid, SEO, analytics, performance
 
-- Radix Dialog voor de cart drawer, het mobiele menu en de popup (focus-trap, Esc, focus terug). Radix Accordion voor alle accordions.
-- Skiplink, `lang="en"`, één `h1` per pagina, labels bij alle velden, `aria-live` voor cart-updates.
-- Metadata per pagina met titeltemplate `%s | CORVANE`, OG-beelden, JSON-LD `Product` met `offers` en zonder `aggregateRating` zolang er geen reviews zijn, `Organization` op de homepage.
-- `lib/analytics.ts`: `track('view_item' | 'add_to_cart' | 'begin_checkout' | 'sign_up', payload)` zet events in `window.dataLayer` (alleen in de browser). Scripts van derden laden pas na toestemming, en de consentbanner verschijnt alleen als `site.analytics.enabled` true is (standaard false).
+- Radix Dialog voor cart drawer, mobiel menu en popup (focus-trap, Esc, focus terug). Radix Accordion voor alle accordions.
+- Skiplink, `lang="en"`, één `h1` per pagina, labels bij alle velden, `aria-live` voor toevoegen en verwijderen in de cart.
+- Metadata per pagina met titeltemplate `%s | CORVANE`, OG-beelden, JSON-LD `Product` met `offers`. `aggregateRating`, de ratingregel in de hero en sterren op cards verschijnen alleen als `getRatingSummary()` niet `null` is. `Organization` op de homepage.
+- `lib/analytics.ts`: `view_item` bij het openen van een productpagina, `add_to_cart` in de cart, `begin_checkout` bij de checkoutknop, `sign_up` na een geslaagde aanmelding. Events in GA4-vorm (`currency: 'EUR'`, `value`, `items`) in `window.dataLayer`. Scripts van derden laden pas na toestemming. De consentbanner en een link "Cookie settings" in de footer bestaan alleen als `site.analytics.enabled` waar is (standaard false).
+- Performance: in fase 8 draait Lighthouse (mobiel) op `next start` voor `/` en `/products/north-swell`. Ondergrens 90; scores gaan in `docs/COMPLIANCE.md`.
 
-## 11. Conventies voor de code
+## 13. Conventies
 
 - TypeScript strict, geen `any`. Server components waar het kan; `'use client'` alleen voor interactie.
-- Tekst die bezoekers zien komt uit `content/`. In componenten staan alleen aria-labels en korte UI-woorden.
-- Copy in het Engels: kort, droog, zelfverzekerd. Geen uitroeptekens, geen emoji, geen hypewoorden (irresistible, magnetic, addictive, seductive, alluring). Geen prestatieclaims buiten `content/claims.ts`. Geen merknamen van andere parfums.
-- Afbeeldingen: SVG-renders als componenten; echte foto's via `next/image` zodra `content/assets.ts` een pad heeft.
-- Geen `Date.now()` of `new Date()` tijdens het renderen van componenten; gebruik `useNow()`.
+- Tekst die bezoekers zien komt uit `content/`. Ook knoppen en labels. USP's en trustregels worden opgebouwd uit `shipping.ts` en `offers.ts`, zodat bedragen en dagen nooit uit elkaar lopen.
+- Copy in het Engels: kort, droog, zelfverzekerd. Niet toegestaan:
+  - uitroeptekens, emoji en hypewoorden (irresistible, magnetic, addictive, seductive, alluring);
+  - verwijzingen naar andere parfums of merken ("inspired by", "smells like", "dupe");
+  - feromoon- en aantrekkingsclaims;
+  - prestatieclaims buiten `content/claims.ts` (geurduur, aantal toepassingen, handbagage);
+  - klantaantallen, "X people viewing", "just bought" en voorraadmeldingen;
+  - badges van derden.
+- Feiten in de copy: 15 g, alcoholvrij, twist-up, plantaardige wasbasis (jojoba en kokos), mat zwarte aluminium huls, smelt op huidtemperatuur (brief §4).
+- `content/content-guard.test.ts` (Vitest) scant alle tekst in `content/`, behalve `claims.ts`, op die verboden patronen. De test controleert ook:
+  - badges anders dan `new`;
+  - een ingevulde `previousPrice`;
+  - reviews in `reviews.ts`;
+  - claims met `verified: true`.
+- Het wettelijke herroepingsrecht van 14 dagen is geen verkoopargument. Het staat alleen op `/shipping-returns` en in de Terms. De garantie van 30 dagen staat er altijd naast als iets aparts.
+- Geen `Date.now()` of `new Date()` tijdens het renderen; gebruik `useNow()`.
 
-## 12. Fasering
+## 14. Beeld (`content/assets.ts`, `docs/ASSETS.md`)
+
+Elke beeldplek heeft vaste sleutel, pad, verhouding en pixelmaat. `src: null` betekent "nog niet aangeleverd": de site toont dan de SVG-render of een placeholder in dezelfde verhouding met het label "PHOTO: …" of "VIDEO: …".
+
+| Sleutel | Pad | Verhouding en maat |
+| --- | --- | --- |
+| `products.<slug>.packshot` | `/images/products/<slug>/packshot.webp` | 4:5, 1600×2000 |
+| `products.<slug>.inHand` | `/images/products/<slug>/in-hand.webp` | 4:5, 1600×2000 |
+| `products.<slug>.lifestyle` | `/images/products/<slug>/lifestyle.webp` | 4:5, 1600×2000 |
+| `lifestyle.gym`, `.work`, `.travel`, `.night` | `/images/lifestyle/<naam>.webp` | 4:5, 1600×2000 |
+| `hero.group` | `/images/hero/group.webp` | 4:5 mobiel, 16:10 desktop |
+| `ugc[1–4]` | `/videos/ugc-0n.mp4` + `/videos/ugc-0n-poster.webp` | 9:16, 1080×1920, H.264 |
+
+De video-rij heet "From CORVANE": eigen merkcontent, nooit "customer" of "review".
+
+De hero toont North Swell, Drift & Ember en Lantern Smoke. De render krijgt een lichtrand, zodat de zwarte huls zichtbaar blijft op `deep`.
+
+## 15. Tests
+
+- **Vitest:** `lib/pricing.test.ts` (vaste waarden uit §7, toewijzing, codes, verzending, pouch), `lib/delivery.test.ts` (vrijdag 14:59 en 15:00, weekend, feestdagen, kerst, zomertijdwissel 25-10-2026 en 28-03-2027), `lib/campaign.test.ts` (vóór, op en na `endsAt`), `content/finder.test.ts`, `content/content-guard.test.ts`.
+- **Playwright** (`tests/e2e/`, op `next build && next start`):
+  - de homepage laadt;
+  - een product toevoegen werkt;
+  - het cart-subtotaal klopt bij 1, 2, 3, 4 en 7 sticks (€24,95, €44,95, €59,95, €84,90, €144,85);
+  - de campagnebalk is weg na `endsAt` (via `page.clock`);
+  - de popup opent maximaal één keer (8 s vooruitspoelen, sluiten, herladen, opnieuw vooruitspoelen);
+  - er is geen horizontale scroll;
+  - pill en sticky add-to-cart overlappen niet.
+
+  Andere tests en de screenshots zetten `last-shown` vooraf via `addInitScript`, zodat de popup niet in beeld komt.
+- **Screenshots:** home, collectie, productpagina en open cart drawer (met 3 sticks) op 390×844 en 1440×900, in `screenshots/` (niet in git).
+
+## 16. Fasering
+
+Na elke fase volgt een commit met een Engelse boodschap "Phase N: …". De prijslogica, de cart en de content worden in fase 3 gebouwd, omdat de layout in fase 4 ze nodig heeft (D16).
 
 | Fase | Oplevering |
 | --- | --- |
 | 1 | `docs/REFERENCE.md` |
-| 2 | dit plan |
+| 2 | dit plan en `docs/DECISIONS.md` |
 | 3 | tokens, fonts, typen, content, prijslogica en tests, commerce, cart, UI-primitives, logo, favicon, renders |
 | 4 | promobalk, header, mobiel menu, footer, cart drawer |
 | 5 | homepage |
 | 6 | collectie en productpagina's |
 | 7 | e-mailpopup, scent finder, overige pagina's |
-| 8 | SEO, analytics, toegankelijkheid, performance |
-| 9 | Vitest en Playwright, screenshots op 390×844 en 1440×900 |
-| 10 | README, TODO-LAUNCH, ASSETS, COMPLIANCE, eindcontrole |
+| 8 | SEO, analytics, toegankelijkheid, performance (Lighthouse) |
+| 9 | Vitest en Playwright, screenshots bekijken en alles rechttrekken |
+| 10 | README, `TODO-LAUNCH.md`, `ASSETS.md`, `COMPLIANCE.md`, eindcontrole, eindbericht |
+
+**`docs/TODO-LAUNCH.md`** bevat minimaal:
+- echte foto's en video's (zie `ASSETS.md`);
+- een review-app koppelen (Judge.me, Trustpilot);
+- Shopify of een betaalprovider;
+- een e-mailtool (Klaviyo) en de koppeling met echte abonnementsfacturering;
+- juridische teksten laten controleren;
+- merknaam en domein checken (BOIP/EUIPO);
+- prestatieclaims testen;
+- KvK, btw-nummer en adres invullen;
+- de garantietermijn bevestigen;
+- de launch-campagne omzetten naar een echte actie;
+- de referentie opnieuw bekijken zodra penroseskin.com bereikbaar is.
