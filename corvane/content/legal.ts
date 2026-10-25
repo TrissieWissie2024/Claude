@@ -13,9 +13,12 @@ import { facts, site } from "./site";
  * has checked the texts (docs/TODO-LAUNCH.md). Company details come from
  * site.company and are marked "(placeholder)", like every other value that is
  * not decided yet (retention periods, providers, notice periods, gift card
- * term). Clauses that need a specific check carry a `check` block, shown on
- * the page as a quiet "Legal check" note, and are listed in `legalCheckpoints`
- * with the points that only the lawyer needs to see.
+ * term), the email address included. Clauses that need a specific check carry
+ * a `check` block and are listed in `legalCheckpoints` with the points that
+ * only the lawyer needs to see. The `check` blocks are drafting notes: they
+ * render as a quiet "Legal check" note only in a review build
+ * (NEXT_PUBLIC_SHOW_LEGAL_CHECKS=true, `legalUi.showChecks`), never for
+ * shoppers.
  *
  * Prices, days and times come from content/offers.ts and content/shipping.ts
  * (via `facts`), storage keys from lib/storage.ts, so nothing can drift.
@@ -131,6 +134,12 @@ export const legalUi = {
   contentsCount: (count: number) => (count === 1 ? "1 section" : `${count} sections`),
   /** Label of the drafting notes (`check` blocks). */
   checkLabel: "Legal check",
+  /**
+   * Show the `check` blocks on the pages. Off by default, so shoppers never see
+   * drafting notes; set NEXT_PUBLIC_SHOW_LEGAL_CHECKS=true for the lawyer's
+   * review build (D51.4).
+   */
+  showChecks: process.env.NEXT_PUBLIC_SHOW_LEGAL_CHECKS === "true",
   /** Links to the other legal pages at the end of each page. */
   relatedLabel: "More legal information",
   /** Pages listed under relatedLabel, in this order; the current page is left out. */
@@ -175,7 +184,8 @@ function stripLabel(value: string, label: string): string {
 
 const company = site.company;
 const email = company.email;
-const emailLink = `[${email}](mailto:${email})`;
+/** The address as a mailto link, followed by its placeholder marker (like the other company details). */
+const emailLink = `[${email}](mailto:${email})${company.emailNote ? ` ${company.emailNote}` : ""}`;
 const kvkNumber = stripLabel(company.kvk, "KvK");
 const vatNumber = stripLabel(company.vat, "VAT");
 
@@ -473,6 +483,7 @@ const ART = {
   subscriptions: 7,
   withdrawal: 11,
   conformity: 13,
+  guarantee: 14,
   usingProducts: 16,
   law: 20,
 } as const;
@@ -482,6 +493,7 @@ const ART_IDS: Record<keyof typeof ART, string> = {
   subscriptions: "subscriptions",
   withdrawal: "withdrawal",
   conformity: "conformity",
+  guarantee: "guarantee",
   usingProducts: "using-products",
   law: "law",
 };
@@ -630,7 +642,7 @@ const terms: LegalPage = {
         "The right of withdrawal does not apply to sealed goods that are not suitable for return for health or hygiene reasons, once you have unsealed them after delivery. Our sticks and mini sticks are delivered sealed for this reason. Sealed items can always be returned within the withdrawal period.",
         check("This exception only holds if sticks and mini sticks are actually delivered sealed and customers are told before they order."),
         `E-gift cards: you can withdraw within ${withdrawalDays} days of purchase, as long as the card has not been used.`,
-        `Opened a stick and it is not for you? The ${guaranteeDays}-day guarantee in the next article covers that.`,
+        `Opened a stick and it is not for you? The ${guaranteeDays}-day guarantee in article ${ART.guarantee} covers that.`,
       ],
     },
     {
@@ -914,7 +926,7 @@ export const legal: Record<LegalPageId, LegalPage> = {
  * texts mark where some of them apply.
  */
 export const legalCheckpoints: string[] = [
-  "Withdrawal exception for sealed cosmetics: only valid if sticks and mini sticks are actually delivered sealed and customers are told before ordering Wording on /shipping-returns, in Terms article 12 and in the product page accordion.",
+  "Withdrawal exception for sealed cosmetics: only valid if sticks and mini sticks are actually delivered sealed and customers are told before ordering. Wording on /shipping-returns, in Terms article 12, in the product page accordion, in the FAQ and in the homepage guarantee block.",
   "E-gift cards: right of withdrawal while unused, and the validity term. Belgium requires at least one year with the end date on the voucher; confirm for the Netherlands (Terms article 15, product page).",
   "VAT on e-gift cards: usable in NL and BE, so probably multi-purpose vouchers, taxed when redeemed rather than when sold. The cart drawer leaves out \"Taxes included.\" for an order with only gift cards; confirm the treatment and any wording for gift cards in the cart, checkout and invoice.",
   "Partial withdrawal from a set: refund of that part's share of the set price; the free Travel Pouch stays with the customer (Terms articles 5 and 11, /shipping-returns).",

@@ -19,6 +19,9 @@ import { facts, site } from "./site";
  * from content/offers.ts and content/shipping.ts. The 14-day right of
  * withdrawal is a legal right, never a perk; the 30-day guarantee is always
  * presented as something separate. Checked by content/content-guard.test.ts.
+ *
+ * Shipping & Returns strings may use the inline markup of content/legal.ts
+ * ([label](href) links, `code`), rendered by components/legal/InlineText.
  */
 
 export interface PageMeta {
@@ -88,7 +91,9 @@ function dispatchHolidaysByYear(): { year: string; days: { iso: string; date: st
   return [...years].map(([year, days]) => ({ year, days }));
 }
 
-const email = site.company.email;
+/** The company address with its placeholder marker, as plain text (the model form) and as an inline link. */
+const email = site.company.emailLabel;
+const emailLink = `[${site.company.email}](mailto:${site.company.email})${site.company.emailNote ? ` ${site.company.emailNote}` : ""}`;
 const withdrawalDays = offers.withdrawalDays;
 const guaranteeDays = offers.guaranteeDays;
 const transitLine = joinList(facts.transit.map((entry) => entry.text));
@@ -186,12 +191,14 @@ const contact = {
   } satisfies PageMeta,
   h1: "Contact",
   intro: "Questions about an order, a scent or a subscription. Email us and we answer on working days.",
-  /** Rendered as: before + <a href="mailto:email">email</a> + after. */
-  emailLine: { before: "Email ", email, after: "." },
+  /** Rendered as: before + <a href="mailto:email">email</a> + note + after. */
+  emailLine: { before: "Email ", email: site.company.email, note: site.company.emailNote, after: "." },
   /** Shown above the form. The form posts to the /api/contact stub. */
   demoNotice: "Demo form: messages are not sent anywhere.",
   form: {
     label: "Contact form",
+    /** Visible h2 at the top of the form. */
+    heading: "Send a message",
     name: { label: "Name", autoComplete: "name" },
     email: { label: "Email address", placeholder: "you@example.com", autoComplete: "email" },
     orderNumber: {
@@ -207,11 +214,12 @@ const contact = {
       emailInvalid: "Enter a valid email address.",
       messageRequired: "Write a message.",
     },
+    // The company address is a placeholder that cannot receive mail, so these never point to it.
     success: {
       heading: "Not sent: this is a demo form",
-      body: `Your message was not sent and nobody will reply. To reach us, email ${email}.`,
+      body: "Your message was not sent and nobody will reply. CORVANE is a demo store, so there is no inbox behind this form yet.",
     },
-    error: `That did not go through. This form is a demo, so nothing was sent. Try again, or email ${email}.`,
+    error: "That did not go through. This form is a demo, so nothing was sent. Try again in a moment.",
     /** Shown with the success message; resets the form. */
     sendAnother: "Write another message",
   },
@@ -242,11 +250,13 @@ const account = {
     noIndex: true,
   } satisfies PageMeta,
   h1: "Account",
+  intro: "You do not need an account to order.",
+  /** The note on accounts (the key name predates the copy: there is no sign-in yet). */
   signIn: {
-    heading: "Sign in",
+    heading: "Accounts come later",
     body: [
-      "Customer accounts arrive later. Then you can see your orders and manage your subscriptions here.",
-      "For now there is nothing to sign in to, and you do not need an account to order.",
+      "Once they arrive, you can see your orders and manage your subscriptions here.",
+      "Until then there is nothing to sign in to. Help with an order is one message away.",
     ],
   },
   orderHelp: {
@@ -427,7 +437,7 @@ const shippingReturns = {
     howTo: {
       heading: "How to withdraw",
       steps: [
-        `Tell us within ${withdrawalDays} days. Email ${email} with your name, your order number and the items you are returning. A clear statement is enough. You can use the model form below, but you do not have to.`,
+        `Tell us within ${withdrawalDays} days. Email ${emailLink} with your name, your order number and the items you are returning. A clear statement is enough. You can use the model form below, but you do not have to.`,
         `Send the items back within ${withdrawalDays} days of telling us. Return address: ${site.company.legalName}, ${site.company.address}.`,
         "Keep your proof of postage until the refund arrives.",
       ],
@@ -487,7 +497,7 @@ const shippingReturns = {
     conditions: {
       heading: "Conditions",
       items: [
-        `Email ${email} within ${guaranteeDays} days of delivery, with your order number and the product you are returning.`,
+        `Email ${emailLink} within ${guaranteeDays} days of delivery, with your order number and the product you are returning.`,
         "Send the product back. Opened is fine.",
         "Applies to sticks, mini sticks, the Discovery Set and the Travel Pouch bought in this shop. Not to e-gift cards.",
         "One claim per item. You pay the cost of return shipping.",
@@ -500,7 +510,7 @@ const shippingReturns = {
     id: "damaged",
     heading: "Damaged or wrong items",
     body: [
-      `Something arrived damaged, faulty or not what you ordered? Email ${email} with your order number and a photo.`,
+      `Something arrived damaged, faulty or not what you ordered? Email ${emailLink} with your order number and a photo.`,
       "We send a replacement or refund you, including the shipping costs. You pay nothing to send it back.",
       `This is your statutory right to a product that matches what you ordered. It is not limited to ${withdrawalDays} or ${guaranteeDays} days.`,
     ],

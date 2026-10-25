@@ -79,7 +79,7 @@ export default function FaqPage() {
                   items={group.items.map((item) => ({
                     id: item.id,
                     title: item.question,
-                    content: <p className="max-w-[62ch]">{item.answer}</p>,
+                    content: <p className="max-w-[34rem]">{item.answer}</p>,
                   }))}
                 />
                 {link ? (

@@ -203,8 +203,12 @@ export const cartCopy = {
   /** Demo checkout page (/checkout). The notice text is fixed by the brief. */
   checkout: {
     title: "Checkout",
+    /** Eyebrow above the h1, as on the other pages. */
+    eyebrow: "Your order",
+    /** Exact text from the brief (§6). At the top of the page and again by the button. */
     demoNotice: "Demo checkout: no payment is taken",
-    intro: "This is a demo. You can walk through the order, but nothing is charged and nothing ships.",
+    /** Practical; the notice above already says it is a demo. */
+    intro: "Check your order, then add your details.",
     orderSummary: "Order summary",
     editCart: "Edit cart",
     emptyCart: {
@@ -242,8 +246,10 @@ export const cartCopy = {
       /** Back to the form, with the cart unchanged. */
       backToCheckout: "Back to checkout",
     },
-    /** Above the contact and address fields. */
-    formNote: "Demo form: nothing you enter here is stored or sent.",
+    /** After the demo notice by the button: what happens to the details. */
+    formNote: "Nothing you enter here is stored or sent.",
+    /** Visually hidden h2 of the details form, so the outline names the main task. */
+    formHeading: "Your details",
     /** Shown near the button when a field needs attention (each field also gets its own message). */
     fixErrors: "Check the fields marked above.",
     /** Accessible name of the form. */

@@ -149,7 +149,7 @@ export function Sheet({
                 size="sm"
                 iconOnly
                 aria-label={closeLabel}
-                className="-mr-2"
+                className="-my-1 -mr-3"
               >
                 <X aria-hidden="true" className="size-5" strokeWidth={1.75} />
               </Button>

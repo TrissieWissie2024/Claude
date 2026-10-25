@@ -120,10 +120,20 @@ function checkString(file: string, path: string, value: string, findings: Findin
   }
 }
 
-function walk(file: string, path: string, value: unknown, findings: Finding[], seen: Set<unknown>, depth = 0) {
+type Visit = (file: string, path: string, value: string, findings: Finding[]) => void;
+
+function walk(
+  file: string,
+  path: string,
+  value: unknown,
+  findings: Finding[],
+  seen: Set<unknown>,
+  depth = 0,
+  visit: Visit = checkString,
+) {
   if (depth > MAX_DEPTH) return;
   if (typeof value === "string") {
-    checkString(file, path, value, findings);
+    visit(file, path, value, findings);
     return;
   }
   if (typeof value === "function") {
@@ -135,7 +145,7 @@ function walk(file: string, path: string, value: unknown, findings: Finding[], s
       try {
         const result = fn(...args);
         called = true;
-        walk(file, `${path}(${args.map((arg) => JSON.stringify(arg)).join(", ")})`, result, findings, seen, depth + 1);
+        walk(file, `${path}(${args.map((arg) => JSON.stringify(arg)).join(", ")})`, result, findings, seen, depth + 1, visit);
       } catch {
         // A function may reject one kind of sample (e.g. a string where it expects a number).
       }
@@ -147,11 +157,11 @@ function walk(file: string, path: string, value: unknown, findings: Finding[], s
   if (seen.has(value)) return;
   seen.add(value);
   if (Array.isArray(value)) {
-    value.forEach((item, index) => walk(file, `${path}[${index}]`, item, findings, seen, depth + 1));
+    value.forEach((item, index) => walk(file, `${path}[${index}]`, item, findings, seen, depth + 1, visit));
     return;
   }
   for (const [key, child] of Object.entries(value)) {
-    walk(file, `${path}.${key}`, child, findings, seen, depth + 1);
+    walk(file, `${path}.${key}`, child, findings, seen, depth + 1, visit);
   }
 }
 
@@ -274,6 +284,48 @@ describe("launch guards", () => {
     for (const claim of claims) {
       expect(claim.verified, `content/claims.ts ${claim.id}: verified`).toBe(false);
     }
+  });
+});
+
+describe("withdrawal and sign-up copy (phase 7 review)", () => {
+  /** Where the right of withdrawal is set out in full, with the exception in its own paragraph. */
+  const FULL_TEXT_FILES = new Set(["content/legal.ts", "content/pages.ts"]);
+  const days = offersModule.offers.withdrawalDays;
+  const statesTheRight = new RegExp(`withdraw[\\s\\S]*\\b${days}[- ]days?\\b|\\b${days}[- ]days?\\b[\\s\\S]*withdraw`, "i");
+
+  it("names the sealed-stick exception wherever the withdrawal period is given as information (D28)", async () => {
+    const modules = await loadAllModules();
+    const findings: Finding[] = [];
+    const visit: Visit = (file, path, value, out) => {
+      if (statesTheRight.test(value) && !/sealed/i.test(value)) out.push({ file, path, value, rule: "no sealed exception" });
+    };
+    for (const [file, exports] of Object.entries(modules)) {
+      if (FULL_TEXT_FILES.has(file)) continue;
+      for (const [name, value] of Object.entries(exports)) walk(file, name, value, findings, new Set(), 0, visit);
+    }
+    expect(findings, `Withdrawal period without the exception:\n${formatFindings(findings)}`).toEqual([]);
+    // The two places the review named.
+    expect(faqModule.faq.find((item) => item.id === "right-of-withdrawal")?.answer).toMatch(/sealed/i);
+    expect(home.guarantee.points.find((point) => point.id === "rights")?.text).toMatch(/sealed/i);
+  });
+
+  it("never claims that a sign-up was saved or that an email was sent while the endpoint is a stub", () => {
+    const { site } = siteModule;
+    expect(site.emailCapture.submit).not.toMatch(/send|email/i);
+    expect(site.newsletter.success).not.toMatch(/on the list|subscribed|welcome aboard/i);
+    expect(site.newsletter.demoNote).toMatch(/not saved/i);
+    expect(site.emailCapture.demoNote).toMatch(/not saved/i);
+  });
+
+  it("marks the placeholder company email like the other company details", () => {
+    const { company } = siteModule.site;
+    expect(company.emailLabel).toBe(`${company.email} (placeholder)`);
+    for (const page of Object.values(legalModule.legal)) {
+      const text = JSON.stringify(page);
+      expect(text).not.toMatch(new RegExp(`\\(mailto:${company.email.replace(/\./g, "\\.")}\\)(?! \\(placeholder\\))`));
+    }
+    expect(pagesModule.pages.contact.form.success.body).not.toContain(company.email);
+    expect(pagesModule.pages.contact.form.error).not.toContain(company.email);
   });
 });
 

@@ -43,6 +43,8 @@ export default function ContactPage() {
                 {emailLine.email}
               </a>
             </p>
+            {/* Like the other company details, the address is marked until the real mailbox exists. */}
+            {emailLine.note ? <p className="mt-2 text-sm text-ink-soft">{emailLine.note}</p> : null}
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, Info, LoaderCircle } from "lucide-react";
+import { CircleAlert, Info, LoaderCircle } from "lucide-react";
 import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -17,9 +17,11 @@ import { cn } from "@/lib/cn";
  *   aria-describedby) and focus moves to the first one. After a failed submit,
  *   messages update as the visitor types.
  * - POST /api/contact (a stub that validates and drops the message; nothing is
- *   stored or sent). 200 -> the success panel, which says plainly that the
- *   form is a demo; 400 with field errors -> the same inline messages;
- *   anything else -> a general error. The demo notice sits above the form.
+ *   stored or sent). 200 -> the result panel, which says plainly that the
+ *   form is a demo (an info icon, not a check mark: nothing was sent); 400
+ *   with field errors -> the same inline messages; anything else -> a
+ *   general error. The form opens with a visible h2 ("Send a message"), so
+ *   the heading outline names it; the demo notice sits under it.
  * - While sending, the button stays focusable (aria-disabled), repeat submits
  *   are ignored. Results are announced through a polite live region; the
  *   success heading takes focus.
@@ -258,7 +260,7 @@ export function ContactForm({ className }: ContactFormProps) {
       <div className={cn("rounded-card bg-white p-6 ring-1 ring-line ring-inset md:p-8", className)}>
         <div role="status" aria-live="polite">
           <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-full bg-sand text-ink">
-            <Check className="size-5" strokeWidth={2} />
+            <Info className="size-5" strokeWidth={2} />
           </span>
           <h2 ref={successRef} tabIndex={-1} className="mt-5 text-[1.625rem] leading-tight text-ink md:text-[1.875rem]">
             {copy.success.heading}
@@ -289,7 +291,8 @@ export function ContactForm({ className }: ContactFormProps) {
       onSubmit={handleSubmit}
       className={cn("rounded-card bg-white p-5 ring-1 ring-line ring-inset sm:p-6 md:p-8", className)}
     >
-      <DemoNotice>{pages.contact.demoNotice}</DemoNotice>
+      <h2 className="text-[1.5rem] leading-tight text-ink md:text-[1.75rem]">{copy.heading}</h2>
+      <DemoNotice className="mt-4 md:mt-5">{pages.contact.demoNotice}</DemoNotice>
 
       <div className="mt-6 grid gap-6 md:mt-7 md:grid-cols-2 md:gap-x-5">
         <FormField id={ids.name} label={copy.name.label} error={errors.name}>

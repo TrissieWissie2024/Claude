@@ -15,9 +15,18 @@ import { cn } from "@/lib/cn";
  * focus trap, Esc and overlay click close, focus returns to the trigger (or
  * to the element that had focus when it opened).
  * Fades and lifts in only with motion allowed. z-index 60 (PLAN §10).
+ *
+ * `anchor`: "center" (default) centres the dialog in the viewport. "top" keeps
+ * its top edge in place when its content grows or shrinks (a step that adds a
+ * form), so the dialog never jumps to re-centre: the top sits where a dialog
+ * of about 44rem would be centred, at least 1rem from the edge, and the
+ * dialog only grows downwards (scrolling inside once it reaches 1rem from the
+ * bottom).
  */
 
 export type ModalSize = "sm" | "md" | "lg";
+
+export type ModalAnchor = "center" | "top";
 
 type ContentProps = ComponentPropsWithoutRef<typeof Dialog.Content>;
 
@@ -29,6 +38,8 @@ export interface ModalProps {
   trigger?: ReactNode;
   /** sm 26rem, md 32rem (default), lg 44rem; never wider than the viewport minus 2rem. */
   size?: ModalSize;
+  /** "center" (default) or "top": keeps the top edge still while the content changes height. */
+  anchor?: ModalAnchor;
   title: ReactNode;
   hideTitle?: boolean;
   description?: ReactNode;
@@ -53,12 +64,19 @@ const widths: Record<ModalSize, string> = {
   lg: "max-w-[44rem]",
 };
 
+/** Vertical placement. Horizontal centring (mx-auto) is shared. */
+const anchors: Record<ModalAnchor, string> = {
+  center: "my-auto max-h-[calc(100dvh-2rem)]",
+  top: "mt-[max(1rem,calc(50dvh-22rem))] mb-auto max-h-[calc(100dvh-max(1rem,calc(50dvh-22rem))-1rem)]",
+};
+
 export function Modal({
   open,
   defaultOpen,
   onOpenChange,
   trigger,
   size = "md",
+  anchor = "center",
   title,
   hideTitle = false,
   description,
@@ -105,10 +123,11 @@ export function Modal({
           onOpenAutoFocus={handleOpenAutoFocus}
           onCloseAutoFocus={handleCloseAutoFocus}
           className={cn(
-            "fixed inset-0 z-60 m-auto flex h-fit max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-card shadow-lift outline-none",
+            "fixed inset-0 z-60 mx-auto flex h-fit w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-card shadow-lift outline-none",
             "motion-safe:data-[state=open]:animate-[corvane-modal-in_320ms_cubic-bezier(0.32,0.72,0,1)] motion-safe:data-[state=closed]:animate-[corvane-modal-out_200ms_ease-in]",
             dark ? "focus-on-dark bg-deep text-fog" : "bg-fog text-ink",
             widths[size],
+            anchors[anchor],
             className,
           )}
         >
@@ -125,7 +144,7 @@ export function Modal({
                 size="sm"
                 iconOnly
                 aria-label={closeLabel}
-                className="-mr-2"
+                className="-mt-1 -mr-3"
               >
                 <X aria-hidden="true" className="size-5" strokeWidth={1.75} />
               </Button>

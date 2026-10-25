@@ -271,7 +271,8 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 4. De kaarten zijn `<button>`s. Met reduced motion draaien ze niet om maar wisselen ze direct.
 5. Bij het e-mailveld staat waarvoor je je aanmeldt (CORVANE e-mails over nieuwe geuren en aanbiedingen, afmelden kan altijd, link naar de Privacy Policy). Er is geen vinkje; als er ooit een komt, staat het standaard uit.
 6. Na aanmelden (`POST /api/subscribe`, vuurt `sign_up`) staat de code in beeld, kopieerbaar, en kan hij in één klik op de cart worden toegepast. De code werkt echt in `priceCart`.
-7. Dezelfde consenttekst staat bij de nieuwsbrief in de footer.
+7. Dezelfde consenttekst staat bij de nieuwsbrief in de footer. Een aanmelding daar telt ook als aanmelding (`markSubscribed`): de popup opent daarna nooit meer vanzelf, de pill biedt de code aan en de bevestiging noemt de welkomstcode (D52).
+8. Zolang `/api/subscribe` een stub is, zeggen beide formulieren dat er niets wordt bewaard of verstuurd (`demoNote`), en heet de knop in de popup "Show my code" (D52).
 
 **Opbouw van elke pagina** (`app/layout.tsx`, D31): SkipLink · PromoBar (in de flow, scrolt weg) · Header (sticky) · `<main id="main">` · Footer · EmailCapture · CartDrawer. Pagina's renderen geen eigen `<main>`. Bij afdrukken vallen skiplink, promobalk, header, footer en pill weg.
 
@@ -367,11 +368,11 @@ Na elke fase volgt een commit met een Engelse boodschap "Phase N: …". De prijs
 - echte foto's en video's (zie `ASSETS.md`);
 - een review-app koppelen (Judge.me, Trustpilot);
 - Shopify of een betaalprovider;
-- een e-mailtool (Klaviyo) en de koppeling met echte abonnementsfacturering;
+- een e-mailtool (Klaviyo) en de koppeling met echte abonnementsfacturering; daarna de demoregel bij de aanmeldformulieren weghalen (`signUpDemoNote` in `content/site.ts`) en de bevestigingstekst aanpassen (D52);
 - juridische teksten laten controleren;
 - merknaam en domein checken (BOIP/EUIPO);
 - prestatieclaims testen;
-- KvK, btw-nummer en adres invullen;
+- KvK, btw-nummer, adres en het e-mailadres invullen (het adres `hello@corvane.example` is een placeholder op het gereserveerde domein `.example` en kan geen mail ontvangen, D52);
 - de garantietermijn bevestigen;
 - de launch-campagne omzetten naar een echte actie;
 - de referentie opnieuw bekijken zodra penroseskin.com bereikbaar is.

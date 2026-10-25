@@ -79,8 +79,9 @@ const sizes: Record<ButtonSize, string> = {
   lg: "h-14 px-8 text-base",
 };
 
+/** Square icon buttons. sm is 44px, the smallest touch target used on the site (dialog close buttons). */
 const iconOnlySizes: Record<ButtonSize, string> = {
-  sm: "size-9",
+  sm: "size-11",
   md: "size-12",
   lg: "size-14",
 };

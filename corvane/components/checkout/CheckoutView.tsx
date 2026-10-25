@@ -37,13 +37,16 @@ import type { CountryCode, PricingSummary } from "@/lib/types";
  *   with Remove), then Subtotal (with the "grouped into sets" note, D34),
  *   the code, shipping to the chosen country, Total, "Taxes included." and
  *   "You save" with its parts. Rows add up on screen, as in the drawer.
- * - Contact and shipping address fields, labelled, with autocomplete, marked
- *   as a demo form. The country select calls setCountry, so shipping in the
+ * - Contact and shipping address fields, labelled, with autocomplete, under a
+ *   visually hidden h2 ("Your details"), so the heading outline names the
+ *   main task. The country select calls setCountry, so shipping in the
  *   summary updates. Gift cards only: no address needed.
  * - "Place demo order": checks the fields, then shows a demo confirmation
  *   (no network call, no payment, the cart stays as it is). The notice "Demo
  *   checkout: no payment is taken" sits at the top of the page
- *   (app/checkout/page.tsx) and again by the button.
+ *   (app/checkout/page.tsx) and again by the button, where it also says that
+ *   nothing entered is stored or sent. Nowhere else: once at the top and
+ *   once at the action is enough (D51.5).
  * - Before the cart has loaded from storage, a quiet placeholder of similar
  *   height; an empty cart shows a short empty state with a link to the shop.
  *
@@ -233,9 +236,9 @@ function CheckoutForm({ values, setValues, onPlaced, className }: CheckoutFormPr
 
   return (
     <form noValidate aria-label={copy.formLabel} onSubmit={handleSubmit} className={className}>
-      <DemoNotice>{copy.formNote}</DemoNotice>
+      <h2 className="sr-only">{copy.formHeading}</h2>
 
-      <fieldset className="mt-8 md:mt-10">
+      <fieldset>
         <legend className="text-[1.5rem] leading-tight font-serif font-semibold tracking-[-0.015em] text-ink md:text-[1.75rem]">
           {copy.contact.heading}
         </legend>
@@ -305,7 +308,9 @@ function CheckoutForm({ values, setValues, onPlaced, className }: CheckoutFormPr
           ) : null}
         </p>
 
-        <DemoNotice className="mt-4">{copy.demoNotice}</DemoNotice>
+        <DemoNotice className="mt-4">
+          {copy.demoNotice}. {copy.formNote}
+        </DemoNotice>
       </div>
     </form>
   );
@@ -328,8 +333,8 @@ function OrderSummary({ className }: { className?: string }) {
     >
       <div className="flex items-baseline justify-between gap-4">
         <h2 id={headingId} className="text-[1.5rem] leading-tight md:text-[1.75rem]">
-          {copy.orderSummary}
-          <span className="tabular ml-2 align-middle font-sans text-[13px] font-normal tracking-normal text-ink-soft">
+          {copy.orderSummary}{" "}
+          <span className="tabular ml-0.5 align-middle font-sans text-[13px] font-normal tracking-normal text-ink-soft">
             {cartCopy.drawer.itemCount(pricing.itemCount)}
           </span>
         </h2>

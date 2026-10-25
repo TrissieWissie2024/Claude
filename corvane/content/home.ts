@@ -318,7 +318,8 @@ export const home = {
       {
         id: "rights",
         title: "On top of your rights",
-        text: `This guarantee comes in addition to your ${withdrawalDays}-day statutory right of withdrawal. It does not replace or limit it.`,
+        // Names the sealed-stick exception, as everywhere the right of withdrawal is explained (D28).
+        text: `This guarantee comes in addition to your ${withdrawalDays}-day statutory right of withdrawal. It does not replace or limit it. Sticks and mini sticks are delivered sealed: once you break the seal, the right of withdrawal no longer applies to that item, but this guarantee does.`,
       },
     ],
     link: { label: "Read the full conditions", href: "/shipping-returns#guarantee" } satisfies NavLink,

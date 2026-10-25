@@ -16,10 +16,15 @@ import { markSubscribed } from "./state";
  * light (fog) modal; the footer has its own form for deep (NewsletterForm).
  *
  * - Visible label, type="email" field and a submit button that names the
- *   action ("Send my code"). The consent text sits under the field and is
- *   linked to it with aria-describedby: what people sign up for (CORVANE
- *   emails about product news, new scents and offers), that they can
- *   unsubscribe any time, and a link to the Privacy Policy. No checkbox.
+ *   action ("Show my code": the code appears on screen, nothing is emailed).
+ *   The consent text sits under the field and is linked to it with
+ *   aria-describedby: what people sign up for (CORVANE emails about product
+ *   news, new scents and offers), that they can unsubscribe any time, and a
+ *   link to the Privacy Policy. No checkbox. While /api/subscribe is a stub,
+ *   `demoNote` follows: nothing is saved or sent.
+ * - Phones stack field, message and button, so an error sits right under the
+ *   field it is about; from sm the button sits beside the field and the
+ *   message under both.
  * - POST /api/subscribe { email, source: "popup" }. 200 -> track("sign_up",
  *   { method: "popup" }), storageKeys.emailCaptureSubscribed is set and
  *   `onSuccess` shows the code; 400 -> invalid-email message; anything else
@@ -51,6 +56,7 @@ export function EmailCaptureForm({ onSuccess, onNavigate, className }: EmailCapt
   const inputId = `${id}-email`;
   const consentId = `${id}-consent`;
   const messageId = `${id}-message`;
+  const demoId = `${id}-demo`;
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
@@ -119,7 +125,13 @@ export function EmailCaptureForm({ onSuccess, onNavigate, className }: EmailCapt
         {copy.emailLabel}
       </label>
 
-      <div className="mt-2.5 flex flex-col gap-2.5 sm:flex-row">
+      {/*
+        One wrapping row: field and button side by side from sm, the message on
+        its own line below them (order-last). Below sm it is a column in DOM
+        order: field, message, button. Margins instead of gap, so the empty
+        live region adds no space.
+      */}
+      <div className="mt-2.5 flex flex-col sm:flex-row sm:flex-wrap">
         <input
           ref={inputRef}
           id={inputId}
@@ -133,14 +145,29 @@ export function EmailCaptureForm({ onSuccess, onNavigate, className }: EmailCapt
           value={email}
           onChange={handleChange}
           aria-invalid={invalid || undefined}
-          aria-describedby={`${messageId} ${consentId}`}
+          aria-describedby={cn(messageId, consentId, copy.demoNote && demoId)}
           // ink/55 on fog is about 3.6:1 (WCAG 1.4.11); a real border, so it also shows in forced colors.
           className={cn(
-            "h-12 w-full min-w-0 rounded-full border bg-white px-5 text-base text-ink sm:flex-1 sm:text-[15px]",
+            "h-12 w-full min-w-0 rounded-full border bg-white px-5 text-base text-ink sm:w-0 sm:flex-1 sm:text-[15px]",
             "transition-colors duration-200 placeholder:text-ink-soft",
             invalid ? "border-signal" : "border-ink/55 hover:border-ink/80",
           )}
         />
+
+        {/* Always in the DOM so changes are announced. No height while empty. */}
+        <p
+          id={messageId}
+          aria-live="polite"
+          className={cn(
+            "flex items-start gap-2 text-sm leading-5 font-medium text-ink sm:order-last sm:basis-full",
+            message && "mt-2.5 sm:mt-3",
+          )}
+        >
+          {message ? <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0 text-signal" strokeWidth={2.25} /> : null}
+          {message}
+          {submitting ? <span className="sr-only">{copy.submitting}</span> : null}
+        </p>
+
         <Button
           type="submit"
           variant="primary"
@@ -150,22 +177,11 @@ export function EmailCaptureForm({ onSuccess, onNavigate, className }: EmailCapt
               <LoaderCircle aria-hidden="true" className="size-[1.1em] motion-safe:animate-spin" strokeWidth={2.25} />
             ) : undefined
           }
-          className={cn("w-full sm:w-auto sm:min-w-[9.5rem]", submitting && "cursor-progress")}
+          className={cn("mt-2.5 w-full sm:mt-0 sm:ml-2.5 sm:w-auto sm:min-w-[9.5rem]", submitting && "cursor-progress")}
         >
           {submitting ? copy.submitting : copy.submit}
         </Button>
       </div>
-
-      {/* Always in the DOM so changes are announced. No height while empty. */}
-      <p
-        id={messageId}
-        aria-live="polite"
-        className={cn("flex items-start gap-2 text-sm leading-5 font-medium text-ink", message && "mt-3")}
-      >
-        {message ? <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0 text-signal" strokeWidth={2.25} /> : null}
-        {message}
-        {submitting ? <span className="sr-only">{copy.submitting}</span> : null}
-      </p>
 
       <p id={consentId} className="mt-3 text-[0.8125rem] leading-relaxed text-ink-soft">
         {copy.consent.text} {privacy.before}
@@ -178,6 +194,11 @@ export function EmailCaptureForm({ onSuccess, onNavigate, className }: EmailCapt
         </Link>
         {privacy.after}
       </p>
+      {copy.demoNote ? (
+        <p id={demoId} className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-soft">
+          {copy.demoNote}
+        </p>
+      ) : null}
     </form>
   );
 }

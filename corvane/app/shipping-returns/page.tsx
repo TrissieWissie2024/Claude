@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { ArrowRightIcon } from "@/components/home/icons";
+import { renderInline } from "@/components/legal/InlineText";
 import { LegalNotice } from "@/components/legal/LegalNotice";
+import { UpcomingHolidays } from "@/components/legal/UpcomingHolidays";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Flag } from "@/components/ui/Flag";
@@ -31,11 +33,16 @@ export const metadata: Metadata = {
  *   on top of those rights. Damaged or wrong items: statutory conformity.
  * - Section ids match the table of contents and existing links
  *   (/shipping-returns#withdrawal from the guarantee block and the FAQ).
+ * - Copy may contain the inline markup of content/legal.ts (the email
+ *   address is a mailto link, as on the legal pages).
+ * - The holiday list drops dates that have passed, after mount
+ *   (UpcomingHolidays); the static HTML lists them all.
  *
  * Layout: notice, heading, then the contents list (phones: a list under the
  * heading; lg+: a sticky column on the left, 3 columns) and the sections on
- * the right, in a column of 44rem (about 68ch of body text), so hairlines,
- * table and cards line up with the text.
+ * the right, in a column of 36rem (about 70 characters per line of body
+ * text, the same measure as the legal pages), so hairlines, table and cards
+ * line up with the text.
  */
 export default function ShippingReturnsPage() {
   return (
@@ -75,7 +82,7 @@ export default function ShippingReturnsPage() {
           </div>
         </nav>
 
-        <div className="min-w-0 max-w-[44rem] lg:col-span-8 lg:col-start-5">
+        <div className="min-w-0 max-w-[36rem] lg:col-span-8 lg:col-start-5">
           <RatesSection />
           <DispatchSection />
           <Section id={copy.delivery.id} heading={copy.delivery.heading}>
@@ -134,7 +141,7 @@ function Paragraphs({ items, className }: { items: readonly string[]; className?
   return (
     <div className={cn("flex flex-col gap-4 text-base leading-relaxed text-ink-soft md:text-[1.0625rem]", className)}>
       {items.map((paragraph) => (
-        <p key={paragraph}>{paragraph}</p>
+        <p key={paragraph}>{renderInline(paragraph)}</p>
       ))}
     </div>
   );
@@ -241,25 +248,7 @@ function DispatchSection() {
         <div className="mt-8 rounded-card bg-sand p-5 md:p-7">
           <h3 className="font-sans text-base font-semibold tracking-normal text-ink">{holidays.heading}</h3>
           <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-soft">{holidays.intro}</p>
-          <div className="mt-5 grid gap-6 sm:grid-cols-2 sm:gap-8">
-            {holidays.years.map((year) => (
-              <div key={year.year}>
-                <p id={`holidays-${year.year}`} className="label-caps tabular text-ink-soft">
-                  {year.year}
-                </p>
-                <ul aria-labelledby={`holidays-${year.year}`} className="mt-2 divide-y divide-ink/10">
-                  {year.days.map((day) => (
-                    <li key={day.iso} className="flex flex-wrap items-baseline justify-between gap-x-4 py-2 text-[0.9375rem]">
-                      <time dateTime={day.iso} className="tabular text-ink">
-                        {day.date}
-                      </time>
-                      <span className="text-ink-soft">{day.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <UpcomingHolidays years={holidays.years} />
         </div>
       ) : null}
     </Section>
@@ -284,7 +273,7 @@ function WithdrawalSection() {
             >
               {index + 1}
             </span>
-            <span className="min-w-0 pt-0.5">{step}</span>
+            <span className="min-w-0 pt-0.5">{renderInline(step)}</span>
           </li>
         ))}
       </ol>
@@ -332,7 +321,7 @@ function GuaranteeSection() {
         {guarantee.conditions.items.map((item) => (
           <li key={item} className="flex gap-3 text-base leading-relaxed text-ink-soft md:text-[1.0625rem]">
             <span aria-hidden="true" className="mt-[0.7em] h-px w-3 shrink-0 bg-ink-soft" />
-            <span className="min-w-0">{item}</span>
+            <span className="min-w-0">{renderInline(item)}</span>
           </li>
         ))}
       </ul>

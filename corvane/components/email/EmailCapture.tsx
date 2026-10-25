@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type RefObject } from "react";
 
 import { VaneIcon } from "@/components/brand/VaneIcon";
 import { useCart } from "@/components/cart/CartProvider";
@@ -47,6 +47,13 @@ import {
  *   (body[data-sticky-atc="true"]) and while a consent banner is open
  *   (body[data-consent-open="true"]), watched with a MutationObserver. So it
  *   never overlaps either of them.
+ * - While it shows, <html data-email-pill-inset> reserves the bottom edge for
+ *   focus scrolling (scroll-padding-bottom in app/globals.css), so a link
+ *   that receives keyboard focus is never scrolled in under the pill (WCAG
+ *   2.4.11). The value is "lg" on product pages, where the pill only shows
+ *   from lg.
+ * - Hiding it moves focus to <main> (without scrolling), so keyboard users do
+ *   not fall back to the start of the document.
  *
  * Auto-open, at most once per page load:
  * - After site.emailCapture.delayMs (8 s), or on desktop exit intent (a fine
@@ -62,7 +69,11 @@ import {
  * Modal (components/ui/Modal: focus trap, Esc, focus returns): the same
  * reward is stated before a card is turned, with its conditions. Turn a card
  * (RewardCards), leave an email (EmailCaptureForm), get the code (RewardCode).
- * "No thanks" is a plain text button; there is no confirm-shaming copy.
+ * "No thanks" is a plain text button; there is no confirm-shaming copy. The
+ * dialog is anchored at the top (Modal anchor="top"), so it grows downwards
+ * when the form appears instead of jumping to re-centre. Closed after an
+ * auto-open, when nothing had focus before, focus goes to the pill (or to
+ * <main> when the pill is not shown) instead of the document body.
  */
 
 type Step = "cards" | "code";
@@ -100,10 +111,12 @@ interface EmailPillProps {
   subscribed: boolean;
   onOpen: () => void;
   onDismiss: () => void;
+  /** The button that opens the modal, so focus can return to it. */
+  openRef?: RefObject<HTMLButtonElement | null>;
   className?: string;
 }
 
-function EmailPill({ subscribed, onOpen, onDismiss, className }: EmailPillProps) {
+function EmailPill({ subscribed, onOpen, onDismiss, openRef, className }: EmailPillProps) {
   const copy = site.emailCapture;
   return (
     <div
@@ -118,6 +131,7 @@ function EmailPill({ subscribed, onOpen, onDismiss, className }: EmailPillProps)
       <PillMotion />
       <div className="flex items-center rounded-full border border-line bg-fog text-ink shadow-lift">
         <button
+          ref={openRef}
           type="button"
           onClick={onOpen}
           aria-haspopup="dialog"
@@ -163,6 +177,23 @@ export function EmailCapture() {
   const openedByVisitor = useRef(false);
   /** True while the current opening is an auto-open (timer or exit intent), not a click on the pill. */
   const openedAutomatically = useRef(false);
+  /** What had focus when the modal opened (Modal returns focus there when it can). */
+  const focusBeforeOpen = useRef<Element | null>(null);
+  const pillOpenRef = useRef<HTMLButtonElement>(null);
+
+  const onCheckout = isCheckoutPath(pathname);
+  const onProductPage = isProductPath(pathname);
+  const showPill = copy.enabled && mounted && revealed && !dismissed && !bodyBlocked && !onCheckout;
+
+  // While the pill shows, keep focused elements clear of it (scroll-padding-bottom, app/globals.css).
+  useEffect(() => {
+    if (!showPill) return;
+    const root = document.documentElement;
+    root.dataset.emailPillInset = onProductPage ? "lg" : "true";
+    return () => {
+      delete root.dataset.emailPillInset;
+    };
+  }, [showPill, onProductPage]);
 
   /** Opens the modal at its first step (or at the code, after signing up). */
   function show(signedUp: boolean, automatic = false) {
@@ -243,9 +274,6 @@ export function EmailCapture() {
 
   if (!copy.enabled) return null;
 
-  const onCheckout = isCheckoutPath(pathname);
-  const showPill = mounted && revealed && !dismissed && !bodyBlocked && !onCheckout;
-
   function openFromPill() {
     openedByVisitor.current = true;
     show(subscribed);
@@ -261,6 +289,12 @@ export function EmailCapture() {
     handleOpenChange(false);
   }
 
+  /** The pill unmounts; keep keyboard users in the page instead of at the start of the document. */
+  function hidePill() {
+    dismissPill();
+    document.getElementById("main")?.focus({ preventScroll: true });
+  }
+
   /**
    * An auto-open did not come from anything the visitor did, so focus goes to
    * the dialog itself (it is announced with its title and description) rather
@@ -268,9 +302,26 @@ export function EmailCapture() {
    * starts at Close as usual. Opened from the pill, Radix focuses Close.
    */
   function handleOpenAutoFocus(event: Event) {
+    focusBeforeOpen.current = document.activeElement;
     if (!openedAutomatically.current) return;
     event.preventDefault();
     if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus({ preventScroll: true });
+  }
+
+  /**
+   * Modal returns focus to what had it before. After an auto-open that is
+   * often nothing (the body), so focus goes to the pill, which closing has just
+   * revealed, or to <main> when the pill is not shown (hidden, product page
+   * below lg).
+   */
+  function handleCloseAutoFocus(event: Event) {
+    const before = focusBeforeOpen.current;
+    focusBeforeOpen.current = null;
+    if (before instanceof HTMLElement && before !== document.body && before.isConnected) return;
+    event.preventDefault();
+    const pill = pillOpenRef.current;
+    if (pill?.isConnected && pill.getClientRects().length > 0) pill.focus({ preventScroll: true });
+    else document.getElementById("main")?.focus({ preventScroll: true });
   }
 
   function handleSignedUp() {
@@ -286,8 +337,9 @@ export function EmailCapture() {
         <EmailPill
           subscribed={subscribed}
           onOpen={openFromPill}
-          onDismiss={dismissPill}
-          className={isProductPath(pathname) ? "max-lg:hidden" : undefined}
+          onDismiss={hidePill}
+          openRef={pillOpenRef}
+          className={onProductPage ? "max-lg:hidden" : undefined}
         />
       ) : null}
 
@@ -295,7 +347,8 @@ export function EmailCapture() {
         open={open}
         onOpenChange={handleOpenChange}
         size="md"
-        title={onCode ? copy.successHeading : copy.title}
+        anchor="top"
+        title={onCode ? copy.successHeading : chosen === null ? copy.title : copy.titleChosen}
         description={
           onCode ? (
             copy.successLine(copy.rewardCode)
@@ -308,6 +361,7 @@ export function EmailCapture() {
         }
         closeLabel={copy.close}
         onOpenAutoFocus={handleOpenAutoFocus}
+        onCloseAutoFocus={handleCloseAutoFocus}
       >
         {onCode ? (
           <RewardCode focusOnMount={focusCode} onDone={close} />
@@ -318,7 +372,7 @@ export function EmailCapture() {
             </div>
 
             <p aria-live="polite" className="mt-4 text-[0.9375rem] leading-6 text-ink">
-              {chosen === null ? copy.intro : copy.revealedLine(copy.rewardLabel)}
+              {chosen === null ? copy.intro : copy.revealedLine}
             </p>
 
             {chosen !== null ? <EmailCaptureForm className="mt-4" onSuccess={handleSignedUp} onNavigate={close} /> : null}

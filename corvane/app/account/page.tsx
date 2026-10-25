@@ -1,4 +1,3 @@
-import { UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -20,22 +19,19 @@ export const metadata: Metadata = {
  * arrive later, so this page says so plainly and offers help instead. There is
  * deliberately no sign-in form: fields that do nothing would be a pretence.
  *
- * Phones: heading, the note on accounts, then the help links. lg+: the note on
- * the left (5 columns), the help links on the right (7 columns).
+ * Phones: heading and intro, the note on accounts, then the help links. lg+:
+ * the note on the left (5 columns), the help links on the right (7 columns).
  */
 export default function AccountPage() {
   const { signIn, orderHelp } = copy;
 
   return (
     <Container className="pt-12 pb-20 md:pt-16 md:pb-28 lg:pt-20 lg:pb-32">
-      <SectionHeading level={1} eyebrow={copy.eyebrow} title={copy.h1} eyebrowRule="neutral" />
+      <SectionHeading level={1} eyebrow={copy.eyebrow} title={copy.h1} intro={copy.intro} eyebrowRule="neutral" />
 
       <div className="mt-10 grid gap-12 md:mt-14 lg:grid-cols-12 lg:gap-x-8">
         <section aria-labelledby="account-sign-in" className="rounded-card bg-sand p-6 md:p-8 lg:col-span-5 lg:self-start">
-          <span aria-hidden="true" className="flex size-11 items-center justify-center rounded-full bg-fog text-ink">
-            <UserRound className="size-5" strokeWidth={1.75} />
-          </span>
-          <h2 id="account-sign-in" className="mt-6 text-[1.625rem] leading-[1.15] md:text-[2rem]">
+          <h2 id="account-sign-in" className="text-[1.625rem] leading-[1.15] md:text-[2rem]">
             {signIn.heading}
           </h2>
           <div className="mt-4 flex flex-col gap-3 text-base leading-relaxed text-ink-soft">
@@ -51,7 +47,7 @@ export default function AccountPage() {
           <h2 id="account-order-help" className="text-[1.625rem] leading-[1.15] md:text-[2rem]">
             {orderHelp.heading}
           </h2>
-          <p className="mt-3 max-w-[56ch] text-base leading-relaxed text-ink-soft md:text-lg">{orderHelp.body}</p>
+          <p className="mt-3 max-w-[36rem] text-base leading-relaxed text-ink-soft md:text-lg">{orderHelp.body}</p>
 
           <ul className="mt-8 border-t border-line">
             {orderHelp.links.map((link) => (

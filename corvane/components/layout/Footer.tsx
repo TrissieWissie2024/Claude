@@ -101,9 +101,12 @@ export function Footer() {
             {companyLines.map((line) => (
               <span key={line}>{line}</span>
             ))}
-            <a href={`mailto:${company.email}`} className="w-fit underline underline-offset-4 hover:text-fog">
-              {company.email}
-            </a>
+            <span>
+              <a href={`mailto:${company.email}`} className="underline underline-offset-4 hover:text-fog">
+                {company.email}
+              </a>
+              {company.emailNote ? ` ${company.emailNote}` : null}
+            </span>
           </address>
 
           <div className="flex flex-col gap-1 lg:shrink-0 lg:items-end lg:text-right">

@@ -4,6 +4,7 @@ import { VANE_PATH, VANE_VIEWBOX } from "@/components/brand/VaneIcon";
 import { ArrowRightIcon } from "@/components/home/icons";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { pages } from "@/content/pages";
 
 const copy = pages.notFound;
@@ -53,7 +54,9 @@ function OffCourseVane({ className }: { className?: string }) {
 /**
  * 404 (docs/PLAN.md §1): handles unmatched URLs and notFound() calls. Brand
  * voice headline, one line, and links to the shop, the FAQ and home. The
- * root layout (header, footer) stays around it; the page renders no <main>.
+ * heading is the shared SectionHeading (eyebrow with its rule, h1, intro), as
+ * on every other page. The root layout (header, footer) stays around it; the
+ * page renders no <main>.
  */
 export default function NotFound() {
   const [primary, ...others] = copy.links;
@@ -62,9 +65,14 @@ export default function NotFound() {
     <Container className="flex flex-col items-start pt-14 pb-24 md:pt-20 md:pb-32 lg:pt-28 lg:pb-40">
       <OffCourseVane className="size-20 text-ink md:size-24" />
 
-      <p className="label-caps tabular mt-10 text-ink-soft md:mt-12">{copy.eyebrow}</p>
-      <h1 className="mt-4 text-[2.625rem] leading-[1.04] text-ink md:text-[3.5rem] lg:text-[4.25rem]">{copy.headline}</h1>
-      <p className="mt-5 max-w-[34rem] text-base leading-relaxed text-ink-soft md:text-lg">{copy.line}</p>
+      <SectionHeading
+        level={1}
+        eyebrow={<span className="tabular">{copy.eyebrow}</span>}
+        title={copy.headline}
+        intro={copy.line}
+        eyebrowRule="neutral"
+        className="mt-10 md:mt-12"
+      />
 
       <div className="mt-10 grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:items-center">
         {primary ? (

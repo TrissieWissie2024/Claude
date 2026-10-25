@@ -2,8 +2,9 @@
 
 import { Check, CircleAlert, LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 
+import { markSubscribed } from "@/components/email/state";
 import { Button } from "@/components/ui/Button";
 import { site } from "@/content/site";
 import { track } from "@/lib/analytics";
@@ -20,8 +21,13 @@ import { cn } from "@/lib/cn";
  * - Validation: type="email" + required for semantics and the mobile keyboard,
  *   checked by the browser's own rules on submit; noValidate replaces the
  *   native bubble with our message, so it is styled and announced.
- * - POST /api/subscribe { email, source }. 200 -> success, fires
- *   track("sign_up", { method: "newsletter" }) and clears the field;
+ * - While /api/subscribe is a stub, `demoNote` under the consent text says
+ *   that nothing is saved or sent, and the success line says the same.
+ * - POST /api/subscribe { email, source }. 200 -> success: fires
+ *   track("sign_up", { method: "newsletter" }), records the sign-up on this
+ *   device (markSubscribed, so the sign-up window never opens on its own
+ *   again and its pill offers the code) and clears the field. The success
+ *   line also gives the welcome code, so nobody has to sign up twice.
  *   400 invalid-email -> invalid message; anything else -> generic error.
  * - States idle / submitting / success / error. Messages go to one polite
  *   live region. While submitting the button stays focusable (aria-disabled,
@@ -49,6 +55,7 @@ export function NewsletterForm({ source = "footer", className }: NewsletterFormP
   const inputId = `${id}-email`;
   const consentId = `${id}-consent`;
   const messageId = `${id}-message`;
+  const demoId = `${id}-demo`;
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
@@ -97,6 +104,7 @@ export function NewsletterForm({ source = "footer", className }: NewsletterFormP
         setStatus("success");
         setEmail("");
         track("sign_up", { method: "newsletter" });
+        markSubscribed();
         return;
       }
       fail(response.status === 400 ? "invalid-email" : "failed");
@@ -105,9 +113,31 @@ export function NewsletterForm({ source = "footer", className }: NewsletterFormP
     }
   }
 
-  let message: string | null = null;
-  if (status === "success") message = copy.success;
-  else if (status === "error") message = error === "invalid-email" ? copy.invalidEmail : copy.error;
+  let message: ReactNode = null;
+  if (status === "success") {
+    const code = site.emailCapture.rewardCode;
+    const codeLine = copy.successCode(code, site.emailCapture.rewardLabel);
+    const [before, after] = codeLine.split(code);
+    message = (
+      <span className="min-w-0">
+        {copy.success}
+        <span className="mt-1 block">
+          {after === undefined ? (
+            codeLine
+          ) : (
+            <>
+              {before}
+              <strong className="font-semibold tracking-[0.04em]">{code}</strong>
+              {after}
+            </>
+          )}
+        </span>
+      </span>
+    );
+  } else if (status === "error") message = error === "invalid-email" ? copy.invalidEmail : copy.error;
+
+  // The success line says the same as the demo note, so the note steps aside meanwhile.
+  const showDemoNote = Boolean(copy.demoNote) && status !== "success";
 
   return (
     <form noValidate onSubmit={handleSubmit} aria-busy={submitting || undefined} className={cn("w-full", className)}>
@@ -128,7 +158,7 @@ export function NewsletterForm({ source = "footer", className }: NewsletterFormP
           value={email}
           onChange={handleChange}
           aria-invalid={invalid || undefined}
-          aria-describedby={`${messageId} ${consentId}`}
+          aria-describedby={cn(messageId, consentId, showDemoNote && demoId)}
           // A real border (fog/45 is about 4:1 on deep, WCAG 1.4.11), not a box-shadow ring, so the field also shows in forced colors.
           className={cn(
             "h-12 w-0 min-w-0 flex-1 rounded-full border bg-fog/[0.06] px-5 text-[15px] text-fog",
@@ -175,6 +205,11 @@ export function NewsletterForm({ source = "footer", className }: NewsletterFormP
         </Link>
         {privacy.after}
       </p>
+      {showDemoNote ? (
+        <p id={demoId} className="mt-2 max-w-[34rem] text-[13px] leading-relaxed text-mist">
+          {copy.demoNote}
+        </p>
+      ) : null}
     </form>
   );
 }

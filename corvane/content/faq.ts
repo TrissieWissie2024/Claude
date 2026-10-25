@@ -133,7 +133,8 @@ export const faq: FaqItem[] = [
     id: "right-of-withdrawal",
     category: "returns",
     question: "Can I return my order?",
-    answer: `Yes. By law you have ${facts.withdrawalDays} days from delivery to withdraw from your purchase. Tell us within that period and send the items back; we refund you within ${facts.withdrawalDays} days of your withdrawal. The details, including what applies to opened products, are on the Shipping & Returns page.`,
+    // Pre-contract information: the sealed-stick exception only holds if customers are told before ordering (D28).
+    answer: `Yes. By law you have ${facts.withdrawalDays} days from delivery to withdraw from your purchase. Tell us within that period and send the items back; we refund you within ${facts.withdrawalDays} days of your withdrawal. Sticks and mini sticks are delivered sealed: once you break the seal, the right of withdrawal no longer applies to that item, but the ${facts.guaranteeDays}-day guarantee still does. The details are on the Shipping & Returns page.`,
   },
   {
     id: "guarantee",
@@ -146,7 +147,7 @@ export const faq: FaqItem[] = [
     id: "damaged-or-wrong",
     category: "returns",
     question: "My order arrived damaged or wrong. What now?",
-    answer: `Email ${site.company.email} with your order number and a photo. We send a replacement or refund you, at no cost to you.`,
+    answer: `Email ${site.company.emailLabel} with your order number and a photo. We send a replacement or refund you, at no cost to you.`,
   },
 
   /* Subscription ----------------------------------------------------- */

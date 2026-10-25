@@ -32,12 +32,16 @@ export const metadata: Metadata = {
  *
  * Photos are PhotoSlots: `story.coast` (the same slot as the homepage story
  * teaser, D41) and `products.north-swell.inHand`; both show a placeholder in
- * the same aspect ratio until real photos exist (docs/ASSETS.md).
+ * the same aspect ratio until real photos exist (docs/ASSETS.md). In the
+ * hero the coast slot is a 5:4 frame on deep (a calm brand panel while it is
+ * a placeholder), top-aligned with the heading, so the h1 sits as high as on
+ * the other pages.
  *
  * Layout: an editorial grid. Each story section has a hairline, a small index
  * and its h2 on the left (4 columns from lg) and the text on the right at a
- * readable measure (about 62ch). The first paragraph of each section is the
- * lead. The six scents sit on a sand band at the end.
+ * readable measure (36rem, about 65 characters per line at 18 px). The first
+ * paragraph of each section is the lead. The six scents sit on a sand band at
+ * the end, with the next index (05).
  */
 export default async function AboutPage() {
   const products = await commerce.getProducts();
@@ -48,7 +52,7 @@ export default async function AboutPage() {
   return (
     <>
       <Container className="pt-12 md:pt-16 lg:pt-20">
-        <div className="grid gap-10 md:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8">
+        <div className="grid gap-10 md:gap-12 lg:grid-cols-12 lg:items-start lg:gap-x-8">
           <SectionHeading
             level={1}
             eyebrow={copy.eyebrow}
@@ -57,12 +61,12 @@ export default async function AboutPage() {
             eyebrowRule="neutral"
             className="lg:col-span-6"
           />
-          <div className="relative aspect-[5/4] overflow-hidden rounded-card md:aspect-[16/10] lg:col-span-6 lg:aspect-[4/5] lg:max-h-[36rem] lg:justify-self-end lg:w-full xl:col-span-5 xl:col-start-8">
+          <div className="relative aspect-[5/4] overflow-hidden rounded-card md:aspect-[16/10] lg:col-span-6 lg:aspect-[5/4] lg:w-full xl:col-span-5 xl:col-start-8">
             <PhotoSlot
               assetKey="story.coast"
               label={copy.photos.coast}
               aspect="fill"
-              tone="sand"
+              tone="deep"
               sizes="(min-width: 1024px) 40vw, 100vw"
             />
           </div>
@@ -124,13 +128,13 @@ function StorySection({ section, index }: { section: PageSection; index: number 
       </div>
 
       <div className="lg:col-span-7 lg:col-start-6">
-        <div className="flex max-w-[62ch] flex-col gap-5">
+        <div className="flex max-w-[36rem] flex-col gap-5">
           {lead ? (
             <p
               className={cn(
                 "text-pretty text-ink",
                 isName
-                  ? "font-serif text-[1.375rem] leading-[1.2] tracking-[-0.01em] md:text-[1.75rem] lg:text-[2.25rem] lg:leading-[1.15]"
+                  ? "font-serif text-[1.375rem] leading-[1.2] tracking-[-0.01em] md:text-[1.5rem] lg:text-[1.75rem]"
                   : "text-lg leading-relaxed md:text-xl",
               )}
             >
@@ -145,7 +149,7 @@ function StorySection({ section, index }: { section: PageSection; index: number 
         </div>
 
         {isMade ? (
-          <div className="mt-10 max-w-[62ch] border-t border-line pt-6">
+          <div className="mt-10 max-w-[36rem] border-t border-line pt-6">
             <p className="label-caps text-ink-soft">{copy.specsLabel}</p>
             <ul className="mt-4 flex flex-wrap gap-2">
               {site.specs.map((spec) => (
@@ -181,13 +185,22 @@ function ScentsBand({ scents }: { scents: StickProduct[] }) {
   const band = copy.scents;
   const headingId = `${band.id}-heading`;
   const [lead, ...rest] = band.body;
+  // The next index after the story sections (01-04), for the same rhythm.
+  const index = String(copy.sections.length + 1).padStart(2, "0");
 
   return (
     <section id={band.id} aria-labelledby={headingId} className="bg-sand text-ink">
       <Container className="py-20 md:py-28 lg:py-32">
-        <div className="grid gap-6 lg:grid-cols-12 lg:gap-x-8">
-          <SectionHeading id={headingId} title={band.heading} eyebrowRule="neutral" className="lg:col-span-4" />
-          <div className="flex max-w-[62ch] flex-col gap-4 lg:col-span-7 lg:col-start-6">
+        <div className="grid gap-6 md:gap-8 lg:grid-cols-12 lg:gap-x-8">
+          <div className="flex flex-col lg:col-span-4">
+            <p aria-hidden="true" className="label-caps tabular text-ink-soft">
+              {index}
+            </p>
+            <h2 id={headingId} className="mt-3 text-[1.75rem] leading-[1.12] md:text-[2.25rem] lg:text-[2.5rem]">
+              {band.heading}
+            </h2>
+          </div>
+          <div className="flex max-w-[36rem] flex-col gap-4 lg:col-span-7 lg:col-start-6">
             {lead ? <p className="text-lg leading-relaxed text-ink md:text-xl">{lead}</p> : null}
             {rest.map((paragraph) => (
               <p key={paragraph} className="text-base leading-relaxed text-ink-soft md:text-lg">

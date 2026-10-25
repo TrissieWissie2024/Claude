@@ -100,6 +100,17 @@ const signUpText =
 
 const rewardConditions = "One code per order. Excludes gift cards.";
 
+/**
+ * Shown with both sign-up forms while /api/subscribe is a stub (it checks the
+ * address and stores nothing). Set to "" once the email tool is connected
+ * (docs/TODO-LAUNCH.md); the forms then leave the line out.
+ */
+const signUpDemoNote = "Demo store: your address is not saved and no emails are sent.";
+
+/** Placeholder until the real mailbox exists (docs/TODO-LAUNCH.md). `mailto:` links use the bare address. */
+const companyEmail = "hello@corvane.example";
+const companyEmailNote = "(placeholder)";
+
 /** Rendered as: before + <a href>linkLabel</a> + after. */
 const privacyLink = {
   before: "Read how we handle your data in our ",
@@ -244,7 +255,12 @@ export const site = {
     kvk: "KvK: 00000000 (placeholder)",
     vat: "VAT: NL000000000B01 (placeholder)",
     address: "Street 1, 0000 AA City, the Netherlands (placeholder)",
-    email: "hello@corvane.example",
+    /** The bare address, for `mailto:` links. Show it with `emailNote` after it, or use `emailLabel`. */
+    email: companyEmail,
+    /** Marker shown after the address, like the other company details, until the real mailbox exists. */
+    emailNote: companyEmailNote,
+    /** The address as plain text, with its marker: "hello@corvane.example (placeholder)". */
+    emailLabel: `${companyEmail} ${companyEmailNote}`,
   },
 
   analytics: {
@@ -269,6 +285,8 @@ export const site = {
     /** Small close button on the pill. Hides it for the rest of the visit. */
     pillDismiss: "Hide this offer",
     title: "Pick a card",
+    /** Dialog title once a card is turned (the step is now: leave your email). */
+    titleChosen: "Your reward",
     /** Dialog description, visible before a card is picked (brief §2.8). */
     sameRewardNote: `Every card reveals the same reward: ${facts.welcomeLabel}.`,
     /** Line under the cards before one is picked. */
@@ -291,16 +309,20 @@ export const site = {
     /** Caption under the turned card, and under the other two once they turn as well. */
     yourCard: "Your card",
     sameReward: "Same reward",
-    revealedLine: (reward: string) => `Your reward: ${reward}. Enter your email to get the code.`,
+    /** Line under the cards once one is turned. The cards already show the reward, so it is not repeated. */
+    revealedLine: "Enter your email to get the code.",
     /** What the subscriber signs up for. There is no checkbox; if one is added, it starts unticked. */
     consent: {
       text: signUpText,
       privacy: privacyLink,
     },
+    /** Under the consent text while the subscribe endpoint is a stub. Empty: not shown. */
+    demoNote: signUpDemoNote,
     emailLabel: "Email address",
     emailPlaceholder: "you@example.com",
-    submit: "Send my code",
-    submitting: "Sending",
+    /** The code appears on screen; nothing is emailed (the subscribe endpoint is a stub). */
+    submit: "Show my code",
+    submitting: "Checking",
     /** Dialog title once signed up. */
     successHeading: "Your code",
     successLine: (code: string) =>
@@ -337,11 +359,16 @@ export const site = {
       text: signUpText,
       privacy: privacyLink,
     },
+    /** Under the consent text while the subscribe endpoint is a stub. Empty: not shown. */
+    demoNote: signUpDemoNote,
     emailLabel: "Email address",
     emailPlaceholder: "you@example.com",
     submit: "Sign up",
-    submitting: "Sending",
-    success: "You are on the list.",
+    submitting: "Checking",
+    /** Honest about the stub: the address is checked, not stored (demoNote says why). */
+    success: "Address checked, but not saved: this is a demo store.",
+    /** After the success line: the same welcome code the sign-up window gives, so nobody has to sign up twice. */
+    successCode: (code: string, label: string) => `Your welcome code: ${code}, ${label}. ${rewardConditions}`,
     invalidEmail: "Enter a valid email address.",
     error: "That did not go through. Try again in a moment.",
   },

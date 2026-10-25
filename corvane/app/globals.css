@@ -71,6 +71,22 @@
     scroll-padding-top: calc(var(--header-height) + 16px);
   }
 
+  /*
+   * While the fixed email pill shows (components/email/EmailCapture sets
+   * data-email-pill-inset on <html>), keep the bottom edge clear for focus
+   * scrolling, so a focused link is never scrolled in under the pill
+   * (WCAG 2.4.11). "lg": product pages, where the pill only shows from lg.
+   */
+  html[data-email-pill-inset="true"] {
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 64rem) {
+    html[data-email-pill-inset="lg"] {
+      scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
   body {
     background-color: var(--fog);
     color: var(--ink);
