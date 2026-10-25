@@ -42,7 +42,9 @@ corvane/
                              Accordion, Sheet (drawer), Modal, Stars, Flag, VisuallyHidden,
                              MotionStyles (keyframes voor Accordion, Sheet en Modal)
     layout/                  PromoBar, Header, MobileNav, Footer, NewsletterForm,
-                             PaymentIcons, SkipLink
+                             PaymentIcons, SkipLink; hulpbestanden in promo/
+                             (CampaignMessage, UspBar), header/ (DesktopNav,
+                             CartButton) en footer/ (CookieSettingsButton)
     cart/                    CartProvider, CartDrawer, CartLine, ShippingProgress,
                              CartUpsell, CartSummary, QuantityStepper
     home/                    Hero, DeliveryBar, ProductGridSection, HowItWorks,
@@ -265,7 +267,9 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 6. Na aanmelden (`POST /api/subscribe`, vuurt `sign_up`) staat de code in beeld, kopieerbaar, en kan hij in één klik op de cart worden toegepast. De code werkt echt in `priceCart`.
 7. Dezelfde consenttekst staat bij de nieuwsbrief in de footer.
 
-**Stapelvolgorde** (laag naar hoog): sticky header 30 · sticky add-to-cart 40 · e-mailpill 45 · consentbanner 50 · drawers en modals 60. Is de sticky add-to-cart zichtbaar of staat de consentbanner open, dan is de pill verborgen en opent de popup niet vanzelf. Een Playwright-test controleert dat pill en sticky add-to-cart elkaar op 390×844 niet overlappen.
+**Opbouw van elke pagina** (`app/layout.tsx`, D31): SkipLink · PromoBar (in de flow, scrolt weg) · Header (sticky) · `<main id="main">` · Footer · CartDrawer. Pagina's renderen geen eigen `<main>`.
+
+**Stapelvolgorde** (laag naar hoog): sticky header 30 · sticky add-to-cart 40 · e-mailpill 45 · consentbanner 50 · drawers en modals 60 · skiplink 70 (alleen zichtbaar bij focus). Is de sticky add-to-cart zichtbaar of staat de consentbanner open, dan is de pill verborgen en opent de popup niet vanzelf. Een Playwright-test controleert dat pill en sticky add-to-cart elkaar op 390×844 niet overlappen.
 
 ## 11. Commerce, catalogus en cart
 

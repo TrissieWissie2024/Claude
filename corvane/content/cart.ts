@@ -20,6 +20,8 @@ export const cartCopy = {
     title: "Your cart",
     close: "Close cart",
     itemCount: (count: number) => (count === 1 ? "1 item" : `${count} items`),
+    /** Accessible name of the list of lines. */
+    linesLabel: "Items in your cart",
   },
 
   empty: {
@@ -39,6 +41,11 @@ export const cartCopy = {
       /** Gift cards only: nothing ships. */
       notNeeded: "Gift cards are delivered by email. No shipping needed.",
       meterLabel: "Progress to free shipping",
+      /** Sentence form used in the drawer, e.g. "You are €12.05 away from free shipping". */
+      away: (amount: string) => `You are ${amount} away from free shipping`,
+      unlockedShort: "Free shipping unlocked",
+      /** aria-valuetext of the meter, e.g. "€37.95 of €50". */
+      valueText: (current: string, target: string) => `${current} of ${target}`,
     },
     pouch: {
       label: "Free Travel Pouch",
@@ -50,6 +57,12 @@ export const cartCopy = {
       /** e.g. "2 of 3 sticks". */
       step: (count: number, target: number) => `${Math.min(count, target)} of ${sticks(target)}`,
       meterLabel: "Progress to a free Travel Pouch",
+      /** Drawer sentence, with the one-per-order condition (D11). */
+      away: (count: number) =>
+        count === 1
+          ? "Add 1 more stick for a free Travel Pouch (one per order)"
+          : `Add ${count} more sticks for a free Travel Pouch (one per order)`,
+      unlockedShort: "Free Travel Pouch unlocked (one per order)",
     },
     bothUnlocked: "Free shipping and a free Travel Pouch. All set.",
   },
@@ -64,6 +77,8 @@ export const cartCopy = {
     scentCount: (name: string, count: number) => (count > 1 ? `${count} × ${name}` : name),
     plan: {
       oneTime: "One-time purchase",
+      /** Short label on cart lines. */
+      oneTimeShort: "One-time",
       subscription: (count: number) => `Subscribe & save, every ${months(count)}`,
       deliveredAndBilled: (count: number) => `Delivered and billed every ${months(count)}`,
     },
@@ -72,6 +87,9 @@ export const cartCopy = {
     giftCardNote: "Delivered by email",
     /** Shown when an existing pouch line became the free pouch. */
     pouchFreeNote: "One pouch free (one per order)",
+    /** Shown when grouping makes a stick line cheaper than its sticks at the single price. Text, never a struck-through price. */
+    bundlePrice: "Bundle price",
+    scentsLabel: "Scents",
     remove: "Remove",
     removeItem: (name: string) => `Remove ${name}`,
     quantity: {
@@ -88,6 +106,9 @@ export const cartCopy = {
     note: `Free with ${facts.freePouchMinSticks} or more sticks (one per order)`,
     price: "Free",
     label: "Free Travel Pouch (one per order)",
+    /** Short note under the gift line. */
+    noteShort: "One per order",
+    gift: "Gift",
   },
 
   upsell: {
@@ -101,6 +122,11 @@ export const cartCopy = {
       lineWithPouch: (price: string) =>
         `Complete a set of three for ${price} more. The Travel Pouch comes free.`,
       chooseScent: "Choose a scent",
+      /** Compact card price: the extra cost, e.g. "+€15.00". */
+      extra: (price: string) => `+${price}`,
+      note: "Completes a set of three.",
+      notePouch: "Completes a set of three. Unlocks the free Travel Pouch.",
+      addItem: (name: string) => `Add 1 ${name} stick to cart`,
     },
     pouch: (price: string) => `Travel Pouch, ${price}`,
     discoverySet: (price: string) => `Discovery Set, ${price}`,
@@ -118,6 +144,10 @@ export const cartCopy = {
     shippingFree: "Free",
     shippingTo: (country: string) => `Shipping to ${country}`,
     noShipping: "No shipping",
+    /** Gift cards only. */
+    digitalDelivery: "Digital delivery",
+    /** A negative amount, e.g. "−€13.49" (U+2212 minus sign). */
+    minus: (amount: string) => `−${amount}`,
     total: "Total",
     taxesIncluded: "Taxes included.",
   },
@@ -136,6 +166,8 @@ export const cartCopy = {
     apply: "Apply",
     applying: "Applying",
     remove: "Remove code",
+    removeShort: "Remove",
+    removeCode: (code: string) => `Remove code ${code}`,
     applied: (code: string, label: string) => `${code} applied: ${label}`,
     rules: "One code per order. Codes do not apply to gift cards.",
     empty: "Enter a code first.",

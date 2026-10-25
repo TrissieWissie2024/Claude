@@ -19,7 +19,7 @@ export default async function HomePage() {
     .filter((stick): stick is StickProduct => stick !== undefined);
 
   return (
-    <main id="main">
+    <>
       <section aria-labelledby="hero-heading" className="focus-on-dark bg-deep text-fog">
         <Container className="grid items-center gap-12 py-16 md:grid-cols-2 md:gap-16 md:py-24">
           <div>
@@ -56,6 +56,6 @@ export default async function HomePage() {
           <p className="mt-16 text-ink-soft">{site.tagline}</p>
         </Container>
       </section>
-    </main>
+    </>
   );
 }

@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 
+import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CatalogProvider } from "@/components/catalog/CatalogProvider";
+import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/components/layout/Header";
+import { PromoBar } from "@/components/layout/PromoBar";
+import { SkipLink } from "@/components/layout/SkipLink";
 import { commerce } from "@/lib/commerce";
 
 import "./globals.css";
@@ -33,6 +38,15 @@ export const viewport: Viewport = {
   themeColor: "#0F2733",
 };
 
+/**
+ * Root layout (docs/PLAN.md §2, §10). A server component; the chrome around
+ * every page, in DOM order:
+ *   SkipLink (z-70, only visible on focus) · PromoBar (in flow, scrolls away) ·
+ *   Header (sticky, z-30) · <main id="main"> · Footer · CartDrawer (portal, z-60)
+ *
+ * Pages render their content without their own <main>. No ancestor of the
+ * header may set overflow, or `sticky` stops working.
+ */
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Local modules only, so this resolves during prerender and every route stays static.
   // A remote provider (Shopify) must cache this call with 'use cache' (D18).
@@ -40,9 +54,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable} antialiased`}>
-      <body className="min-h-dvh bg-fog text-ink">
+      <body className="flex min-h-dvh flex-col bg-fog text-ink">
         <CatalogProvider products={products}>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            <SkipLink />
+            <PromoBar />
+            <Header />
+            {/* tabIndex -1: the skip link moves focus here; no ring on the whole page. */}
+            <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+              {children}
+            </main>
+            <Footer />
+            <CartDrawer />
+          </CartProvider>
         </CatalogProvider>
       </body>
     </html>

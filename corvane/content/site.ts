@@ -167,6 +167,8 @@ export const site = {
     account: "Account",
     /** Accessible name of the cart button, including the item count. */
     cart: (count: number) => (count === 1 ? "Cart, 1 item" : `Cart, ${count} items`),
+    /** Accessible name of the help links in the mobile menu. */
+    helpNavLabel: "Help",
   },
 
   skipLink: "Skip to content",
@@ -183,11 +185,20 @@ export const site = {
     endsIn: "Ends in",
     /** Units for the campaign countdown. Kept short; the countdown is not a live region. */
     units: { days: "d", hours: "h", minutes: "m", seconds: "s" },
-    /** Accessible description of when the campaign ends, e.g. "Ends 1 November at 23:59". */
-    endsAt: (date: string) => `Ends ${date}`,
-    code: (code: string) => `Code ${code}`,
+    /** Label of the USP rotation toggle. Constant; its state is aria-pressed (D32). */
     pause: "Pause messages",
-    play: "Play messages",
+    /**
+     * Screen reader text for the fixed campaign end (the visible countdown is
+     * aria-hidden), e.g. "Offer ends 1 November at 23:59 Amsterdam time."
+     */
+    endsAtFull: (date: string, time: string) => `Offer ends ${date} at ${time} ${facts.timeZoneLabel}.`,
+    /**
+     * Shorter wording for the one-line rotating USP bar on mobile, by usp id.
+     * Same facts as site.usps; items without an entry use their normal text.
+     */
+    uspShort: {
+      dispatch: `Ships same day on working days before ${facts.cutoff}`,
+    } as Partial<Record<string, string>>,
   },
 
   badges: {
@@ -338,6 +349,12 @@ export const site = {
     // Update the year when it changes; never compute it during render.
     copyright: "© 2026 CORVANE",
     demoNotice: "Demo store. No orders are shipped and no payment is taken.",
+    /** Accessible name of the footer link columns. */
+    navLabel: "Footer",
+    /** Accessible name of the company details (site.company, all placeholders until launch). */
+    companyLabel: "Company details",
+    /** Screen reader suffix for links that open in a new tab (socials). */
+    newTab: "opens in a new tab",
   },
 
   /**
