@@ -131,3 +131,36 @@ describe("content/offers.ts campaign (brief §2.3)", () => {
     }
   });
 });
+
+describe("malformed campaign data (phase 9 coverage audit)", () => {
+  it("fails closed on a startsAt that cannot be parsed", () => {
+    expect(getActiveCampaign(new Date("2026-10-30T12:00:00Z"), { ...campaign, startsAt: "tomorrow" })).toBeNull();
+  });
+
+  it("fails closed when endsAt is missing (untyped data)", () => {
+    const { endsAt: _endsAt, ...withoutEnd } = campaign;
+    void _endsAt;
+    expect(getActiveCampaign(new Date("2026-10-30T12:00:00Z"), withoutEnd as unknown as Campaign)).toBeNull();
+    expect(getCountdown(new Date("2026-10-30T12:00:00Z"), undefined as unknown as string)).toEqual({
+      totalMs: 0,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
+  });
+
+  it("is active exactly at startsAt for the campaign in content/offers.ts", () => {
+    const startsAt = offers.campaign.startsAt;
+    expect(startsAt).toBeDefined();
+    if (startsAt === undefined) return;
+    expect(getActiveCampaign(new Date(Date.parse(startsAt) - 1))).toBeNull();
+    expect(getActiveCampaign(new Date(startsAt))).toBe(offers.campaign);
+  });
+
+  it("counts down the last second and is gone at endsAt", () => {
+    expect(getCountdown(new Date(END.getTime() - 999), END)).toMatchObject({ totalMs: 999, seconds: 0 });
+    expect(getActiveCampaign(new Date(END.getTime() - 1), campaign)).toBe(campaign);
+    expect(getActiveCampaign(END, campaign)).toBeNull();
+  });
+});

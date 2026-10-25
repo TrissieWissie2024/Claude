@@ -93,4 +93,28 @@ describe("claims and reviews helpers", () => {
     expect(getRatingSummary(undefined, sampleReviews)).toEqual({ average: 4.2, count: 5 });
     expect(getRatingSummary("iron-coast", sampleReviews)).toBeNull();
   });
+
+  it("keeps the source order for reviews on the same date and never mutates the source", () => {
+    const sameDay = [
+      review("first", "north-swell", 5, "2027-02-01"),
+      review("second", "north-swell", 3, "2027-02-01"),
+      review("older", "north-swell", 4, "2027-01-15"),
+    ];
+    const before = sameDay.map((item) => item.id);
+    expect(getReviews("north-swell", sameDay).map((item) => item.id)).toEqual(["first", "second", "older"]);
+    expect(getReviews(undefined, [...sameDay].reverse()).map((item) => item.id)).toEqual(["second", "first", "older"]);
+    expect(sameDay.map((item) => item.id)).toEqual(before);
+  });
+
+  it("rounds a rating average to one decimal, half up", () => {
+    // (5 + 4 + 4 + 4) / 4 = 4.25 -> 4.3
+    const four = ["a", "b", "c", "d"].map((id, index) => review(id, "dune-fig", index === 0 ? 5 : 4, "2027-01-01"));
+    expect(getRatingSummary("dune-fig", four)).toEqual({ average: 4.3, count: 4 });
+  });
+
+  it("only treats verified: true as verified", () => {
+    const loose = [{ id: "longevity", text: "x", verified: "true", evidence: "" }] as unknown as Claim[];
+    expect(getVerifiedClaims(loose)).toEqual([]);
+    expect(getVerifiedClaim("longevity", loose)).toBeNull();
+  });
 });

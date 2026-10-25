@@ -9,9 +9,13 @@ import {
   getCardNotes,
   getFamilies,
   getFromPrice,
+  getScentNames,
   getSticks,
   hasFromPrice,
+  isSortKey,
   isStick,
+  MAX_CART_LINES,
+  MAX_LINE_QUANTITY,
   parseCartLine,
   parseCartLines,
   parseFamily,
@@ -179,5 +183,166 @@ describe("analytics payloads", () => {
 
   it("is a no-op on the server", () => {
     expect(() => track("sign_up", { method: "newsletter" })).not.toThrow();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Edge cases (phase 9 coverage audit)                                 */
+/* ------------------------------------------------------------------ */
+
+describe("prices with other gift card configs", () => {
+  const giftCard = () => findProduct(products, "e-gift-card")!;
+
+  it("is 0 and not a From price without denominations, a plain price with one", () => {
+    expect(getFromPrice(giftCard(), { ...offers, giftCardDenominations: [] })).toBe(0);
+    expect(hasFromPrice(giftCard(), { ...offers, giftCardDenominations: [] })).toBe(false);
+    expect(getFromPrice(giftCard(), { ...offers, giftCardDenominations: [7500] })).toBe(7500);
+    expect(hasFromPrice(giftCard(), { ...offers, giftCardDenominations: [7500] })).toBe(false);
+    // Lowest, whatever the order in the config.
+    expect(getFromPrice(giftCard(), { ...offers, giftCardDenominations: [10000, 2500, 5000] })).toBe(2500);
+  });
+});
+
+describe("sort ties and search params", () => {
+  it("breaks featuredRank ties on the slug, both ways", () => {
+    const tied = products.map((product) => ({ ...product, featuredRank: 1 }));
+    const sorted = slugs(sortProducts([...tied].reverse(), "featured"));
+    expect(sorted).toEqual([...sorted].sort());
+    expect(slugs(sortProducts(tied, "featured"))).toEqual(sorted);
+  });
+
+  it("sorts newest first with older products last", () => {
+    const dated = products.map((product) =>
+      product.slug === "north-swell"
+        ? { ...product, releasedAt: "2026-01-01" }
+        : product.slug === "dune-fig"
+          ? { ...product, releasedAt: "2027-06-01" }
+          : product,
+    );
+    const sorted = slugs(sortProducts(dated, "newest"));
+    expect(sorted[0]).toBe("dune-fig");
+    expect(sorted[sorted.length - 1]).toBe("north-swell");
+    // Same result whatever the input order.
+    expect(slugs(sortProducts([...dated].reverse(), "newest"))).toEqual(sorted);
+  });
+
+  it("treats duplicate entries as equal", () => {
+    const stick = findProduct(products, "north-swell")!;
+    expect(slugs(sortProducts([stick, stick], "featured"))).toEqual(["north-swell", "north-swell"]);
+  });
+
+  it("falls back to featured for an unknown sort key at runtime", () => {
+    expect(slugs(sortProducts([...products].reverse(), "cheapest" as never))).toEqual(slugs(products));
+  });
+
+  it("accepts only known sort keys and families", () => {
+    expect(isSortKey("newest")).toBe(true);
+    expect(isSortKey(3)).toBe(false);
+    expect(parseSortKey(undefined)).toBe("featured");
+    expect(parseFamily(null)).toBeNull();
+    expect(parseFamily(undefined)).toBeNull();
+    expect(parseFamily("")).toBeNull();
+    expect(parseFamily("  DARK ")).toBe("Dark");
+  });
+
+  it("returns no products for a family without sticks", () => {
+    const withoutWoody = products.filter((product) => !(isStick(product) && product.family === "Woody"));
+    expect(filterByFamily(withoutWoody, "Woody")).toEqual([]);
+    expect(getFamilies(withoutWoody)).not.toContain("Woody");
+  });
+});
+
+describe("cart line validation, every kind", () => {
+  const oneTime = { type: "one-time" };
+
+  it("accepts each kind with its own slug", () => {
+    expect(parseCartLine({ id: "d", kind: "discovery-set", slug: "discovery-set", quantity: 2 }, products)).toEqual({
+      id: "d",
+      kind: "discovery-set",
+      slug: "discovery-set",
+      quantity: 2,
+    });
+    expect(parseCartLine({ id: "p", kind: "pouch", slug: "travel-pouch", quantity: 1, extra: true }, products)).toEqual({
+      id: "p",
+      kind: "pouch",
+      slug: "travel-pouch",
+      quantity: 1,
+    });
+    expect(parseCartLine({ id: "g", kind: "gift-card", slug: "e-gift-card", amount: 10000, quantity: 1 }, products)).toEqual({
+      id: "g",
+      kind: "gift-card",
+      slug: "e-gift-card",
+      amount: 10000,
+      quantity: 1,
+    });
+    expect(
+      parseCartLine({ id: "s", kind: "stick", scents: ["north-swell", "north-swell"], plan: oneTime, quantity: 1 }, products),
+    ).toMatchObject({ scents: ["north-swell", "north-swell"], plan: { type: "one-time" } });
+  });
+
+  it("rejects a kind with the wrong slug or a product missing from the catalog", () => {
+    expect(parseCartLine({ id: "d", kind: "discovery-set", slug: "travel-pouch", quantity: 1 }, products)).toBeNull();
+    expect(parseCartLine({ id: "g", kind: "gift-card", slug: "gift", amount: 5000, quantity: 1 }, products)).toBeNull();
+    expect(parseCartLine({ id: "g", kind: "gift-card", slug: "e-gift-card", amount: "5000", quantity: 1 }, products)).toBeNull();
+    const sticksOnly = getSticks(products);
+    expect(parseCartLine({ id: "d", kind: "discovery-set", slug: "discovery-set", quantity: 1 }, sticksOnly)).toBeNull();
+    expect(parseCartLine({ id: "p", kind: "pouch", slug: "travel-pouch", quantity: 1 }, sticksOnly)).toBeNull();
+    expect(parseCartLine({ id: "g", kind: "gift-card", slug: "e-gift-card", amount: 5000, quantity: 1 }, sticksOnly)).toBeNull();
+  });
+
+  it("rejects unknown kinds, bad ids and quantities outside 1 to 99", () => {
+    const pouch = { id: "p", kind: "pouch", slug: "travel-pouch", quantity: 1 };
+    expect(parseCartLine({ ...pouch, kind: "candle" }, products)).toBeNull();
+    expect(parseCartLine({ ...pouch, id: "" }, products)).toBeNull();
+    expect(parseCartLine({ ...pouch, id: 7 }, products)).toBeNull();
+    expect(parseCartLine({ ...pouch, id: "x".repeat(201) }, products)).toBeNull();
+    expect(parseCartLine({ ...pouch, id: "x".repeat(200) }, products)).not.toBeNull();
+    expect(parseCartLine({ ...pouch, quantity: MAX_LINE_QUANTITY }, products)).not.toBeNull();
+    expect(parseCartLine({ ...pouch, quantity: MAX_LINE_QUANTITY + 1 }, products)).toBeNull();
+    expect(parseCartLine({ ...pouch, quantity: "1" }, products)).toBeNull();
+    expect(parseCartLine([pouch], products)).toBeNull();
+    expect(parseCartLine(undefined, products)).toBeNull();
+  });
+
+  it("rejects plans that are missing, unknown or not an object", () => {
+    const line = { id: "s", kind: "stick", scents: ["north-swell"], quantity: 1 };
+    expect(parseCartLine(line, products)).toBeNull();
+    expect(parseCartLine({ ...line, plan: "one-time" }, products)).toBeNull();
+    expect(parseCartLine({ ...line, plan: { type: "weekly" } }, products)).toBeNull();
+    expect(parseCartLine({ ...line, plan: { type: "subscription" } }, products)).toBeNull();
+    expect(parseCartLine({ ...line, plan: { type: "subscription", intervalMonths: "2" } }, products)).toBeNull();
+    expect(parseCartLine({ ...line, plan: { type: "subscription", intervalMonths: 3, extra: 1 } }, products)).toMatchObject({
+      plan: { type: "subscription", intervalMonths: 3 },
+    });
+    expect(parseCartLine({ ...line, scents: "north-swell", plan: oneTime }, products)).toBeNull();
+    expect(parseCartLine({ ...line, scents: ["discovery-set"], plan: oneTime }, products)).toBeNull();
+  });
+
+  it("does not share the scents array with the input", () => {
+    const scents = ["north-swell"];
+    const line = parseCartLine({ id: "s", kind: "stick", scents, plan: oneTime, quantity: 1 }, products);
+    expect(line?.kind === "stick" && line.scents).toEqual(scents);
+    expect(line?.kind === "stick" && line.scents !== scents).toBe(true);
+  });
+
+  it(`keeps at most ${MAX_CART_LINES} valid lines`, () => {
+    const many = Array.from({ length: MAX_CART_LINES + 5 }, (_, index) => ({
+      id: `line-${index}`,
+      kind: "pouch",
+      slug: "travel-pouch",
+      quantity: 1,
+    }));
+    const lines = parseCartLines([null, ...many], products);
+    expect(lines).toHaveLength(MAX_CART_LINES);
+    expect(lines[0].id).toBe("line-0");
+    expect(lines[MAX_CART_LINES - 1].id).toBe(`line-${MAX_CART_LINES - 1}`);
+  });
+});
+
+describe("getScentNames", () => {
+  it("names scents in the order chosen and falls back to the slug", () => {
+    expect(getScentNames(products, ["dune-fig", "north-swell"])).toEqual(["Dune Fig", "North Swell"]);
+    expect(getScentNames(products, ["retired-scent", "discovery-set"])).toEqual(["retired-scent", "discovery-set"]);
+    expect(getScentNames(products, [])).toEqual([]);
   });
 });

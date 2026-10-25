@@ -561,3 +561,300 @@ describe("bundle tile quotes (PLAN §7 rule 10)", () => {
     }
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* Edge cases and defensive branches (phase 9 coverage audit)          */
+/* ------------------------------------------------------------------ */
+
+function withOffers(patch: Partial<PricingConfig["offers"]>): PricingConfig {
+  return { ...defaultPricingConfig, offers: { ...offers, ...patch } };
+}
+
+function withDiscountCodes(codes: PricingConfig["offers"]["discountCodes"]): PricingConfig {
+  return withOffers({ discountCodes: codes });
+}
+
+describe("free shipping at exactly the €50.00 basis (PLAN §7 rule 7, D14)", () => {
+  // No combination of the default prices lands on exactly 5000, so the pouch
+  // price is moved to make 2 sticks + 1 pouch hit the threshold.
+  const atThreshold = withOffers({ prices: { ...offers.prices, travelPouch: 505 } });
+  const oneCentBelow = withOffers({ prices: { ...offers.prices, travelPouch: 504 } });
+  const cart = [stick(["north-swell", "dune-fig"]), pouch()];
+
+  it("ships free at a basis of exactly 5000 in NL and BE", () => {
+    for (const country of ["NL", "BE"] as const) {
+      const summary = priceCart({ lines: cart, country, now: NOW }, atThreshold);
+      expect(summary.shipping).toMatchObject({ country, basis: 5000, amount: 0, isFree: true, remainingForFree: 0 });
+      expect(summary.total).toBe(5000);
+    }
+  });
+
+  it("charges shipping 1 cent below the threshold", () => {
+    const summary = price(cart, null, NOW, oneCentBelow);
+    expect(summary.shipping).toMatchObject({ basis: 4999, amount: 495, isFree: false, remainingForFree: 1 });
+    expect(summary.total).toBe(4999 + 495);
+  });
+
+  it("stays free when the code takes the total below 5000", () => {
+    const summary = price(cart, "WELCOME10", NOW, atThreshold);
+    expect(summary.discount?.amount).toBe(500);
+    expect(summary.subtotal).toBe(4500);
+    expect(summary.shipping).toMatchObject({ basis: 5000, amount: 0, isFree: true });
+    expect(summary.total).toBe(4500);
+  });
+});
+
+describe("subscription with 8 sticks", () => {
+  it("prices 8 sticks over lines with intervals 1, 2 and 3 as one group of 14013", () => {
+    const summary = price([
+      stick(["north-swell", "dune-fig", "iron-coast"], SUB_1),
+      stick(["harbour-tea", "lantern-smoke", "drift-and-ember"], SUB_2),
+      stick(["north-swell", "harbour-tea"], { type: "subscription", intervalMonths: 3 }),
+    ]);
+    expect(summary.groups).toHaveLength(1);
+    expect(summary.groups[0]).toMatchObject({
+      purchaseType: "subscription",
+      stickCount: 8,
+      listTotal: 8 * 2495,
+      bundleTotal: 2 * 5995 + 4495,
+      subscriptionDiscount: 2 * 5995 + 4495 - 14013,
+      total: 14013,
+    });
+    expect(summary.groups[0].bundles).toEqual([
+      { size: 3, count: 2, groupPrice: 5096 },
+      { size: 2, count: 1, groupPrice: 3821 },
+    ]);
+    // Each line is exactly its tile, because the lines already are whole bundles.
+    expect(summary.lines.map((line) => line.total)).toEqual([5096, 5096, 3821]);
+    expect(summary.subtotal).toBe(14013);
+    expect(summary.freePouch).toMatchObject({ eligible: true, sticksNeeded: 0 });
+    expect(summary.pouchSavings).toBe(995);
+    expect(summary.shipping.amount).toBe(0);
+  });
+
+  it("keeps 8 subscription sticks and 1 one-time stick in separate groups", () => {
+    const summary = price([stick(["north-swell"], SUB_2, 8), stick(["dune-fig"])]);
+    expect(summary.groups.map((group) => [group.purchaseType, group.stickCount, group.total])).toEqual([
+      ["one-time", 1, 2495],
+      ["subscription", 8, 14013],
+    ]);
+    expect(summary.subtotal).toBe(14013 + 2495);
+    expect(summary.subscriptionSavings).toBe(2 * 5995 + 4495 - 14013);
+  });
+
+  it("quotes per-stick prices for subscription tiles, rounded half up", () => {
+    // 3821 / 2 = 1910.5 -> 1911; 5096 / 3 = 1698.67 -> 1699.
+    expect(([1, 2, 3] as const).map((size) => getBundleTileQuote(size, "subscription").perStick)).toEqual([
+      2121, 1911, 1699,
+    ]);
+  });
+});
+
+describe("discount code edge cases", () => {
+  const LAUNCH_START = new Date("2026-10-24T22:00:00Z"); // 2026-10-25T00:00:00+02:00
+
+  it("treats a blank code as unknown in validateDiscountCode", () => {
+    expect(validateDiscountCode("", NOW)).toEqual({ valid: false, error: "unknown" });
+    expect(validateDiscountCode("   ", NOW)).toEqual({ valid: false, error: "unknown" });
+  });
+
+  it("accepts the campaign code exactly at startsAt and 1 ms before endsAt, in the cart too", () => {
+    expect(price([stick(["north-swell"])], "LAUNCH15", LAUNCH_START).discount?.amount).toBe(374);
+    expect(price([stick(["north-swell"])], "LAUNCH15", new Date(LAUNCH_START.getTime() - 1)).discountError).toBe(
+      "not-started",
+    );
+    expect(price([stick(["north-swell"])], "LAUNCH15", new Date("2026-11-01T22:59:58.999Z")).discount?.amount).toBe(374);
+  });
+
+  it("applies both windows: a code that starts after its campaign waits for its own startsAt", () => {
+    const config = withDiscountCodes(
+      offers.discountCodes.map((code) =>
+        code.code === "LAUNCH15" ? { ...code, startsAt: "2026-10-28T09:00:00+01:00" } : code,
+      ),
+    );
+    expect(validateDiscountCode("LAUNCH15", new Date("2026-10-28T07:59:59.999Z"), config)).toEqual({
+      valid: false,
+      error: "not-started",
+    });
+    expect(validateDiscountCode("LAUNCH15", new Date("2026-10-28T08:00:00Z"), config).valid).toBe(true);
+  });
+
+  it("applies both windows: a campaign that ends before its code ends the code too", () => {
+    const config = withDiscountCodes(
+      offers.discountCodes.map((code) => (code.code === "LAUNCH15" ? { ...code, endsAt: "2026-12-31T23:59:59+01:00" } : code)),
+    );
+    expect(validateDiscountCode("LAUNCH15", new Date("2026-11-01T22:59:59Z"), config)).toEqual({
+      valid: false,
+      error: "expired",
+    });
+  });
+
+  it("gives a welcome code with its own window the same start and end checks", () => {
+    const config = withDiscountCodes([
+      {
+        code: "SPRING5",
+        kind: "percent",
+        value: 5,
+        label: "5% off",
+        source: "welcome",
+        active: true,
+        startsAt: "2027-03-01T00:00:00+01:00",
+        endsAt: "2027-04-01T00:00:00+02:00",
+      },
+    ]);
+    expect(validateDiscountCode("spring5", new Date("2027-02-28T22:59:59Z"), config)).toEqual({
+      valid: false,
+      error: "not-started",
+    });
+    expect(validateDiscountCode("spring5", new Date("2027-02-28T23:00:00Z"), config).valid).toBe(true);
+    // The March DST change lies inside the window: endsAt is 22:00Z, not 23:00Z.
+    expect(validateDiscountCode("spring5", new Date("2027-03-31T21:59:59.999Z"), config).valid).toBe(true);
+    expect(validateDiscountCode("spring5", new Date("2027-03-31T22:00:00Z"), config)).toEqual({
+      valid: false,
+      error: "expired",
+    });
+  });
+
+  it("fails closed on a code or campaign timestamp that cannot be parsed", () => {
+    const brokenCode = (patch: { startsAt?: string; endsAt?: string }) =>
+      withDiscountCodes(offers.discountCodes.map((code) => (code.code === "WELCOME10" ? { ...code, ...patch } : code)));
+    expect(validateDiscountCode("WELCOME10", NOW, brokenCode({ startsAt: "soon" }))).toEqual({
+      valid: false,
+      error: "inactive",
+    });
+    expect(validateDiscountCode("WELCOME10", NOW, brokenCode({ endsAt: "2026-13-45" }))).toEqual({
+      valid: false,
+      error: "inactive",
+    });
+    expect(validateDiscountCode("LAUNCH15", NOW, withCampaign({ endsAt: "next week" }))).toEqual({
+      valid: false,
+      error: "inactive",
+    });
+    expect(price([stick(["north-swell"])], "WELCOME10", NOW, brokenCode({ startsAt: "soon" })).discount).toBeNull();
+  });
+
+  it("matches the campaign code case-insensitively and works without a campaign startsAt", () => {
+    expect(validateDiscountCode("LAUNCH15", NOW, withCampaign({ code: " launch15 " })).valid).toBe(true);
+    const { startsAt: _start, ...noStart } = offers.campaign;
+    void _start;
+    const config = withOffers({
+      campaign: noStart,
+      discountCodes: offers.discountCodes.map((code) => (code.code === "LAUNCH15" ? { ...code, startsAt: undefined } : code)),
+    });
+    expect(validateDiscountCode("LAUNCH15", new Date("2026-01-01T00:00:00Z"), config).valid).toBe(true);
+  });
+
+  it("rejects a valid code on an empty cart as nothing-eligible", () => {
+    const summary = price([], "WELCOME10");
+    expect(summary.discount).toBeNull();
+    expect(summary.discountError).toBe("nothing-eligible");
+    expect(summary.total).toBe(0);
+  });
+
+  it("never discounts more than the eligible amount", () => {
+    const config = withDiscountCodes([
+      { code: "ALL", kind: "percent", value: 150, label: "Test", source: "welcome", active: true },
+    ]);
+    const summary = price([stick(["north-swell"]), giftCard(2500)], "ALL", NOW, config);
+    expect(summary.discount?.amount).toBe(2495);
+    expect(summary.subtotal).toBe(2500);
+  });
+
+  it("discountWindowStart ignores boundaries that cannot be parsed", () => {
+    const codeStart = Date.parse("2026-10-25T00:00:00+02:00");
+    // The LAUNCH15 code window still counts when the campaign's timestamps are broken.
+    expect(discountWindowStart(NOW, withCampaign({ startsAt: "whenever", endsAt: "later" }))).toBe(codeStart);
+    // Without codes, the campaign window alone.
+    expect(discountWindowStart(NOW, withDiscountCodes([]))).toBe(codeStart);
+    // Nothing parseable at all: 0.
+    const nothing = withOffers({ discountCodes: [], campaign: { ...offers.campaign, startsAt: "x", endsAt: "y" } });
+    expect(discountWindowStart(NOW, nothing)).toBe(0);
+  });
+});
+
+describe("shipping country fallback", () => {
+  it("uses the default country when priceCart gets no or an unknown country", () => {
+    expect(priceCart({ lines: [stick(["north-swell"])], now: NOW }).shipping.country).toBe("NL");
+    expect(priceCart({ lines: [stick(["north-swell"])], country: "DE" as CountryCode, now: NOW }).shipping.country).toBe(
+      "NL",
+    );
+  });
+
+  it("falls back to the first country when the default is missing, and throws without countries", () => {
+    const onlyBelgium: PricingConfig = {
+      ...defaultPricingConfig,
+      shipping: { ...shipping, countries: shipping.countries.filter((country) => country.code === "BE") },
+    };
+    expect(quoteShipping("NL", 100, true, onlyBelgium).country).toBe("BE");
+    const none: PricingConfig = { ...defaultPricingConfig, shipping: { ...shipping, countries: [] } };
+    expect(() => quoteShipping("NL", 100, true, none)).toThrow("Shipping config has no countries.");
+  });
+
+  it("clamps a negative basis to 0", () => {
+    expect(quoteShipping("NL", -100, true)).toMatchObject({ basis: 0, amount: 495, remainingForFree: 5000 });
+  });
+});
+
+describe("tampered stick lines (e.g. from old localStorage)", () => {
+  it("skips lines whose scents are not a list of slugs or whose plan is unknown", () => {
+    const valid = stick(["lantern-smoke"]);
+    const tampered = [
+      { ...valid, id: "string-scents", scents: "north-swell" },
+      { ...valid, id: "empty-slug", scents: ["north-swell", ""] },
+      { ...valid, id: "number-slug", scents: [42] },
+      { ...valid, id: "no-plan", plan: undefined },
+      { ...valid, id: "weekly", plan: { type: "weekly" } },
+      null,
+    ] as unknown as CartLine[];
+    const summary = price([...tampered, valid]);
+    expect(summary.lines.map((line) => line.lineId)).toEqual([valid.id]);
+    expect(summary.subtotal).toBe(2495);
+  });
+});
+
+describe("allocation with unusual configs (D13 safety)", () => {
+  it("puts a zero group total on the last line when every price is 0", () => {
+    const config = withOffers({ stickPricing: { 1: 0, 2: 0, 3: 0 } });
+    const summary = price([stick(["north-swell"]), stick(["dune-fig"])], null, NOW, config);
+    expect(summary.lines.map((line) => line.total)).toEqual([0, 0]);
+    expect(summary.subtotal).toBe(0);
+  });
+
+  it("still sums to the group total when a bundle costs more than its single sticks", () => {
+    const config = withOffers({ stickPricing: { 1: 1000, 2: 2000, 3: 3301 } });
+    const summary = price([stick(["north-swell"]), stick(["dune-fig"]), stick(["iron-coast"])], null, NOW, config);
+    expect(summary.groups[0].total).toBe(3301);
+    expect(summary.lines.map((line) => line.total)).toEqual([1100, 1100, 1101]);
+  });
+});
+
+describe("best value tile with other configs", () => {
+  it("marks the 1-stick tile when it is the cheapest per stick", () => {
+    const config = withOffers({ stickPricing: { 1: 1000, 2: 2400, 3: 3600 } });
+    expect(([1, 2, 3] as const).map((size) => getBundleTileQuote(size, ONE_TIME, config).isBestValue)).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    // Negative savings are reported as they are; the UI only shows a positive saving.
+    expect(getBundleTileQuote(3, ONE_TIME, config).savings).toBe(-600);
+  });
+
+  it("gives an exact per-stick tie to the larger tile", () => {
+    const config = withOffers({ stickPricing: { 1: 1000, 2: 2000, 3: 3000 } });
+    expect(([1, 2, 3] as const).map((size) => getBundleTileQuote(size, ONE_TIME, config).isBestValue)).toEqual([
+      false,
+      false,
+      true,
+    ]);
+  });
+
+  it("follows freePouch.minSticks for includesFreePouch", () => {
+    const config = withOffers({ freePouch: { ...offers.freePouch, minSticks: 2 } });
+    expect(([1, 2, 3] as const).map((size) => getBundleTileQuote(size, ONE_TIME, config).includesFreePouch)).toEqual([
+      false,
+      true,
+      true,
+    ]);
+  });
+});
