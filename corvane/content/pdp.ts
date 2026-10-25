@@ -115,7 +115,10 @@ export const pdp = {
       3: "3 sticks",
     } satisfies Record<BundleSize, string>,
     perStick: (price: string) => `${price} per stick`,
-    /** Bundle saving versus the single-stick price, e.g. "Save €4.95". Text only, never a struck-through price. */
+    /**
+     * Saving versus single sticks bought one-time, e.g. "Save €4.95" (with Subscribe & save the tile
+     * saving includes the subscription discount). Text only, never a struck-through price.
+     */
     savings: (amount: string) => `Save ${amount}`,
     /** Only on the 3-stick tile (offers.freePouch). */
     freePouch: "Free Travel Pouch (one per order)",
@@ -129,6 +132,10 @@ export const pdp = {
     /** Stick 1 is always the scent of the page. */
     firstSlotNote: (name: string) => `${name}, the scent on this page`,
     selectLabel: (index: number) => `Scent for stick ${index}`,
+    /** Short marker after the stick 1 name. */
+    pageScent: "This page",
+    /** Summary of the chosen set, e.g. "Your set: 2 × North Swell and Dune Fig". */
+    summary: (names: string) => `Your set: ${names}`,
   },
 
   purchaseType: {
@@ -150,6 +157,17 @@ export const pdp = {
      */
     subscriptionNote:
       "Cancel any time before your next delivery. Recurring billing is connected when the shop goes live; until then no payment is taken.",
+    /** Short plan names for summaries (sticky bar). */
+    oneTimeShort: "One-time",
+    /** Compact interval control: legend plus short options, so three fit on one line at 390 px. */
+    intervalLegendShort: "Deliver every",
+    intervalsShort: {
+      1: "1 month",
+      2: "2 months",
+      3: "3 months",
+    } satisfies Record<SubscriptionInterval, string>,
+    /** Unit after the subscription price, e.g. "€50.96 per delivery". */
+    perDeliveryUnit: "per delivery",
   },
 
   addToCart: {
@@ -157,6 +175,8 @@ export const pdp = {
     withPrice: (price: string) => `Add to cart – ${price}`,
     adding: "Adding",
     added: "Added to cart",
+    /** Visual separator between label and total ("Add to cart · €59.95"); rendered aria-hidden. */
+    separator: "·",
   },
 
   /** Mobile bar that appears once the main button scrolls out of view. */
@@ -165,6 +185,10 @@ export const pdp = {
     summary: (name: string, selection: string) => `${name}, ${selection}`,
     cta: "Add to cart",
     ctaWithPrice: (price: string) => `Add – ${price}`,
+    /** Discovery Set and Travel Pouch, e.g. "Quantity: 2". */
+    quantity: (count: number) => `Quantity: ${count}`,
+    /** E-gift card, e.g. "€50 · Delivered by email". */
+    giftCard: (amount: string) => `${amount} · Delivered by email`,
   },
 
   /** Fixed text only. Never a countdown to the cut-off (brief §2.3). */
@@ -304,6 +328,8 @@ export const pdp = {
     ],
     freeNote: "Free Travel Pouch (one per order)",
     oneTimeOnly: "One-time purchase.",
+    /** Shown next to the price on the Travel Pouch page. */
+    freeWith: `Free with ${facts.freePouchMinSticks} or more sticks (one per order).`,
   },
 
   giftCard: {
@@ -319,6 +345,121 @@ export const pdp = {
     /** Gift cards are digital: no delivery estimate, no shipping in the trust row. */
     noShipping: "No shipping",
   },
+
+  /* ---------------------------------------------------------------- */
+  /* Page shell: title block, gallery, delivery, accordions of the     */
+  /* products without a scent, cross-sell (phase 6)                    */
+  /* ---------------------------------------------------------------- */
+
+  /** Eyebrow above the name of a product without a scent family (sticks show pdp.family). */
+  eyebrow: {
+    "discovery-set": "Try all six",
+    pouch: "Accessory",
+    "gift-card": "Digital gift card",
+  },
+
+  /** Size after the price in the title block. The configurator shows the live price. */
+  priceSize: {
+    stick: "15 g",
+    "discovery-set": "6 × 3 g",
+  },
+
+  /** The ring colour of each scent in words (Details accordion); the hex lives in the product data. */
+  ringColour: {
+    label: "Ring colour",
+    names: {
+      "north-swell": "Light blue",
+      "drift-and-ember": "Burnt orange",
+      "lantern-smoke": "Deep red",
+      "iron-coast": "Steel grey",
+      "dune-fig": "Sage green",
+      "harbour-tea": "Tea brown",
+    } as Partial<Record<string, string>>,
+  },
+
+  /** Delivery estimate before mount (no clock yet), in the same space. True on every day. */
+  deliveryFallback: {
+    dispatch: "Ships on working days",
+    estimate: (min: number, max: number) =>
+      min === max
+        ? `Delivery in ${min} working ${min === 1 ? "day" : "days"}`
+        : `Delivery in ${min} to ${max} working days`,
+  },
+
+  /** Polite announcement after the country switch, e.g. "Estimated delivery: Tue 27 Oct to Wed 28 Oct (Belgium)." */
+  deliveryCountryChanged: (country: string, estimate: string) => `${estimate} (${country}).`,
+
+  /** Screen reader status of the gallery after a swipe or a thumbnail, e.g. "Image 2 of 4". */
+  galleryStatus: (index: number, total: number) => `Image ${index} of ${total}`,
+
+  /** Tag next to copy that is a placeholder until launch (INCI list, gift card validity term). */
+  toFollow: "To follow",
+
+  /** Accordions of the products without a scent (sticks use pdp.accordions). */
+  accordionsFor: {
+    discoverySet: {
+      details: [
+        "Six 3 g mini sticks, one of each scent",
+        "Alcohol-free",
+        "Plant-based wax base with jojoba and coconut oil",
+        "Melts at skin temperature",
+        "Same formula as the 15 g stick",
+      ],
+    },
+    pouch: {
+      details: [
+        "Canvas pouch",
+        "Keeps your CORVANE sticks together",
+        "Sticks sold separately",
+        `Free with ${facts.freePouchMinSticks} or more sticks (one per order)`,
+      ],
+    },
+    giftCard: {
+      howItWorks: {
+        title: "How it works",
+        steps: [
+          "Choose an amount.",
+          "The e-gift card arrives by email after purchase.",
+          "They pick the scent and use the card at checkout.",
+        ],
+        note: "Redeeming a gift card at checkout becomes available when the shop goes live. Discount codes do not apply to gift cards.",
+      },
+      validity: {
+        title: "Validity",
+        // TODO launch: the term follows from the legal check (content/legal.ts, Terms article 14).
+        term: "Validity term: confirmed before the shop goes live.",
+        isPlaceholder: true,
+        items: [
+          "Use it for products in this shop, not for other gift cards.",
+          "Any balance stays on the card. It cannot be exchanged for cash.",
+        ],
+      },
+      delivery: {
+        title: "Delivery",
+        text: "Delivered by email after purchase. There is nothing to ship.",
+        /** Rendered as: before + <a href>label</a> + after. */
+        terms: {
+          before: "Withdrawal and validity are set out in the ",
+          label: "Terms & Conditions",
+          after: ".",
+          href: "/terms-and-conditions",
+        },
+      },
+    },
+  },
+
+  /** Cross-sell on the pages that are not scent sticks (sticks use pdp.crossSell.heading). */
+  crossSellFor: {
+    eyebrow: "Also in the range",
+    headings: {
+      "discovery-set": "Then pick your stick",
+      pouch: "Fill the pouch",
+      "gift-card": "Or choose for them",
+    } as Partial<Record<string, string>>,
+  },
+
+  /** Screen reader text of the product page skeleton (unknown slugs, before the 404). */
+  loading: "Loading product",
 };
 
 export type Pdp = typeof pdp;

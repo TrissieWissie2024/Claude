@@ -250,10 +250,11 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 
 - **Galerij:** scroll-snap met swipe op mobiel, vorige/volgende-knoppen en thumbnails (knoppen) op desktop. Dia's: render, schaalbeeld in de hand (placeholder), notenkaart, lifestyle (placeholder).
 - **Geurkiezer:** swatches in de ringkleur, met een rand van 1 px `ink-soft` (enkele ringkleuren halen anders geen 3:1 op fog), de naam als zichtbaar label en een geselecteerde staat die niet alleen op kleur leunt. Elke swatch is een link naar `/products/[slug]` (`scroll={false}`) met `aria-current`. De keuzes (tegel, aankooptype, interval, extra sticks) staan in `PdpStateProvider` in `app/products/layout.tsx` en blijven dus bewaard bij het wisselen van geur. Stick 1 is altijd de geur van de pagina.
-- **Bundeltegels, aankooptype, interval, mix & match:** native radiogroepen. Extra sticks staan standaard op de geur van de pagina.
+- **Bundeltegels, aankooptype, interval, mix & match:** native radiogroepen. Standaard: 1 stick, eenmalig, interval 2 maanden (D45). Extra sticks staan standaard op de geur van de pagina. De besparing op een tegel is altijd gemeten tegen losse eenmalige sticks.
 - **Abonnement:** "Delivered and billed every N months", met de prijs per levering. Opzeggen staat in de Terms; de koppeling met echte facturering volgt bij launch.
-- **Per producttype:** stick = tegels + aankooptype. Discovery Set en Travel Pouch = aantal, alleen eenmalig. E-gift card = bedrag (€25, €50, €100), "Delivered by email", geen leverschatting en geen verzendregel in de trustrij.
-- **Sticky add-to-cart:** alleen op mobiel, verschijnt zodra de hoofdknop uit beeld is (IntersectionObserver), met `env(safe-area-inset-bottom)`.
+- **Per producttype:** stick = tegels + aankooptype. Discovery Set en Travel Pouch = aantal, alleen eenmalig. E-gift card = bedrag (€25, €50, €100), "Delivered by email", geen leverschatting; de trustrij toont alleen veilig betalen (geen verzending, en de garantie geldt niet voor cadeaukaarten, D28 en D48).
+- **Sticky add-to-cart:** alleen onder `lg`, verschijnt zodra de hoofdknop boven de onderkant van de sticky header is verdwenen (IntersectionObserver, ook bij een sprong voorbij de knop), met `env(safe-area-inset-bottom)` (D46).
+- **Lay-out:** vanaf `lg` twee kolommen, galerij links (ongeveer 55%) en de koopkolom rechts met de accordions onder de trustrij; de kortste kolom blijft in beeld (D44).
 
 ## 10. Cart drawer, e-mailpopup en vaste elementen
 
@@ -278,7 +279,7 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 - `lib/commerce/local.ts` is het enige bestand dat `content/products.ts` importeert. Het geeft `/checkout` als checkout-URL. `lib/commerce/shopify.ts` is een gedocumenteerde stub voor de Storefront API (handle, variant-id's en selling plans uit `externalIds`). `COMMERCE_PROVIDER` (`local` of `shopify`) kiest de provider (D26).
 - Server components en route handlers halen productdata via `commerce`. Client components krijgen die via `CatalogProvider` (in `app/layout.tsx` gevuld met `await commerce.getProducts()`; een externe provider cachet dat met `'use cache'`, D18) of via props. `lib/catalog.ts` bevat pure hulpfuncties die een productlijst als argument krijgen.
 - `CartProvider` (React context) staat in `app/layout.tsx` binnen `CatalogProvider`. Hij bewaart regels en kortingscode in localStorage (`corvane:cart:v1`) en het land apart (`corvane:country:v1`), via `lib/storage.ts` (D24). Opslag wordt pas na mount gelezen. Zonder storage werkt de cart in het geheugen. De cart rekent met `priceCart`.
-- Collectie: alle negen producten; het familiefilter toont alleen sticks. Gelijke waarden sorteren op `featuredRank`. Card-prijs: stick €24,95, cadeaukaart "From €25". Quick-add voegt 1 stick eenmalig toe en opent de drawer.
+- Collectie: alle negen producten; het familiefilter toont alleen sticks. Filter en sortering staan in de URL en worden client-side bijgewerkt met `history.replaceState` (D47). Gelijke waarden sorteren op `featuredRank`. Card-prijs: stick €24,95, cadeaukaart "From €25". Quick-add voegt 1 stick eenmalig toe en opent de drawer.
 
 ## 12. Toegankelijkheid, SEO, analytics, performance
 

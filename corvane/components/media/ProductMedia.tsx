@@ -150,8 +150,10 @@ function PackshotRender({
       );
     case "gift-card":
       return (
-        <div className="absolute inset-0 flex items-center justify-center px-[6%]">
-          <GiftCardRender amount={giftCardAmount} decorative={decorative} />
+        // Fits both ways (the SVG letterboxes itself): width-bound in a 4:5 box, height-bound in a
+        // wide collection card, where a full-width card would overrun the box.
+        <div className="absolute inset-0 flex items-center justify-center px-[6%] py-[9%]">
+          <GiftCardRender amount={giftCardAmount} decorative={decorative} className="block h-full w-full" />
         </div>
       );
   }
