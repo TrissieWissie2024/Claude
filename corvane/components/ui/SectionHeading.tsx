@@ -64,7 +64,7 @@ export function SectionHeading({
       {intro ? (
         <div
           className={cn(
-            "mt-4 max-w-[36rem] text-base leading-relaxed md:mt-5 md:text-lg",
+            "mt-4 max-w-[36rem] text-base leading-relaxed text-pretty md:mt-5 md:text-lg",
             dark ? "text-mist" : "text-ink-soft",
           )}
         >

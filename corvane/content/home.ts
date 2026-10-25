@@ -158,6 +158,8 @@ export const home = {
     renderAlt: "Three CORVANE sticks: North Swell, Drift & Ember and Lantern Smoke",
     primaryCta: { label: "Shop the range", href: "/collections/all" } satisfies NavLink,
     secondaryCta: { label: "Find your scent", href: "#scent-finder" } satisfies NavLink,
+    /** Anchor of the hero section. */
+    id: "hero",
   },
 
   /**
@@ -179,6 +181,17 @@ export const home = {
     countryLabel: "Country",
     changeCountry: "Change country",
     note: "Working days only. Weekends and public holidays excluded.",
+    /** Anchor of the delivery bar. */
+    id: "delivery",
+    /** Short dispatch line before mount (no time yet). True on every day. */
+    fallbackDispatch: "Ships on working days",
+    /** Transit line before mount, from the country's transitDays in content/shipping.ts. True on every day. */
+    fallbackEstimate: (min: number, max: number) =>
+      min === max
+        ? `Delivery in ${min} working ${min === 1 ? "day" : "days"}`
+        : `Delivery in ${min} to ${max} working days`,
+    /** Polite announcement after the country switch, e.g. "Estimated delivery: Tuesday to Wednesday (Belgium)." */
+    countryChanged: (country: string, estimate: string) => `${estimate} (${country}).`,
   },
 
   /** Section 5. The six scents and the Discovery Set. */
@@ -193,6 +206,12 @@ export const home = {
       defaultValue: defaultSort,
     },
     viewAll: { label: "Shop all", href: "/collections/all" } satisfies NavLink,
+    /** Product card extras (the rest of the card copy lives in content/collection.ts, productCard). */
+    card: {
+      /** Gift cards have several amounts, so the card links to the product page instead of adding. */
+      chooseAmount: "Choose amount",
+      chooseAmountLabel: (name: string) => `Choose amount for the ${name}`,
+    },
   },
 
   /** Section 6. */
@@ -243,6 +262,10 @@ export const home = {
     /** Only used once real reviews exist. */
     count: (count: number) => (count === 1 ? "1 review" : `${count} reviews`),
     verifiedBuyer: "Verified buyer",
+    /** Accessible name of the stars on one review. Only used once real reviews exist. */
+    ratingLabel: (rating: number) => `Rated ${rating} out of 5`,
+    /** Where a review was collected (Review.source), e.g. "Collected by judge.me". */
+    source: (source: string) => `Collected by ${source}`,
   },
 
   /** Section 9b. Our own 9:16 films (docs/PLAN.md §14). Never "customer" or "review". */
@@ -255,6 +278,8 @@ export const home = {
     slots: videoSlots,
     play: (title: string) => `Play video: ${title}`,
     pause: (title: string) => `Pause video: ${title}`,
+    /** Accessible name of the row (it scrolls sideways on mobile, so it takes keyboard focus). */
+    listLabel: "Films from CORVANE",
   },
 
   /**
@@ -285,6 +310,10 @@ export const home = {
       },
     ],
     link: { label: "Read the full conditions", href: "/shipping-returns#guarantee" } satisfies NavLink,
+    /** Decorative seal beside the heading ("30" over "days"); the heading says the same in words. */
+    seal: { value: String(guaranteeDays), unit: "days" },
+    /** Plain information link under the "rights" point. The statutory right is never a perk. */
+    rightsLink: { label: "Your right of withdrawal", href: "/shipping-returns#withdrawal" } satisfies NavLink,
   },
 
   /** Section 11. Questions come from content/faq.ts (onHome). */
@@ -293,6 +322,8 @@ export const home = {
     label: "FAQ",
     heading: "Questions",
     link: { label: "All questions", href: "/faq" } satisfies NavLink,
+    /** Small line under the link: where to go when the answer is not here. */
+    contact: { text: "Something else?", link: { label: "Contact us", href: "/contact" } satisfies NavLink },
   },
 
   /** Section 12. Fictional brand story (brief §3). No founding years or numbers we cannot back. */
@@ -307,6 +338,18 @@ export const home = {
     /** PhotoSlot placeholder until a real photo exists. */
     photoLabel: "PHOTO: North Sea coast, dunes and a weather vane",
     link: { label: "Read our story", href: "/about" } satisfies NavLink,
+    /** The name as a short dictionary entry (brief §3: cor + vane). */
+    name: {
+      label: "The name",
+      word: site.name,
+      pronunciationLabel: "Pronounced",
+      pronunciation: site.pronunciation,
+      parts: [
+        { id: "cor", term: "Cor", meaning: "Latin for heart." },
+        { id: "vane", term: "Vane", meaning: "As in weather vane. It turns with the wind but holds its point." },
+      ],
+    },
+    tagline: site.tagline,
   },
 };
 

@@ -118,7 +118,7 @@ corvane/
 
 **Typografie:** Fraunces 600 voor koppen (`font-serif`), Inter 400–600 voor body en UI (`font-sans`), labels in Inter uppercase met `tracking-[0.14em]`. Beide via `next/font/google`.
 
-**Vorm:** cards met 16 px radius (`rounded-card`), pills volledig rond, subtiele schaduw (`shadow-soft`), veel witruimte (secties 64–96 px verticaal op mobiel, 96–128 px op desktop). Geen goud of bruin in de huisstijl. De ringkleuren van de geuren zijn productkleuren en worden alleen bij het product gebruikt.
+**Vorm:** cards met 16 px radius (`rounded-card`), pills volledig rond, subtiele schaduw (`shadow-soft`), veel witruimte (secties 64–96 px verticaal op mobiel, 96–128 px op desktop; de homepage gebruikt 80, 112 en 128 px, D37). Geen goud of bruin in de huisstijl. De ringkleuren van de geuren zijn productkleuren en worden alleen bij het product gebruikt.
 
 **Knoppen:** primair `bg-signal text-ink`; hover en pressed worden lichter (#E86A43, contrast 5,8 met ink), nooit donkerder, want ink op een donkerder oranje zakt onder AA. Tekst op ringkleuren kan niet: overlays op productbeelden staan op een vlak van fog of deep.
 
@@ -135,7 +135,7 @@ corvane/
 | 5 | Productgrid met sorteren | `home/ProductGridSection` | zes geuren en Discovery Set |
 | 6 | How it works | `home/HowItWorks` | `home.howItWorks` |
 | 7 | Solid vs spray | `home/SolidVsSpray` | `home.comparison` |
-| 8 | Scent finder | `finder/ScentFinder` | `content/finder.ts` |
+| 8 | Scent finder | `finder/ScentFinder` (fase 7; tot dan een sectie met alleen eyebrow en kop in `app/page.tsx`, D38) | `content/finder.ts` |
 | 9 | Reviews en video-rij | `home/ReviewsSection`, `home/VideoRow` | `content/reviews.ts`, `content/assets.ts` |
 | 10 | Garantie | `home/GuaranteeBlock` | `offers.guaranteeDays` |
 | 11 | FAQ | `home/FaqSection` | `content/faq.ts` (selectie) |
@@ -318,7 +318,8 @@ Elke beeldplek heeft vaste sleutel, pad, verhouding en pixelmaat. `src: null` be
 | `products.<slug>.inHand` | `/images/products/<slug>/in-hand.webp` | 4:5, 1600×2000 |
 | `products.<slug>.lifestyle` | `/images/products/<slug>/lifestyle.webp` | 4:5, 1600×2000 |
 | `lifestyle.gym`, `.work`, `.travel`, `.night` | `/images/lifestyle/<naam>.webp` | 4:5, 1600×2000 |
-| `hero.group` | `/images/hero/group.webp` | 4:5 mobiel, 16:10 desktop |
+| `hero.group` | `/images/hero/group.webp` | 4:5, 1600×2000; ook op desktop (D39). De 16:10-uitsnede (`group-desktop.webp`, 2560×1600) blijft in het manifest voor een latere bredere layout |
+| `story.coast` | `/images/story/coast.webp` | 4:5, 1600×2000 (merkverhaal op de homepage en About, D41) |
 | `ugc[1–4]` | `/videos/ugc-0n.mp4` + `/videos/ugc-0n-poster.webp` | 9:16, 1080×1920, H.264 |
 
 De video-rij heet "From CORVANE": eigen merkcontent, nooit "customer" of "review".

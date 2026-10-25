@@ -1,61 +1,68 @@
-import { Wordmark } from "@/components/brand/Wordmark";
-import { GroupRender } from "@/components/media/GroupRender";
-import { StickRender } from "@/components/media/StickRender";
+import { DeliveryBar } from "@/components/home/DeliveryBar";
+import { FaqSection, faqItemsFor } from "@/components/home/FaqSection";
+import { GuaranteeBlock } from "@/components/home/GuaranteeBlock";
+import { Hero } from "@/components/home/Hero";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { ProductGridSection } from "@/components/home/ProductGridSection";
+import { ReviewsSection } from "@/components/home/ReviewsSection";
+import { SolidVsSpray } from "@/components/home/SolidVsSpray";
+import { StoryTeaser } from "@/components/home/StoryTeaser";
+import { VideoRow } from "@/components/home/VideoRow";
 import { Container } from "@/components/ui/Container";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { home } from "@/content/home";
-import { site } from "@/content/site";
-import { getSticks } from "@/lib/catalog";
 import { commerce } from "@/lib/commerce";
-import type { StickProduct } from "@/lib/types";
 
 /**
- * Temporary homepage for phase 3: the wordmark, the hero group render and the
- * six stick renders. Replaced by the full homepage in phase 5.
+ * Homepage (brief §6, docs/PLAN.md §4). A server component, fully static:
+ * all data comes from local modules through `commerce`, and everything that
+ * depends on the time or the cart (delivery bar, quick add) is a small client
+ * island that renders same-height fallback text first.
+ *
+ * Section order follows PLAN §4. The promo bar, header and footer come from
+ * app/layout.tsx; the email capture pill arrives in phase 7.
+ *
+ * Surfaces, top to bottom: deep hero · fog (delivery, range, how it works) ·
+ * sand comparison · fog (finder, reviews, films) · kelp guarantee · fog (FAQ,
+ * story). A fog section that follows another fog section gets `divider`, a
+ * hairline aligned to the container.
  */
 export default async function HomePage() {
-  const sticks = getSticks(await commerce.getProducts());
-  const heroSticks = home.hero.groupScents
-    .map((slug) => sticks.find((stick) => stick.slug === slug))
-    .filter((stick): stick is StickProduct => stick !== undefined);
+  const products = await commerce.getProducts();
 
   return (
     <>
-      <section aria-labelledby="hero-heading" className="focus-on-dark bg-deep text-fog">
-        <Container className="grid items-center gap-12 py-16 md:grid-cols-2 md:gap-16 md:py-24">
-          <div>
-            <Wordmark className="h-5 w-auto text-fog md:h-7" />
-            <p className="label-caps mt-10 text-mist">{home.hero.eyebrow}</p>
-            <h1 id="hero-heading" className="mt-4 text-[2.625rem] leading-[1.04] md:text-[4.25rem]">
-              {home.hero.heading}
-            </h1>
-            <p className="mt-6 max-w-md text-lg text-mist">{home.hero.subheading}</p>
-          </div>
-          <div className="mx-auto w-full max-w-[22rem] md:max-w-[28rem]">
-            <GroupRender scents={heroSticks} />
-          </div>
-        </Container>
-      </section>
-
-      <section aria-labelledby="range-heading" className="py-16 md:py-24">
-        <Container>
-          <p className="label-caps text-ink-soft">{home.productGrid.label}</p>
-          <h2 id="range-heading" className="mt-4 text-[2.125rem] leading-[1.08] md:text-[3.25rem]">
-            {home.productGrid.heading}
-          </h2>
-          <ul className="mt-12 grid grid-cols-2 gap-x-5 gap-y-12 sm:grid-cols-3 lg:grid-cols-6">
-            {sticks.map((stick) => (
-              <li key={stick.slug} className="flex flex-col items-center text-center">
-                <div className="flex h-56 w-full justify-center rounded-card bg-sand py-6 md:h-64">
-                  <StickRender ringColor={stick.ringColor} name={stick.name} />
-                </div>
-                <p className="mt-4 font-serif text-xl">{stick.name}</p>
-                <p className="label-caps mt-1 text-ink-soft">{stick.family}</p>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-16 text-ink-soft">{site.tagline}</p>
-        </Container>
-      </section>
+      <Hero products={products} />
+      <DeliveryBar />
+      <ProductGridSection />
+      <HowItWorks divider />
+      <SolidVsSpray />
+      <ScentFinderPlaceholder />
+      <ReviewsSection divider />
+      <VideoRow divider />
+      <GuaranteeBlock />
+      <FaqSection items={faqItemsFor("home")} />
+      <StoryTeaser divider />
     </>
+  );
+}
+
+/**
+ * Placeholder for the scent finder (PLAN §4.8). Phase 7 replaces it with
+ * components/finder/ScentFinder (quiz from content/finder.ts). Until then only
+ * the eyebrow and heading render, so the hero's "Find your scent" anchor
+ * (#scent-finder) and the footer link land somewhere real, without promising
+ * a quiz that is not there yet (the intro line waits for the quiz).
+ */
+function ScentFinderPlaceholder() {
+  const { id, label, heading } = home.scentFinder;
+  const headingId = `${id}-heading`;
+
+  return (
+    <section id={id} aria-labelledby={headingId} className="bg-fog text-ink">
+      <Container className="py-20 md:py-28 lg:py-32">
+        <SectionHeading id={headingId} eyebrow={label} title={heading} />
+      </Container>
+    </section>
   );
 }

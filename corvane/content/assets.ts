@@ -56,7 +56,8 @@ export type LifestyleScene = (typeof LIFESTYLE_SCENES)[number];
 export type ImageAssetKey =
   | `products.${AssetProductSlug}.${ProductShot}`
   | `lifestyle.${LifestyleScene}`
-  | "hero.group";
+  | "hero.group"
+  | "story.coast";
 
 export type VideoAssetKey = `ugc.${1 | 2 | 3 | 4}`;
 
@@ -356,6 +357,22 @@ export const assets = {
     },
   } satisfies Record<"group", ImageAsset>,
 
+  /** Brand story teaser on the homepage (and the About page). A PhotoSlot placeholder shows until this is supplied. */
+  story: {
+    coast: {
+      kind: "image",
+      key: "story.coast",
+      path: "/images/story/coast.webp",
+      src: null,
+      ...PORTRAIT,
+      label: "North Sea coast",
+      alt: "Dunes on the North Sea coast under a wide grey sky, with a weather vane on a post in the foreground",
+      shot:
+        "North Sea coast, dunes and dune grass, wide sky, overcast daylight or late afternoon. A simple weather vane on a wooden post " +
+        "in the foreground, slightly off centre. No people, no products, no other brands or signs. Portrait 4:5.",
+    },
+  } satisfies Record<"coast", ImageAsset>,
+
   /**
    * "From CORVANE" video row on the homepage: our own 9:16 films, never presented
    * as customer content or reviews. Titles match content/home.ts (videoRow.slots).
@@ -402,6 +419,7 @@ for (const shots of Object.values(assets.products)) {
 }
 for (const asset of Object.values(assets.lifestyle)) imageIndex.set(asset.key, asset);
 imageIndex.set(assets.hero.group.key, assets.hero.group);
+imageIndex.set(assets.story.coast.key, assets.story.coast);
 
 const videoIndex = new Map<string, VideoAsset>(assets.ugc.map((asset) => [asset.key, asset]));
 const videoById = new Map<string, VideoAsset>(assets.ugc.map((asset) => [asset.id, asset]));
