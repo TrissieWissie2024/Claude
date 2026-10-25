@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import sitemap from "@/app/sitemap";
+import { legalRoutes } from "@/content/legal";
 import { offers } from "@/content/offers";
 import { findProduct } from "@/lib/catalog";
 import { localCommerce } from "@/lib/commerce/local";
@@ -88,6 +90,25 @@ describe("helpers", () => {
       expect(DISALLOWED_PATHS.some((blocked) => path.startsWith(blocked))).toBe(false);
     }
     expect(DISALLOWED_PATHS).toContain("/api/");
+  });
+});
+
+describe("sitemap", () => {
+  it("lists every indexable page once, absolute, without the noindex pages", async () => {
+    const entries = await sitemap();
+    const urls = entries.map((entry) => entry.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    expect(urls).toHaveLength(STATIC_ROUTES.length + products.length + Object.keys(legalRoutes).length);
+    for (const url of urls) expect(url).toMatch(/^https?:\/\/[^/]+\//);
+    for (const path of NOINDEX_PATHS) expect(urls).not.toContain(absoluteUrl(path));
+  });
+
+  it("uses no extension elements, which Next.js would write before <lastmod> (D54.3)", async () => {
+    for (const entry of await sitemap()) {
+      expect(entry.images).toBeUndefined();
+      expect(entry.videos).toBeUndefined();
+      expect(entry.alternates).toBeUndefined();
+    }
   });
 });
 

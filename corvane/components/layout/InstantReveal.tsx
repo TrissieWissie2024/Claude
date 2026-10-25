@@ -20,6 +20,11 @@ import { InlineScript } from "@/components/ui/InlineScript";
  * Nothing else reads `$RT`. If a future React drops the throttle or renames
  * the global, the script does nothing and the default behaviour returns.
  *
+ * Since the phase 8 review (D54.1) the product page renders outside
+ * <Suspense>, so today no prerendered page has an out-of-line boundary and
+ * the throttle has nothing to delay. The script stays for any large
+ * boundary that comes back, and for its place in <head>, below.
+ *
  * Its place matters for a second reason: an inline script after a stylesheet
  * waits for that stylesheet, so the parser only builds the body once the CSS
  * is in and then parses, lays out and paints it in one task. The async

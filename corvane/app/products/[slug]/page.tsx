@@ -34,15 +34,30 @@ import type { FaqItem, Product, StickProduct } from "@/lib/types";
  * Next.js 16.4 with Cache Components: every listed slug is prerendered
  * (generateStaticParams), and `ensureStatic = 'navigation'` makes the whole
  * route static, so an unknown slug waits for the full render and notFound()
- * answers the first request with a 404. `params` is read inside <Suspense>
- * (ProductView), so the route's shell stays URL-independent.
+ * answers the first request with a 404.
  *
- * Unknown slugs: the layout is server-rendered, the not-found UI inside the
- * boundary only after hydration (Next.js 16.4 with Cache Components renders
- * it on the client; reading `params` before the boundary instead gives an
- * empty error document, measured with `next build`). So the skeleton
- * fallback says nothing about loading, the <title> says "Product not found"
- * and visitors without JavaScript get a short notice instead of the skeleton.
+ * Known products render outside any <Suspense> (D54.1). React moves a
+ * finished boundary of more than 500 bytes out of line when the shell and
+ * the boundary together pass about 12.8 KB of HTML (our shell alone is
+ * larger): its HTML then sits in a hidden <div> after the footer and only
+ * React's inline script puts it in place. With the whole product inside the
+ * boundary, a client without JavaScript (and any crawler reading raw HTML)
+ * saw the fallback where the product should be and the product name in a
+ * hidden element after the footer. Now the h1, the buy box and the JSON-LD
+ * are in place in the static HTML. The cost: `params` is
+ * read outside <Suspense>, so the route's App Shell holds no page content and
+ * a click on a default <Link> waits for the (static, cached) page instead of
+ * showing a skeleton first. `instant = false` says so, which also silences
+ * the dev-only "URL data outside of Suspense" error; `ensureStatic` still
+ * fails the build if anything request-time sneaks into the route.
+ *
+ * Unknown slugs keep a <Suspense> boundary around notFound(): thrown outside
+ * one, Next.js 16.4 answers with an empty error document (404, but no
+ * header, footer or text; measured with `next build`). Inside it the layout
+ * is server-rendered and the not-found UI renders in the browser after
+ * hydration. The skeleton fallback therefore says nothing about loading, the
+ * <title> says "Product not found" and visitors without JavaScript get a
+ * short notice instead of the skeleton. Known products never render it.
  *
  * Order (D50): gallery · title block (family, name, tagline, price,
  * description) · configurator (scent, sets, mix & match, purchase type, Add to
@@ -59,6 +74,9 @@ import type { FaqItem, Product, StickProduct } from "@/lib/types";
 
 export const ensureStatic = "navigation";
 
+/** Navigations into this page may wait for it: `params` is read outside <Suspense> (see above, D54.1). */
+export const instant = false;
+
 export async function generateStaticParams() {
   const products = await commerce.getProducts();
   return products.map((product) => ({ slug: product.slug }));
@@ -73,18 +91,16 @@ export async function generateMetadata({ params }: PageProps<"/products/[slug]">
   return productMetadata(product);
 }
 
-export default function ProductPage({ params }: PageProps<"/products/[slug]">) {
-  return (
-    <Suspense fallback={<PdpSkeleton />}>
-      <ProductView params={params} />
-    </Suspense>
-  );
-}
-
-async function ProductView({ params }: Pick<PageProps<"/products/[slug]">, "params">) {
+export default async function ProductPage({ params }: PageProps<"/products/[slug]">) {
   const { slug } = await params;
   const product = await commerce.getProduct(slug);
-  if (!product) notFound();
+  if (!product) {
+    return (
+      <Suspense fallback={<PdpSkeleton />}>
+        <ProductNotFound />
+      </Suspense>
+    );
+  }
   const products = await commerce.getProducts();
   return (
     <>
@@ -93,6 +109,11 @@ async function ProductView({ params }: Pick<PageProps<"/products/[slug]">, "para
       <ProductDetail product={product} products={products} />
     </>
   );
+}
+
+/** Unknown slug: notFound() inside the page's <Suspense>, so the layout stays server-rendered (see above). */
+async function ProductNotFound(): Promise<never> {
+  notFound();
 }
 
 /* ------------------------------------------------------------------ */
@@ -302,15 +323,14 @@ function SlotThumb({ product, variant }: { product: Product; variant: Exclude<Pr
 }
 
 /* ------------------------------------------------------------------ */
-/* Skeleton (client navigations before the page arrives; unknown slugs) */
+/* Skeleton (unknown slugs only)                                       */
 /* ------------------------------------------------------------------ */
 
 /**
- * The Suspense fallback. Listed products are prerendered in full, so it shows
- * only during a client navigation that is faster than its prefetch, and for
- * an unknown slug until the client renders the not-found UI. It is decorative
- * (no "loading" text: for an unknown slug it would never stop). Without
- * JavaScript the skeleton is hidden and a short not-found notice shows.
+ * The fallback of the unknown-slug boundary: it shows until the client
+ * renders the not-found UI. Known products never render it (D54.1). It is
+ * decorative (no "loading" text: nothing is loading). Without JavaScript the
+ * skeleton is hidden and a short not-found notice shows instead.
  */
 function PdpSkeleton() {
   const bar = "rounded-full bg-ink/[0.06]";
