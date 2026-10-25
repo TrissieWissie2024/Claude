@@ -22,7 +22,9 @@ import type { StickProduct } from "@/lib/types";
  *   more with the ring colour), so the state never relies on colour alone and
  *   survives forced colors. The name of the current scent is shown above the
  *   row; from lg every swatch also shows its name underneath (on a phone six
- *   names do not fit in one row).
+ *   names do not fit in one row), always on two lines ("Lantern / Smoke",
+ *   nameLines), so the six labels share one shape at every width instead of
+ *   one or three of them wrapping.
  * - 44 x 44 px targets. Focus has a different shape from the selection: a
  *   rounded square around the target below lg, the whole swatch-and-name cell
  *   from lg, never a circle like the selected ring.
@@ -51,6 +53,12 @@ let pendingFocus: { slug: string; at: number } | null = null;
 
 /** A navigation slower than this no longer moves the focus (the visitor has moved on). */
 const PENDING_FOCUS_MS = 10_000;
+
+/** "Lantern Smoke" -> ["Lantern", "Smoke"], "Drift & Ember" -> ["Drift &", "Ember"]; a one-word name keeps one line. */
+function nameLines(name: string): [string, string | null] {
+  const at = name.lastIndexOf(" ");
+  return at > 0 ? [name.slice(0, at), name.slice(at + 1)] : [name, null];
+}
 
 function isPlainActivation(event: MouseEvent<HTMLAnchorElement>): boolean {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
@@ -89,6 +97,7 @@ export function ScentSwatches({ sticks, currentSlug, className }: ScentSwatchesP
       >
         {sticks.map((stick) => {
           const selected = stick.slug === currentSlug;
+          const [firstLine, secondLine] = nameLines(stick.name);
           return (
             <li key={stick.slug} className="lg:min-w-0">
               <Link
@@ -130,12 +139,20 @@ export function ScentSwatches({ sticks, currentSlug, className }: ScentSwatchesP
                 </span>
                 <span
                   className={cn(
-                    "sr-only lg:not-sr-only lg:mt-1 lg:block lg:text-center lg:text-xs lg:leading-tight lg:text-balance",
-                    // Same weight for every name, so the chosen one never wraps where the others do.
+                    // Two lines for every name (min-h for a one-word name), so the row stays aligned.
+                    "sr-only lg:not-sr-only lg:mt-1 lg:block lg:min-h-[2lh] lg:text-center lg:text-xs lg:leading-tight lg:whitespace-nowrap",
+                    // Same weight for every name, so the chosen one never looks different in shape.
                     selected ? "lg:text-ink" : "lg:text-ink-soft lg:group-hover:text-ink",
                   )}
                 >
-                  {stick.name}
+                  {firstLine}
+                  {secondLine ? (
+                    <>
+                      {" "}
+                      <br />
+                      {secondLine}
+                    </>
+                  ) : null}
                 </span>
               </Link>
             </li>

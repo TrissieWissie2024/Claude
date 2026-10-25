@@ -1,19 +1,20 @@
 import { getVideoAsset, placeholderCopy, type VideoAssetId, type VideoAssetKey } from "@/content/assets";
 import { cn } from "@/lib/cn";
 
-import { SlotPlaceholder, slotFrame, withPrefix, type SlotTone } from "./PhotoSlot";
+import { SlotPlaceholder, slotFrame, stripPrefix, type SlotTone } from "./PhotoSlot";
 
 /**
  * A 9:16 video slot from content/assets.ts ("From CORVANE" row). When the
  * manifest has a `src`, it renders a native <video> with controls: muted,
  * playsInline, preload="none" and the poster frame. It never autoplays.
- * Otherwise a placeholder "VIDEO: <label>" in the same ratio.
+ * Otherwise a placeholder in the same ratio: "VIDEO" as a small caps line and
+ * the label on its own line under it (SlotPlaceholder).
  */
 
 export interface VideoSlotProps {
   /** "ugc.1" ... "ugc.4" or the file id "ugc-01" ... "ugc-04". */
   assetKey?: VideoAssetKey | VideoAssetId;
-  /** Placeholder label; shown as "VIDEO: <label>" (a label that already starts with "VIDEO:" is kept). */
+  /** Placeholder label, shown under "VIDEO" (a leading "VIDEO:" in the copy is dropped). */
   label: string;
   className?: string;
   /** Placeholder background. Default "deep". */
@@ -44,5 +45,13 @@ export function VideoSlot({ assetKey, label, className, tone = "deep" }: VideoSl
     );
   }
 
-  return <SlotPlaceholder text={withPrefix(placeholderCopy.videoPrefix, label)} tone={tone} frame={frame} className={className} />;
+  return (
+    <SlotPlaceholder
+      prefix={placeholderCopy.videoPrefix}
+      text={stripPrefix(placeholderCopy.videoPrefix, label)}
+      tone={tone}
+      frame={frame}
+      className={className}
+    />
+  );
 }

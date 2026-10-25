@@ -34,7 +34,8 @@ import { SortSelect } from "./SortSelect";
  *   order and each card keeps its state.
  * - Chips are toggle buttons (aria-pressed); the pressed one is an ink pill
  *   with a check, not only a colour change. Pressing the pressed family again
- *   shows all. The count is a polite live region.
+ *   shows all. The count is a polite live region. On phones the chips wrap
+ *   (no hidden sideways scroll), so every family is visible.
  *
  * useSearchParams needs a <Suspense> boundary (the build fails otherwise).
  * The page renders <CollectionViewFallback> (same layout, unfiltered,
@@ -164,11 +165,12 @@ function CollectionLayout({
           <span id={labelId} className="label-caps shrink-0 text-ink-soft">
             {collection.filter.legend}
           </span>
-          {/* Phones: one row that scrolls sideways to the screen edges. md+: wraps. */}
-          <ul
-            role="list"
-            className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 py-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
-          >
+          {/*
+            Wraps instead of scrolling sideways, so every family is in view: two rows from 360 px
+            whichever chip is pressed (the chips are a little narrower below md for that), three
+            below; one row from md.
+          */}
+          <ul role="list" className="flex flex-wrap gap-2 py-1">
             <li className="shrink-0">
               <FilterChip pressed={family === null} onClick={() => onFamilyChange?.(null)}>
                 {collection.filter.all}
@@ -189,7 +191,8 @@ function CollectionLayout({
           </ul>
         </div>
 
-        <div className="flex items-center justify-between gap-4 xl:shrink-0 xl:justify-end xl:gap-8">
+        {/* Under about 370 px the sort control wraps below the count, so "Sort by" and "9 products" never break. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 whitespace-nowrap xl:shrink-0 xl:flex-nowrap xl:justify-end xl:gap-8">
           <p aria-live="polite" aria-atomic="true" className="tabular text-sm text-ink-soft">
             {collection.resultCount(order.length)}
           </p>
@@ -246,7 +249,8 @@ function FilterChip({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium whitespace-nowrap",
+        // min-w-11: "All" stays a 44 px target with the narrower padding below md.
+        "inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-full border px-3 text-sm font-medium whitespace-nowrap md:gap-2 md:px-4",
         "motion-safe:transition-[background-color,border-color,color] motion-safe:duration-200",
         pressed
           ? "border-ink bg-ink text-fog"

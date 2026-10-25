@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Check, CircleAlert, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { Fragment, useEffect, useId, useReducer, useRef, type Ref } from "react";
+import { Fragment, useEffect, useId, useLayoutEffect, useReducer, useRef, type Ref } from "react";
 
 import { useCartActions } from "@/components/cart/CartProvider";
 import { useCatalog } from "@/components/catalog/CatalogProvider";
@@ -41,9 +41,12 @@ import { finderTones, type FinderTone, type FinderToneClasses } from "./tones";
  *   the sticky header) and a status region announces "Question 2 of 3" or
  *   "Your scent: North Swell". The focus only moves after a step change made
  *   here, never on mount or when Activity shows the route again.
- * - The panel has a fixed minimum height per breakpoint that holds the tallest
- *   step (the result), and the buttons sit at its foot, so moving between
- *   steps never shifts the page. The first question is in the static HTML.
+ * - The panel is as tall as its step: Back and Next sit directly under the
+ *   options, and the panel grows for the result. The first question is in the
+ *   static HTML and hydrates unchanged, so the section never shifts on load;
+ *   a step change only follows a click or key press (not counted as CLS).
+ *   With motion allowed the panel eases from its old height to the new one
+ *   (PANEL_RESIZE, Web Animations API, nothing left inline afterwards).
  * - Option tiles take their selected look from :has(:checked), so a choice
  *   made before hydration already shows.
  * - Steps fade and rise in on change (motion-safe only, never on first paint).
@@ -59,15 +62,8 @@ export interface FinderQuizProps {
   className?: string;
 }
 
-/**
- * Minimum panel height: the tallest result step (of all six scents) at the
- * narrowest width of each range, measured with Playwright from 320 to 1920 px:
- * 705 px below 360 px, 650 px from 360, 624 px from 375, 554 px from sm (640),
- * 591 px from lg (1024). Question steps are shorter and keep the spare room
- * above their buttons. With larger text the panel grows instead of clipping.
- */
-const PANEL_MIN_HEIGHT =
-  "min-h-[44.0625rem] min-[22.5rem]:min-h-[40.625rem] min-[23.4375rem]:min-h-[39rem] sm:min-h-[34.625rem] lg:min-h-[37rem]";
+/** The panel's height change between two steps (well within the 500 ms after an input that CLS ignores). */
+const PANEL_RESIZE: KeyframeAnimationOptions = { duration: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
 
 const KEYFRAMES =
   "@keyframes corvane-finder-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}" +
@@ -91,6 +87,8 @@ export function FinderQuiz({ tone = "deep", className }: FinderQuizProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusOnMove = useRef(false);
+  /** The panel's height just before a step change made here, for the resize animation. */
+  const heightBeforeMove = useRef<number | null>(null);
 
   const total = finderQuestions.length;
   const question = getCurrentQuestion(state);
@@ -105,6 +103,25 @@ export function FinderQuiz({ tone = "deep", className }: FinderQuizProps) {
         : question
           ? finder.labels.progress(state.step + 1, total)
           : "";
+
+  // Before paint: the new step is in the DOM at its own height; ease the panel there from the old one.
+  useLayoutEffect(() => {
+    const from = heightBeforeMove.current;
+    heightBeforeMove.current = null;
+    const panel = panelRef.current;
+    if (from === null || !panel || typeof panel.animate !== "function") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const to = panel.getBoundingClientRect().height;
+    if (Math.abs(to - from) < 1) return;
+    // Clipped while it runs, so a taller step does not spill over the panel's edge.
+    panel.animate(
+      [
+        { height: `${from}px`, overflow: "hidden" },
+        { height: `${to}px`, overflow: "hidden" },
+      ],
+      PANEL_RESIZE,
+    );
+  }, [state.moves]);
 
   useEffect(() => {
     if (!focusOnMove.current) return;
@@ -121,7 +138,10 @@ export function FinderQuiz({ tone = "deep", className }: FinderQuizProps) {
   }, [state.moves]);
 
   const send = (action: FinderAction) => {
-    if (reduceFinder(state, action).moves !== state.moves) focusOnMove.current = true;
+    if (reduceFinder(state, action).moves !== state.moves) {
+      focusOnMove.current = true;
+      heightBeforeMove.current = panelRef.current?.getBoundingClientRect().height ?? null;
+    }
     dispatch(action);
   };
 
@@ -132,7 +152,7 @@ export function FinderQuiz({ tone = "deep", className }: FinderQuizProps) {
   return (
     <div
       ref={panelRef}
-      className={cn("relative flex flex-col rounded-card p-5 sm:p-8 lg:p-10", PANEL_MIN_HEIGHT, t.panel, className)}
+      className={cn("relative flex flex-col rounded-card p-5 sm:p-8 lg:p-10", t.panel, className)}
     >
       <style href="corvane-finder-motion" precedence="default">
         {KEYFRAMES}
@@ -265,7 +285,7 @@ function QuestionStep({
         </div>
       </fieldset>
 
-      <div className="mt-auto pt-6 md:pt-8">
+      <div className="pt-6 md:pt-8">
         <p id={hintId} aria-live="polite" className={cn("text-sm font-medium", t.strong)}>
           {missing ? (
             <span className="mb-3 flex items-center gap-2">
@@ -379,7 +399,7 @@ function ResultStep({ stick, total, t, headingRef, onAdd, onRestart }: ResultSte
         </div>
       </div>
 
-      <div className="mt-auto pt-6 md:pt-8">
+      <div className="pt-6 md:pt-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-x-6">
           <Button variant="primary" onClick={onAdd} className="w-full sm:w-auto">
             {finder.result.addToCart}

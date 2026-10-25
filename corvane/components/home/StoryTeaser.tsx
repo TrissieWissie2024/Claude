@@ -62,7 +62,8 @@ export function StoryTeaser({ divider = false, className }: StoryTeaserProps) {
               ))}
             </div>
 
-            <div className="mt-10 max-w-[34rem] border-y border-line py-6 md:mt-12">
+            {/* Full column width: the hairlines end at the container edge like the other rules on the page. */}
+            <div className="mt-10 border-y border-line py-6 md:mt-12">
               <p className="label-caps text-ink-soft">{name.label}</p>
               <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="font-serif text-[1.625rem] leading-none tracking-[0.12em]">{name.word}</span>

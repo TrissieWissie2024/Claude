@@ -26,8 +26,9 @@ import type { Review } from "@/lib/types";
  * `variant="inline"` (product page): without reviews, the empty state is one
  * quiet row instead of a section with a display heading (label-caps eyebrow,
  * a small serif heading and one line), aligned to the 4 / 7 column split of
- * the cross-sell and FAQ around it. Same id and heading, so real reviews can
- * take its place; with reviews it renders the full section.
+ * the cross-sell and FAQ around it, with the empty section's padding. Same id
+ * and heading, so real reviews can take its place; with reviews it renders
+ * the full section.
  */
 
 export interface ReviewsSectionProps {
@@ -100,7 +101,9 @@ export function ReviewsSection({
         <Container>
           <div
             className={cn(
-              "grid gap-y-2 py-8 md:py-10 lg:grid-cols-12 lg:items-baseline lg:gap-x-8",
+              // The same padding as the empty section below (56 / 80 / 96 px), so the row sits
+              // between its rules with room in proportion to the 80 / 112 / 128 px around it.
+              "grid gap-y-3 py-14 md:py-20 lg:grid-cols-12 lg:items-baseline lg:gap-x-8 lg:py-24",
               divider && "border-t border-line",
             )}
           >

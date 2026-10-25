@@ -10,8 +10,9 @@ import { finderTones, type FinderTone } from "./tones";
  * Homepage section 8, the scent finder (brief §6.9, docs/PLAN.md §4, D23).
  * A server component: eyebrow, h2 and intro come from home.scentFinder and
  * are static HTML; only the quiz panel (FinderQuiz) is a client island. Its
- * first question is in the static HTML too, and the panel keeps one minimum
- * height for every step, so neither hydration nor the steps shift the page.
+ * first question is in the static HTML too and hydrates unchanged, so the
+ * section does not shift on load. The panel is as tall as its step (Back and
+ * Next directly under the options) and grows for the result after a click.
  *
  * Keeps `id="scent-finder"` (home.scentFinder.id), the target of the hero's
  * "Find your scent" anchor and the footer link. Homepage rhythm (D37): 80 /
