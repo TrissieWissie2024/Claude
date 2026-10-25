@@ -35,11 +35,12 @@ Navigatie desktop: Shop (`/collections/all`), Discovery Set (`/products/discover
 corvane/
   app/                       routes (zie sitemap), layout.tsx, globals.css
   components/
-    brand/                   Wordmark, VaneIcon
+    brand/                   Wordmark, VaneIcon (SVG-paden, D19 en D20)
     media/                   StickRender, GroupRender, DiscoverySetRender, PouchRender,
                              GiftCardRender, NotesCard, PhotoSlot, VideoSlot, ProductMedia
     ui/                      Button, Pill, Badge, Container, SectionHeading, Price,
-                             Accordion, Sheet (drawer), Modal, Stars, Flag, VisuallyHidden
+                             Accordion, Sheet (drawer), Modal, Stars, Flag, VisuallyHidden,
+                             MotionStyles (keyframes voor Accordion, Sheet en Modal)
     layout/                  PromoBar, Header, MobileNav, Footer, NewsletterForm,
                              PaymentIcons, SkipLink
     cart/                    CartProvider, CartDrawer, CartLine, ShippingProgress,
@@ -74,6 +75,7 @@ corvane/
     cn.ts                    classnames
   tests/e2e/                 Playwright-smoketests
   docs/                      Nederlandse documentatie
+  public/brand/              woordmerk en windvaan als losse SVG-bestanden
   public/images/             echte foto's later (zie ASSETS.md); nu leeg
   reference/                 screenshots van de referentie (in .gitignore)
 ```
@@ -267,9 +269,9 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 ## 11. Commerce, catalogus en cart
 
 - `lib/commerce/types.ts` definieert `CommerceProvider` met `getProducts()`, `getProduct(slug)` en `createCheckout({ lines, discountCode, country })`.
-- `lib/commerce/local.ts` is het enige bestand dat `content/products.ts` importeert. Het geeft `/checkout` als checkout-URL. `lib/commerce/shopify.ts` is een gedocumenteerde stub voor de Storefront API (handle, variant-id's en selling plans uit `externalIds`).
-- Server components en route handlers halen productdata via `commerce`. Client components krijgen die via `CatalogProvider` (in `app/layout.tsx` gevuld met `commerce.getProducts()`) of via props. `lib/catalog.ts` bevat pure hulpfuncties die een productlijst als argument krijgen.
-- `CartProvider` (React context) bewaart regels, kortingscode en land in localStorage (`corvane:cart:v1`, in try/catch). Zonder storage werkt de cart in het geheugen. De cart rekent met `priceCart`.
+- `lib/commerce/local.ts` is het enige bestand dat `content/products.ts` importeert. Het geeft `/checkout` als checkout-URL. `lib/commerce/shopify.ts` is een gedocumenteerde stub voor de Storefront API (handle, variant-id's en selling plans uit `externalIds`). `COMMERCE_PROVIDER` (`local` of `shopify`) kiest de provider (D26).
+- Server components en route handlers halen productdata via `commerce`. Client components krijgen die via `CatalogProvider` (in `app/layout.tsx` gevuld met `await commerce.getProducts()`; een externe provider cachet dat met `'use cache'`, D18) of via props. `lib/catalog.ts` bevat pure hulpfuncties die een productlijst als argument krijgen.
+- `CartProvider` (React context) staat in `app/layout.tsx` binnen `CatalogProvider`. Hij bewaart regels en kortingscode in localStorage (`corvane:cart:v1`) en het land apart (`corvane:country:v1`), via `lib/storage.ts` (D24). Opslag wordt pas na mount gelezen. Zonder storage werkt de cart in het geheugen. De cart rekent met `priceCart`.
 - Collectie: alle negen producten; het familiefilter toont alleen sticks. Gelijke waarden sorteren op `featuredRank`. Card-prijs: stick €24,95, cadeaukaart "From €25". Quick-add voegt 1 stick eenmalig toe en opent de drawer.
 
 ## 12. Toegankelijkheid, SEO, analytics, performance

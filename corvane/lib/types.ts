@@ -167,7 +167,7 @@ export interface ShippingCountry {
   deliveryHolidays: Holiday[];
   /** Flat rate in cents. */
   rate: number;
-  /** Free shipping from this shippable subtotal (after discounts), in cents. */
+  /** Free shipping from this shippable subtotal (after bundle and subscription pricing, before the discount code, D14), in cents. */
   freeFrom: number;
   /** Transit time in working days after dispatch. */
   transitDays: { min: number; max: number };

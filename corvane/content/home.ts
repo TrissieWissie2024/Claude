@@ -1,0 +1,313 @@
+import type { NavLink } from "@/lib/types";
+
+import type { ScentSlug } from "./finder";
+import { offers } from "./offers";
+import { facts, site } from "./site";
+
+/**
+ * Homepage copy, section by section in page order (docs/PLAN.md §4).
+ *
+ * Copy rules (brief §2, docs/PLAN.md §13): specifications only, no performance
+ * claims, no social proof, no exclamation marks, no other brands. Days,
+ * amounts and times come from content/offers.ts and content/shipping.ts via
+ * `facts` in content/site.ts. Templated strings are small functions that take
+ * plain strings (dates and amounts arrive already formatted by lib/delivery.ts
+ * and lib/money.ts). Checked by content/content-guard.test.ts.
+ *
+ * Every section has an `id` for its anchor (`<section id>`), a small caps
+ * `label` above the heading and a serif `heading` (h2; the hero heading is the
+ * page h1).
+ */
+
+/** A short spec pill. Labels are drawn from site.specs only. */
+export interface SpecPill {
+  /** Matches an id in site.specs. */
+  id: string;
+  label: string;
+}
+
+export interface HowItWorksStep {
+  id: "twist" | "swipe" | "go";
+  title: string;
+  text: string;
+  /** lucide-react icon name in kebab case (RotateCw, MoveHorizontal, Navigation). */
+  icon: "rotate-cw" | "move-horizontal" | "navigation";
+}
+
+export interface ComparisonRow {
+  id: "format" | "alcohol" | "glass" | "leak-risk";
+  label: string;
+  solid: string;
+  spray: string;
+}
+
+/** Sort options for the homepage grid; values match the `?sort=` param of /collections/all. */
+export type HomeSortValue = "featured" | "newest" | "price-asc" | "price-desc";
+
+export interface VideoSlotCopy {
+  /** Matches the ugc-0n slot in content/assets.ts and /videos/ugc-0n.mp4. Own brand content, not customer videos. */
+  id: "ugc-01" | "ugc-02" | "ugc-03" | "ugc-04";
+  /** Short title, also used for the play button's accessible name. */
+  title: string;
+  /** Placeholder label shown until the real video exists. */
+  label: string;
+}
+
+/** The three sticks in the hero render, left to right (docs/PLAN.md §14). */
+const heroScents: ScentSlug[] = ["north-swell", "drift-and-ember", "lantern-smoke"];
+
+const heroPills: SpecPill[] = [
+  { id: "twist-up", label: "15 g twist-up" },
+  { id: "alcohol-free", label: "Alcohol-free" },
+];
+
+// Guard: pills may only repeat specifications that exist in site.specs.
+for (const pill of heroPills) {
+  if (!site.specs.some((spec) => spec.id === pill.id)) {
+    throw new Error(`content/home.ts: hero pill "${pill.id}" is not a spec in content/site.ts.`);
+  }
+}
+
+const howItWorksSteps: HowItWorksStep[] = [
+  {
+    id: "twist",
+    title: "Twist",
+    text: "Turn the base. A few millimetres is enough.",
+    icon: "rotate-cw",
+  },
+  {
+    id: "swipe",
+    title: "Swipe",
+    text: "Two or three swipes over wrists, neck and chest.",
+    icon: "move-horizontal",
+  },
+  {
+    id: "go",
+    title: "Go",
+    text: "Twist it down, cap on, back in your pocket.",
+    icon: "navigation",
+  },
+];
+
+/** Exactly four rows (brief §6.8). No rows on longevity, number of uses or travel rules. */
+const comparisonRows: ComparisonRow[] = [
+  {
+    id: "format",
+    label: "Format",
+    solid: "A 15 g twist-up stick. You apply it straight to the skin.",
+    spray: "A liquid in a bottle with a pump. Wider projection, and quicker to apply over clothing.",
+  },
+  {
+    id: "alcohol",
+    label: "Alcohol",
+    solid: "Alcohol-free. A plant-based wax base with jojoba and coconut oil carries the scent.",
+    spray: "Usually alcohol-based. The alcohol carries the scent and evaporates.",
+  },
+  {
+    id: "glass",
+    label: "Glass",
+    solid: "None. A matte black aluminium tube.",
+    spray: "Usually a glass bottle.",
+  },
+  {
+    // Describes the physical form only. Never a promise about bags or travel (brief §2.6).
+    id: "leak-risk",
+    label: "Leak risk",
+    solid:
+      "A solid, so there is no liquid to spill. The wax melts at skin temperature, so it softens in heat. Keep the cap on and keep it out of the sun.",
+    spray: "A liquid. A loose cap or a cracked bottle can spill.",
+  },
+];
+
+const defaultSort: HomeSortValue = "featured";
+
+const sortOptions: { value: HomeSortValue; label: string }[] = [
+  { value: "featured", label: "Featured" },
+  { value: "newest", label: "Newest" },
+  { value: "price-asc", label: "Price: low to high" },
+  { value: "price-desc", label: "Price: high to low" },
+];
+
+/** "From CORVANE": our own films. Never framed as customers, reviews or testimonials. */
+const videoSlots: VideoSlotCopy[] = [
+  { id: "ugc-01", title: "Gym bag", label: "VIDEO: Gym bag, 9:16" },
+  { id: "ugc-02", title: "Desk drawer", label: "VIDEO: Desk drawer, 9:16" },
+  { id: "ugc-03", title: "Weekend bag", label: "VIDEO: Weekend bag, 9:16" },
+  { id: "ugc-04", title: "Night out", label: "VIDEO: Night out, 9:16" },
+];
+
+const guaranteeDays = offers.guaranteeDays;
+const withdrawalDays = offers.withdrawalDays;
+
+export const home = {
+  meta: {
+    title: "Solid cologne in a twist-up stick",
+    description: site.description,
+  },
+
+  /** Section 3. Dark hero with the group render. The rating line only renders with real reviews. */
+  hero: {
+    eyebrow: "Solid cologne",
+    /** The page h1. */
+    heading: "Cologne that fits in your pocket.",
+    subheading: "Six original scents in a 15 g twist-up stick. No glass. No spray. No fuss.",
+    pillsLabel: "Specifications",
+    pills: heroPills,
+    groupScents: heroScents,
+    /** Alt text for the group render. */
+    renderAlt: "Three CORVANE sticks: North Swell, Drift & Ember and Lantern Smoke",
+    primaryCta: { label: "Shop the range", href: "/collections/all" } satisfies NavLink,
+    secondaryCta: { label: "Find your scent", href: "#scent-finder" } satisfies NavLink,
+  },
+
+  /**
+   * Section 4. Fixed text only: never a countdown to the cut-off (brief §2.3).
+   * `day` comes from formatDayLabel() ("tomorrow", "Monday", "Mon 2 Nov"),
+   * dates from formatDate() ("Tue 27 Oct"), amounts from formatMoneyShort().
+   */
+  deliveryBar: {
+    label: "Delivery",
+    /** Shown before mount (no time yet) in the same space. True on every day. */
+    fallback: `Order on a working day before ${facts.cutoff} and it ships the same day`,
+    shipsToday: `Order before ${facts.cutoff}, ships today`,
+    shipsOn: (day: string) => `Ships ${day}`,
+    estimate: (date: string) => `Estimated delivery ${date}`,
+    estimateRange: (from: string, to: string) => `Estimated delivery ${from} to ${to}`,
+    deliveryTo: (country: string) => `Delivery to ${country}`,
+    freeShipping: (amount: string) => `Free shipping from ${amount}`,
+    freeShippingDefault: `Free shipping from ${facts.freeShippingFrom}`,
+    countryLabel: "Country",
+    changeCountry: "Change country",
+    note: "Working days only. Weekends and public holidays excluded.",
+  },
+
+  /** Section 5. The six scents and the Discovery Set. */
+  productGrid: {
+    id: "shop",
+    label: "The range",
+    heading: "Six scents. Pick your direction.",
+    intro: "Each one in a 15 g twist-up stick. Not sure yet? The Discovery Set has all six.",
+    sort: {
+      label: "Sort by",
+      options: sortOptions,
+      defaultValue: defaultSort,
+    },
+    viewAll: { label: "Shop all", href: "/collections/all" } satisfies NavLink,
+  },
+
+  /** Section 6. */
+  howItWorks: {
+    id: "how-it-works",
+    label: "How it works",
+    heading: "Twist. Swipe. Go.",
+    intro: "No glass. No spray. No fuss.",
+    steps: howItWorksSteps,
+  },
+
+  /** Section 7. A fair comparison with spray in general. No brands, no performance numbers. */
+  comparison: {
+    id: "solid-vs-spray",
+    label: "Compare",
+    heading: "Solid vs spray",
+    intro:
+      "Two ways to wear scent, and both have their place. Here is how the formats differ, in general.",
+    /** Table caption for screen readers. */
+    caption: "Solid cologne compared with spray in general",
+    columns: {
+      feature: "Feature",
+      solid: "Solid cologne",
+      spray: "Spray (in general)",
+    },
+    rows: comparisonRows,
+    note: "A general comparison of formats, not of any product or brand. Sprays differ.",
+  },
+
+  /** Section 8. The quiz copy itself lives in content/finder.ts. */
+  scentFinder: {
+    /** Anchor target of the hero's secondary CTA. */
+    id: "scent-finder",
+    label: "Scent finder",
+    heading: "Find your scent",
+    intro: "Three questions, one suggestion. No email needed.",
+  },
+
+  /** Section 9a. Real reviews only (content/reviews.ts). Empty at launch, so the empty state shows. */
+  reviews: {
+    id: "reviews",
+    label: "Reviews",
+    heading: "Reviews",
+    empty: {
+      heading: "No reviews yet",
+      body: "CORVANE has just launched. Reviews from verified buyers will appear here as they come in.",
+    },
+    /** Only used once real reviews exist. */
+    count: (count: number) => (count === 1 ? "1 review" : `${count} reviews`),
+    verifiedBuyer: "Verified buyer",
+  },
+
+  /** Section 9b. Our own 9:16 films (docs/PLAN.md §14). Never "customer" or "review". */
+  videoRow: {
+    id: "from-corvane",
+    label: "Films",
+    heading: "From CORVANE",
+    intro: "Short films we shot ourselves. Where the stick goes and how it is used.",
+    note: "Brand content, filmed by CORVANE.",
+    slots: videoSlots,
+    play: (title: string) => `Play video: ${title}`,
+    pause: (title: string) => `Pause video: ${title}`,
+  },
+
+  /**
+   * Section 10. The guarantee is a voluntary extra. The statutory right of
+   * withdrawal is mentioned only as the right it comes on top of, never as a
+   * perk (docs/PLAN.md §13).
+   */
+  guarantee: {
+    id: "guarantee",
+    label: "Guarantee",
+    heading: `${guaranteeDays}-day guarantee`,
+    lead: `Not the right scent for you? Tell us within ${guaranteeDays} days of delivery, send it back and we refund it.`,
+    points: [
+      {
+        id: "what",
+        title: "What it means",
+        text: "Opened or not, send the product back and we refund what you paid for it. Prefer another scent? We can swap it instead.",
+      },
+      {
+        id: "condition",
+        title: "The condition",
+        text: `Email us with your order number within ${guaranteeDays} days of delivery, then send the product back. E-gift cards are not included.`,
+      },
+      {
+        id: "rights",
+        title: "On top of your rights",
+        text: `This guarantee comes in addition to your ${withdrawalDays}-day statutory right of withdrawal. It does not replace or limit it.`,
+      },
+    ],
+    link: { label: "Read the full conditions", href: "/shipping-returns#guarantee" } satisfies NavLink,
+  },
+
+  /** Section 11. Questions come from content/faq.ts (onHome). */
+  faq: {
+    id: "faq",
+    label: "FAQ",
+    heading: "Questions",
+    link: { label: "All questions", href: "/faq" } satisfies NavLink,
+  },
+
+  /** Section 12. Fictional brand story (brief §3). No founding years or numbers we cannot back. */
+  story: {
+    id: "story",
+    label: "Our story",
+    heading: "Started on the North Sea coast.",
+    paragraphs: [
+      "CORVANE started on the North Sea coast. Wide beaches, cold water and a wind that keeps changing its mind. A weather vane turns with all of it and still points somewhere.",
+      "The idea came from there: smell good without carrying a bottle. So we made cologne solid. A 15 g twist-up stick, alcohol-free, small enough for a pocket.",
+    ],
+    /** PhotoSlot placeholder until a real photo exists. */
+    photoLabel: "PHOTO: North Sea coast, dunes and a weather vane",
+    link: { label: "Read our story", href: "/about" } satisfies NavLink,
+  },
+};
+
+export type Home = typeof home;
