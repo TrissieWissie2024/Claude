@@ -1,5 +1,5 @@
 import { formatMoney, formatMoneyShort } from "@/lib/money";
-import type { NavLink } from "@/lib/types";
+import type { FaqCategory, NavLink } from "@/lib/types";
 
 import { cartCopy } from "./cart";
 import type { ScentSlug } from "./finder";
@@ -9,8 +9,9 @@ import { shipping } from "./shipping";
 import { facts, site } from "./site";
 
 /**
- * Copy for the static pages: About, Contact, Account, Checkout (title only),
- * 404 and Shipping & Returns (docs/PLAN.md §1, §5). Legal texts live in
+ * Copy for the static pages: About, FAQ (page chrome; the questions live in
+ * content/faq.ts), Contact, Account, Checkout (title only), 404 and Shipping &
+ * Returns (docs/PLAN.md §1, §5). Legal texts live in
  * content/legal.ts; the checkout stub copy lives in content/cart.ts.
  *
  * Copy rules (brief §2, docs/PLAN.md §13): specifications only, no performance
@@ -43,6 +44,48 @@ function joinList(items: string[]): string {
 function workingDays(min: number, max: number): string {
   if (min === max) return min === 1 ? "1 working day" : `${min} working days`;
   return `${min} to ${max} working days`;
+}
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/**
+ * Dispatch holidays from content/shipping.ts that fall on a working day, grouped
+ * by year, e.g. { year: "2026", days: [{ date: "Monday 6 April", name: "Easter Monday" }] }.
+ * Weekend dates are left out: nothing ships at the weekend anyway. Pure: parses
+ * the fixed ISO dates (UTC noon), never reads the clock.
+ */
+function dispatchHolidaysByYear(): { year: string; days: { iso: string; date: string; name: string }[] }[] {
+  const years = new Map<string, { iso: string; date: string; name: string }[]>();
+  for (const holiday of shipping.holidays) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(holiday.date);
+    if (!match) continue;
+    const weekday = new Date(`${holiday.date}T12:00:00Z`).getUTCDay();
+    if (!shipping.dispatchWeekdays.includes(weekday === 0 ? 7 : weekday)) continue;
+    const entry = {
+      iso: holiday.date,
+      date: `${WEEKDAYS[weekday]} ${Number(match[3])} ${MONTHS[Number(match[2]) - 1]}`,
+      name: holiday.name,
+    };
+    const list = years.get(match[1]) ?? [];
+    list.push(entry);
+    years.set(match[1], list);
+  }
+  return [...years].map(([year, days]) => ({ year, days }));
 }
 
 const email = site.company.email;
@@ -126,6 +169,10 @@ const about = {
     coast: "PHOTO: North Sea coast, wide beach in cold light",
     product: "PHOTO: Stick in hand, cap off",
   },
+  /** Label above the spec list in "How it is made" (the labels come from site.specs). */
+  specsLabel: "In every stick",
+  /** Accessible name of the list of scent links. */
+  scentsListLabel: "The six scents",
 };
 
 /* ------------------------------------------------------------------ */
@@ -165,6 +212,22 @@ const contact = {
       body: `Your message was not sent and nobody will reply. To reach us, email ${email}.`,
     },
     error: `That did not go through. This form is a demo, so nothing was sent. Try again, or email ${email}.`,
+    /** Shown with the success message; resets the form. */
+    sendAnother: "Write another message",
+  },
+  eyebrow: "Help",
+  /** Label above the email address in the side column. */
+  emailLabel: "Email",
+  /** Upper limits, also checked by the /api/contact stub. */
+  limits: { name: 100, orderNumber: 40, message: 5000 },
+  /** Shown under the email line: most questions are answered elsewhere. */
+  shortcuts: {
+    heading: "Quick answers",
+    body: "Delivery times, returns and the guarantee are covered on these pages.",
+    links: [
+      { label: "FAQ", href: "/faq" },
+      { label: "Shipping & Returns", href: "/shipping-returns" },
+    ] satisfies NavLink[],
   },
 };
 
@@ -191,7 +254,18 @@ const account = {
     body: "Send us your order number and your question. We look it up and get back to you.",
     link: { label: "Contact us", href: "/contact" } satisfies NavLink,
     secondaryLink: { label: "Shipping & Returns", href: "/shipping-returns" } satisfies NavLink,
+    /** The help links on the account stub, each with one line on what it covers. */
+    links: [
+      { label: "Contact us", href: "/contact", description: "Your order number and your question. We answer on working days." },
+      {
+        label: "Shipping & Returns",
+        href: "/shipping-returns",
+        description: `Delivery times, your ${withdrawalDays}-day right of withdrawal and the ${guaranteeDays}-day guarantee.`,
+      },
+      { label: "FAQ", href: "/faq", description: "Scents, ordering, payment and Subscribe & save." },
+    ] satisfies (NavLink & { description: string })[],
   },
+  eyebrow: "Help",
 };
 
 /* ------------------------------------------------------------------ */
@@ -204,6 +278,45 @@ const checkout = {
     description: "Demo checkout. No payment is taken.",
     noIndex: true,
   } satisfies PageMeta,
+};
+
+/* ------------------------------------------------------------------ */
+/* FAQ (page chrome; the questions live in content/faq.ts)             */
+/* ------------------------------------------------------------------ */
+
+const faqCategoryLinks: Partial<Record<FaqCategory, NavLink>> = {
+  shipping: { label: "Shipping rates and delivery times", href: "/shipping-returns#rates" },
+  returns: { label: "Withdrawal, guarantee and returns in full", href: "/shipping-returns#withdrawal" },
+};
+
+const faqPage = {
+  meta: {
+    title: "FAQ",
+    description:
+      "Answers about CORVANE solid cologne: the product, ordering and payment, shipping, returns and Subscribe & save.",
+  } satisfies PageMeta,
+  eyebrow: "Help",
+  h1: "Questions and answers",
+  intro: "Short answers first. Where there is more to say, the answer links to it.",
+  /** Accessible name of the category links at the top. */
+  navLabel: "Categories",
+  /** Category headings, in this order (FaqCategory in lib/types.ts). */
+  categories: [
+    { id: "product", label: "The product" },
+    { id: "ordering", label: "Ordering and payment" },
+    { id: "shipping", label: "Shipping" },
+    { id: "returns", label: "Returns and guarantee" },
+    { id: "subscription", label: "Subscribe & save" },
+  ] satisfies { id: FaqCategory; label: string }[],
+  /** e.g. "7 questions". */
+  questionCount: (count: number) => (count === 1 ? "1 question" : `${count} questions`),
+  /** Links shown under a category, e.g. the full withdrawal text under Returns. */
+  categoryLinks: faqCategoryLinks,
+  contact: {
+    heading: "Still a question?",
+    body: "Send us a message. We answer on working days.",
+    link: { label: "Contact us", href: "/contact" } satisfies NavLink,
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -286,6 +399,12 @@ const shippingReturns = {
       "Later than that, at the weekend or on a Dutch public holiday, it ships the next working day.",
       "Every order ships from the Netherlands.",
     ],
+    /** Dutch public holidays on working days, from content/shipping.ts (maintained yearly). */
+    holidays: {
+      heading: "No dispatch on Dutch public holidays",
+      intro: "Orders placed on these days ship the next working day.",
+      years: dispatchHolidaysByYear(),
+    },
   },
 
   delivery: {
@@ -392,10 +511,19 @@ const shippingReturns = {
     body: "Something not covered here? Send us a message.",
     link: { label: "Contact us", href: "/contact" } satisfies NavLink,
   },
+
+  eyebrow: "Help",
+  /** Small labels that keep the legal right and the voluntary guarantee apart. */
+  tags: {
+    withdrawal: "Your statutory right",
+    guarantee: "Voluntary, on top of your rights",
+    damaged: "Your statutory right",
+  },
 };
 
 export const pages = {
   about,
+  faq: faqPage,
   contact,
   account,
   checkout,

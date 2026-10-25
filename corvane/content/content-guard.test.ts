@@ -283,13 +283,14 @@ describe("homepage copy added after the phase 5 review", () => {
     expect(home.reviews.emptyTitle).not.toMatch(/\d|star|rating/i);
   });
 
-  it("does not promise the scent finder quiz before it ships (D38)", () => {
-    const interim = home.scentFinder.interim;
-    expect(interim.text).not.toMatch(/quiz|question|finder/i);
-    expect(interim.link.href).toBe("/products/discovery-set");
-    const answer = home.faq.interimAnswers["which-scent"];
-    expect(answer, "home.faq.interimAnswers.which-scent").toBeTruthy();
-    expect(answer).not.toMatch(/quiz|question|finder/i);
+  it("drops the interim scent finder copy now that the quiz ships (D38, D43.1, D51)", () => {
+    expect("interim" in home.scentFinder, "home.scentFinder.interim").toBe(false);
+    expect("interimAnswers" in home.faq, "home.faq.interimAnswers").toBe(false);
+    expect(home.scentFinder.intro).toMatch(/three questions/i);
+    const whichScent = faqModule.faq.find((item) => item.id === "which-scent");
+    expect(whichScent?.onHome, "content/faq.ts which-scent: onHome").toBe(true);
+    expect(whichScent?.answer).toMatch(/scent finder/i);
+    expect(pdpModule.pdp.faq.idsFor["discovery-set"], "pdp.faq.idsFor.discovery-set").toContain("which-scent");
   });
 
   it("states the guarantee days from offers.ts and keeps the short intros short", () => {

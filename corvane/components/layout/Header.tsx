@@ -24,7 +24,7 @@ import { site } from "@/content/site";
  */
 export function Header() {
   return (
-    <header className="sticky top-0 z-30 h-header border-b border-line bg-fog">
+    <header className="sticky top-0 z-30 h-header border-b border-line bg-fog print:hidden">
       <Container className="grid h-full grid-cols-[1fr_auto_1fr] items-center gap-4">
         <div className="flex min-w-0 items-center justify-start">
           <MobileNav className="-ml-3" />

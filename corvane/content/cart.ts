@@ -235,7 +235,21 @@ export const cartCopy = {
       heading: "Demo order placed",
       body: "Nothing was charged and nothing will ship. This checkout is a demo.",
       backToShop: { label: "Back to the shop", href: "/collections/all" },
+      /** Under the result body, e.g. "No confirmation email was sent to you@example.com." */
+      emailNote: (email: string) => `No confirmation email was sent to ${email}.`,
+      /** Label of the total in the result recap. */
+      totalLabel: "Order total (not charged)",
+      /** Back to the form, with the cart unchanged. */
+      backToCheckout: "Back to checkout",
     },
+    /** Above the contact and address fields. */
+    formNote: "Demo form: nothing you enter here is stored or sent.",
+    /** Shown near the button when a field needs attention (each field also gets its own message). */
+    fixErrors: "Check the fields marked above.",
+    /** Accessible name of the form. */
+    formLabel: "Contact and shipping details",
+    /** Shown with the order summary while the cart loads from storage (no visible text). */
+    loadingLabel: "Loading your order",
   },
 };
 

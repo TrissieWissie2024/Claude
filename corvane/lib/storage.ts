@@ -55,5 +55,7 @@ export const storageKeys = {
   country: "corvane:country:v1",
   emailCaptureLastShown: "corvane:email-capture:last-shown",
   emailCaptureSubscribed: "corvane:email-capture:subscribed",
+  /** sessionStorage (not localStorage): the visitor hid the email capture pill for this visit. */
+  emailCapturePillDismissed: "corvane:email-capture:pill-dismissed",
   consent: "corvane:consent:v1",
 } as const;

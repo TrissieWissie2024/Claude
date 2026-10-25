@@ -258,14 +258,6 @@ export const home = {
     label: "Scent finder",
     heading: "Find your scent",
     intro: "Three questions, one suggestion. No email needed.",
-    /**
-     * Shown under the heading until the quiz ships (phase 7, D38): something
-     * to do now, without promising a quiz that is not on the page yet.
-     */
-    interim: {
-      text: "Not sure yet? Try all six first.",
-      link: { label: "Discovery Set", href: "/products/discovery-set" } satisfies NavLink,
-    },
   },
 
   /** Section 9a. Real reviews only (content/reviews.ts). Empty at launch, so the empty state shows. */
@@ -348,15 +340,6 @@ export const home = {
     link: { label: "All questions", href: "/faq" } satisfies NavLink,
     /** Small line under the link: where to go when the answer is not here. */
     contact: { text: "Something else?", link: { label: "Contact us", href: "/contact" } satisfies NavLink },
-    /**
-     * Homepage answers that replace the content/faq.ts answer of the same id
-     * until the scent finder ships (phase 7, D38): faq.ts "which-scent" points
-     * to the quiz, which is not on the page yet. Phase 7 drops this override.
-     */
-    interimAnswers: {
-      "which-scent":
-        "Start with the notes on each card, from fresh to dark. Still not sure? The Discovery Set has six 3 g mini sticks, one of each scent, so you can try them all first.",
-    } as Partial<Record<string, string>>,
   },
 
   /** Section 12. Fictional brand story (brief §3). No founding years or numbers we cannot back. */

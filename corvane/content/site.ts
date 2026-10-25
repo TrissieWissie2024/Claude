@@ -262,15 +262,35 @@ export const site = {
     rewardConditions,
     /** Honest: picking a card always gives the same reward. No chance, no prize draw. */
     pillLabel: `Pick a card for ${facts.welcomePercent}% off`,
-    pillAriaLabel: `Pick a card: every card gives ${facts.welcomeLabel}`,
+    /** Screen reader text after the visible pill label, so the accessible name starts with it (WCAG 2.5.3). */
+    pillLabelSuffix: "Every card gives the same reward.",
+    /** Pill label after signing up: it opens the code again. */
+    pillSubscribedLabel: `Your ${facts.welcomePercent}% code`,
+    /** Small close button on the pill. Hides it for the rest of the visit. */
+    pillDismiss: "Hide this offer",
     title: "Pick a card",
-    intro: "Three cards, one reward. Turn one, leave your email and the code is yours.",
-    /** Shown before a card is picked. */
+    /** Dialog description, visible before a card is picked (brief §2.8). */
     sameRewardNote: `Every card reveals the same reward: ${facts.welcomeLabel}.`,
-    cardsLabel: "Cards",
-    card: (index: number) => `Turn card ${index}`,
-    cardBack: "CORVANE",
-    revealedHeading: `${facts.welcomePercent}% off`,
+    /** Line under the cards before one is picked. */
+    intro: "Turn any card, then leave your email to get the code.",
+    cardsLabel: "Choose a card",
+    /** Accessible name of a face-down card. */
+    card: (index: number, total: number) => `Card ${index} of ${total}`,
+    /** Accessible name of a turned card. */
+    cardRevealed: (index: number, total: number, reward: string) => `Card ${index} of ${total}: ${reward}`,
+    /** Accessible name of the card the visitor turned. */
+    cardChosen: (index: number, total: number, reward: string) =>
+      `Card ${index} of ${total}, your card: ${reward}`,
+    /** Front of every card: the same reward, e.g. "10%" over "off your first order". */
+    cardFace: {
+      value: `${facts.welcomePercent}%`,
+      line: facts.welcomeLabel.startsWith(`${facts.welcomePercent}% `)
+        ? facts.welcomeLabel.slice(`${facts.welcomePercent}% `.length)
+        : facts.welcomeLabel,
+    },
+    /** Caption under the turned card, and under the other two once they turn as well. */
+    yourCard: "Your card",
+    sameReward: "Same reward",
     revealedLine: (reward: string) => `Your reward: ${reward}. Enter your email to get the code.`,
     /** What the subscriber signs up for. There is no checkbox; if one is added, it starts unticked. */
     consent: {
@@ -279,17 +299,32 @@ export const site = {
     },
     emailLabel: "Email address",
     emailPlaceholder: "you@example.com",
-    submit: "Get my code",
+    submit: "Send my code",
     submitting: "Sending",
+    /** Dialog title once signed up. */
     successHeading: "Your code",
     successLine: (code: string) =>
       `Use ${code} at checkout for ${facts.welcomeLabel}. ${rewardConditions}`,
+    /** Accessible name of the code box. */
+    codeLabel: "Your discount code",
     copy: "Copy code",
     copied: "Copied",
-    applyToCart: "Apply to cart",
+    copiedMessage: (code: string) => `${code} copied.`,
+    /** Shown when the clipboard is blocked; the code is selected instead. */
+    copyFailed: "Copying did not work in this browser. The code is selected, so you can copy it yourself.",
+    applyToCart: "Apply to my cart",
     appliedToCart: "Applied to your cart",
+    applied: (code: string) => `${code} is applied to your cart.`,
+    /** Applied while the cart has nothing the code works on (empty, or gift cards only). */
+    appliedNothingEligible: (code: string) =>
+      `${code} is saved in your cart. It comes off once you add a stick or set. ${rewardConditions}`,
+    /** Shown before applying when the cart already holds another code (one code per order). */
+    replaceNote: (current: string, currentLabel: string, code: string) =>
+      `Your cart has ${current}: ${currentLabel}. One code per order, so applying ${code} replaces it.`,
+    replaced: (code: string, previous: string) => `${code} is applied to your cart. It replaced ${previous}.`,
     invalidEmail: "Enter a valid email address.",
-    error: "That did not go through. Check your email address and try again.",
+    error: "That did not go through. Try again in a moment.",
+    continueShopping: "Continue shopping",
     close: "Close",
     dismiss: "No thanks",
   },

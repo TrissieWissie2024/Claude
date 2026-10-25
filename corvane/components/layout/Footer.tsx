@@ -35,7 +35,7 @@ export function Footer() {
   const companyLines = [company.legalName, company.kvk, company.vat, company.address];
 
   return (
-    <footer className="focus-on-dark bg-deep text-fog">
+    <footer className="focus-on-dark bg-deep text-fog print:hidden">
       <Container>
         <section
           aria-labelledby="footer-newsletter-heading"

@@ -56,8 +56,12 @@ corvane/
                              NotesChips, IntensityMeters, DeliveryEstimate, TrustRow,
                              ProductAccordions, CrossSell
     catalog/                 CatalogProvider (productdata voor client components)
-    finder/                  ScentFinder
-    email/                   EmailCapture (pill, modal, kaarten)
+    finder/                  ScentFinder, FinderQuiz, finderState, tones
+    email/                   EmailCapture (pill, modal), RewardCards, EmailCaptureForm,
+                             RewardCode, state (opslag en afkoelperiode)
+    legal/                   LegalPage, LegalNotice ("TODO: laten controleren")
+    contact/                 ContactForm (en veldhulpjes die de checkout ook gebruikt)
+    checkout/                CheckoutView
     consent/                 ConsentBanner, AnalyticsLoader
     seo/                     JsonLd
   content/                   alle tekst en data (zie §5)
@@ -135,7 +139,7 @@ corvane/
 | 5 | Productgrid met sorteren | `home/ProductGridSection` | zes geuren en Discovery Set |
 | 6 | How it works | `home/HowItWorks` | `home.howItWorks` |
 | 7 | Solid vs spray | `home/SolidVsSpray` | `home.comparison` |
-| 8 | Scent finder | `finder/ScentFinder` (fase 7; tot dan een sectie in `app/page.tsx` met eyebrow, kop en een regel met een knop naar de Discovery Set, D38 en D43) | `content/finder.ts` |
+| 8 | Scent finder | `finder/ScentFinder` (quiz `finder/FinderQuiz`, op deep, D51) | `content/finder.ts`, `home.scentFinder` |
 | 9 | Reviews en video-rij | `home/ReviewsSection`, `home/VideoRow` | `content/reviews.ts`, `content/assets.ts` |
 | 10 | Garantie | `home/GuaranteeBlock` | `offers.guaranteeDays` |
 | 11 | FAQ | `home/FaqSection` | `content/faq.ts` (selectie) |
@@ -261,7 +265,7 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 **Cart drawer** (Radix Dialog, rechts): twee indicatoren boven elkaar: een balk in euro's naar gratis verzending (zelfde basis als regel 7) en een stap 0–3 sticks naar de gratis pouch. Daaronder de regels met geur(en), aankooptype, stepper en verwijderen; upsell (pouch als die nog niet gratis is, Discovery Set, "+1 stick" als er één stick mist tot de volgende bundel); subtotaal, "You save", "Taxes included", checkoutknop (vuurt `begin_checkout`), betaaliconen (onderaan de scrollende inhoud). Stickregels tonen hun eigen tegelprijs; groepering over regels staat als notitie onder het subtotaal (D34). Nette lege staat. De teller in de header telt artikelen (elke stick telt één).
 
 **E-mailpopup** (`email/EmailCapture`):
-1. De pill linksonder is zichtbaar na mount en opent altijd de modal.
+1. De pill linksonder opent altijd de modal. Hij verschijnt pas als de bezoeker de pagina 240 px heeft gescrold of de modal op die pagina open is geweest, zodat het eerste beeld van een pagina vrij blijft; daarna blijft hij op die pagina staan. Niet op `/checkout` en niet op productpagina's onder `lg` (daar hoort de onderrand bij de sticky add-to-cart, D51).
 2. Automatisch openen gebeurt na 8 seconden of bij exit-intent op desktop (`pointer: fine`, muis verlaat het venster aan de bovenkant). Alleen als `corvane:email-capture:last-shown` ontbreekt of ouder is dan 7 dagen, en nooit meer na aanmelden. Het tijdstip wordt opgeslagen bij automatisch openen. Werkt localStorage niet, dan opent de popup nooit vanzelf.
 3. Vóór het kiezen staat er al: "Every card reveals the same reward: 10% off your first order." Het percentage en de code komen uit `offers.welcomeCode`. De voorwaarden staan erbij: one code per order, excludes gift cards.
 4. De kaarten zijn `<button>`s. Met reduced motion draaien ze niet om maar wisselen ze direct.
@@ -269,9 +273,9 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 6. Na aanmelden (`POST /api/subscribe`, vuurt `sign_up`) staat de code in beeld, kopieerbaar, en kan hij in één klik op de cart worden toegepast. De code werkt echt in `priceCart`.
 7. Dezelfde consenttekst staat bij de nieuwsbrief in de footer.
 
-**Opbouw van elke pagina** (`app/layout.tsx`, D31): SkipLink · PromoBar (in de flow, scrolt weg) · Header (sticky) · `<main id="main">` · Footer · CartDrawer. Pagina's renderen geen eigen `<main>`.
+**Opbouw van elke pagina** (`app/layout.tsx`, D31): SkipLink · PromoBar (in de flow, scrolt weg) · Header (sticky) · `<main id="main">` · Footer · EmailCapture · CartDrawer. Pagina's renderen geen eigen `<main>`. Bij afdrukken vallen skiplink, promobalk, header, footer en pill weg.
 
-**Stapelvolgorde** (laag naar hoog): sticky header 30 · sticky add-to-cart 40 · e-mailpill 45 · consentbanner 50 · drawers en modals 60 · skiplink 70 (alleen zichtbaar bij focus). Is de sticky add-to-cart zichtbaar of staat de consentbanner open, dan is de pill verborgen en opent de popup niet vanzelf. Een Playwright-test controleert dat pill en sticky add-to-cart elkaar op 390×844 niet overlappen.
+**Stapelvolgorde** (laag naar hoog): sticky header 30 · sticky add-to-cart 40 · e-mailpill 45 · consentbanner 50 · drawers en modals 60 · skiplink 70 (alleen zichtbaar bij focus). Is de sticky add-to-cart zichtbaar of staat de consentbanner open (`data-consent-open="true"` op `<body>`), dan is de pill verborgen en opent de popup niet vanzelf. `EmailCapture` staat in `app/layout.tsx` tussen Footer en CartDrawer, binnen `CartProvider`. Een Playwright-test controleert dat pill en sticky add-to-cart elkaar op 390×844 niet overlappen.
 
 ## 11. Commerce, catalogus en cart
 

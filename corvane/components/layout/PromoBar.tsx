@@ -31,7 +31,7 @@ export function PromoBar() {
   return (
     <section
       aria-label={site.promoBar.regionLabel}
-      className="focus-on-dark relative flex min-h-promo bg-deep text-xs leading-4 font-medium tracking-[0.01em] text-fog lg:text-[13px]"
+      className="focus-on-dark relative flex min-h-promo bg-deep text-xs leading-4 font-medium tracking-[0.01em] text-fog lg:text-[13px] print:hidden"
     >
       <PromoMotion />
       {/* Container width, with a 16 px gutter on phones so the longest USP line fits on one line. */}

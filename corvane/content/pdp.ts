@@ -299,10 +299,11 @@ export const pdp = {
     allLink: { label: "All questions", href: "/faq" },
     /**
      * Questions per product kind (ids from content/faq.ts, in this order). Scent sticks use the
-     * questions marked `onProduct`. "which-scent" waits for the scent finder (D38).
+     * questions marked `onProduct`. "which-scent" points to the scent finder on the homepage and
+     * then to the Discovery Set itself, so it sits on the Discovery Set page (D51).
      */
     idsFor: {
-      "discovery-set": ["what-is-solid-cologne", "how-to-apply", "heat", "shipping-cost", "guarantee"],
+      "discovery-set": ["what-is-solid-cologne", "which-scent", "how-to-apply", "heat", "shipping-cost", "guarantee"],
       pouch: ["bundle-pricing", "travel", "shipping-cost"],
       "gift-card": ["gift-cards", "discount-codes", "payment-methods"],
     } as Partial<Record<string, readonly string[]>>,
@@ -453,7 +454,7 @@ export const pdp = {
       },
       validity: {
         title: "Validity",
-        // TODO launch: the term follows from the legal check (content/legal.ts, Terms article 14).
+        // TODO launch: the term follows from the legal check (content/legal.ts, Terms article 15).
         term: "Validity term: confirmed before the shop goes live.",
         isPlaceholder: true,
         items: [
@@ -469,7 +470,7 @@ export const pdp = {
           before: "Withdrawal and validity are set out in the ",
           label: "Terms & Conditions",
           after: ".",
-          href: "/terms-and-conditions",
+          href: "/terms-and-conditions#gift-cards",
         },
       },
     },

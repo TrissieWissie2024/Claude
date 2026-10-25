@@ -4,6 +4,7 @@ import { Fraunces, Inter } from "next/font/google";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CatalogProvider } from "@/components/catalog/CatalogProvider";
+import { EmailCapture } from "@/components/email/EmailCapture";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { PromoBar } from "@/components/layout/PromoBar";
@@ -44,7 +45,9 @@ export const viewport: Viewport = {
  * Root layout (docs/PLAN.md §2, §10). A server component; the chrome around
  * every page, in DOM order:
  *   SkipLink (z-70, only visible on focus) · PromoBar (in flow, scrolls away) ·
- *   Header (sticky, z-30) · <main id="main"> · Footer · CartDrawer (portal, z-60) ·
+ *   Header (sticky, z-30) · <main id="main"> · Footer ·
+ *   EmailCapture (fixed pill bottom left, z-45; its modal is a portal, z-60) ·
+ *   CartDrawer (portal, z-60) ·
  *   RouteFocus (renders nothing; moves focus to <main> after a client navigation
  *   when the focused link went away with the previous page) ·
  *   StickDefs (a zero-size <svg> with the gradients every product render shares)
@@ -70,6 +73,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               {children}
             </main>
             <Footer />
+            <EmailCapture />
             <CartDrawer />
             <RouteFocus />
           </CartProvider>

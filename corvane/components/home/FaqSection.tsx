@@ -40,20 +40,9 @@ export interface FaqSectionProps {
   className?: string;
 }
 
-/**
- * The questions for a placement, in content order. On the homepage an answer
- * in home.faq.interimAnswers replaces the content/faq.ts one of the same id
- * (until the scent finder ships, "which-scent" must not point to it; D38).
- */
+/** The questions for a placement (`onHome` or `onProduct` in content/faq.ts), in content order. */
 export function faqItemsFor(placement: "home" | "product"): FaqItem[] {
-  if (placement === "product") return faq.filter((item) => item.onProduct);
-  const overrides = home.faq.interimAnswers;
-  return faq
-    .filter((item) => item.onHome)
-    .map((item) => {
-      const answer = overrides[item.id];
-      return answer ? { ...item, answer } : item;
-    });
+  return faq.filter((item) => (placement === "home" ? item.onHome : item.onProduct));
 }
 
 export function FaqSection({

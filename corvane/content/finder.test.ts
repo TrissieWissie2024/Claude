@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  finderReducer,
+  getAnswer,
+  getCurrentQuestion,
+  getFinderResult,
+  initialFinderState,
+  isResultStep,
+  type FinderState,
+} from "@/components/finder/finderState";
 import type { StickProduct } from "@/lib/types";
 
 import {
@@ -99,5 +108,90 @@ describe("recommendScent", () => {
     expect(recommendScent({})).toBe("north-swell");
     expect(recommendScent({ occasion: "nope" } as FinderAnswers)).toBe("north-swell");
     expect(recommendScent({ occasion: "night", place: "nope" })).toBe("lantern-smoke");
+  });
+});
+
+/*
+ * The quiz UI (components/finder/FinderQuiz.tsx) is driven by this reducer.
+ * Tested here because vitest only collects lib/ and content/ tests.
+ */
+describe("finder quiz state", () => {
+  type Step = (state: FinderState) => FinderState;
+  const run = (...steps: Step[]) => steps.reduce<FinderState>((state, step) => step(state), initialFinderState);
+  const choose = (optionId: string): Step => (state) => finderReducer(state, { type: "select", optionId });
+  const next: Step = (state) => finderReducer(state, { type: "next" });
+  const back: Step = (state) => finderReducer(state, { type: "back" });
+  const restart: Step = (state) => finderReducer(state, { type: "restart" });
+
+  it("walks every path through the three questions to a valid scent", () => {
+    const reached = new Set<ScentSlug>();
+    for (const answers of allAnswerSets()) {
+      const steps = finderQuestions.flatMap((question) => [choose(answers[question.id] as string), next]);
+      const state = run(...steps);
+      expect(isResultStep(state)).toBe(true);
+      const result = getFinderResult(state);
+      expect(result).toBe(recommendScent(answers));
+      expect(finderScentOrder).toContain(result);
+      reached.add(result as ScentSlug);
+    }
+    expect([...reached].sort()).toEqual([...finderScentOrder].sort());
+  });
+
+  it("starts on the first question with nothing chosen", () => {
+    expect(getCurrentQuestion(initialFinderState)?.id).toBe(finderQuestions[0].id);
+    expect(getAnswer(initialFinderState, finderQuestions[0])).toBeNull();
+    expect(getFinderResult(initialFinderState)).toBeNull();
+  });
+
+  it("does not move on without an answer and flags it", () => {
+    const state = run(next);
+    expect(state.step).toBe(0);
+    expect(state.missing).toBe(true);
+    expect(state.moves).toBe(0);
+    const chosen = run(next, choose("gym"));
+    expect(chosen.missing).toBe(false);
+    expect(run(next, choose("gym"), next).step).toBe(1);
+  });
+
+  it("ignores options of other questions and unknown ids", () => {
+    expect(run(choose("shore")).answers).toEqual({});
+    expect(run(choose("nope")).answers).toEqual({});
+    expect(run(choose("shore"), next).step).toBe(0);
+  });
+
+  it("keeps answers when going back and forward", () => {
+    const state = run(choose("night"), next, choose("fire"), back);
+    expect(state.step).toBe(0);
+    expect(getAnswer(state, finderQuestions[0])).toBe("night");
+    const forward = next(state);
+    expect(forward.step).toBe(1);
+    expect(getAnswer(forward, finderQuestions[1])).toBe("fire");
+  });
+
+  it("changing an earlier answer changes the result", () => {
+    const first = run(choose("night"), next, choose("fire"), next, choose("dark"), next);
+    expect(getFinderResult(first)).toBe("lantern-smoke");
+    const changed = run(choose("night"), next, choose("fire"), next, choose("dark"), next, back, choose("spiced"), next);
+    expect(getFinderResult(changed)).toBe("drift-and-ember");
+  });
+
+  it("goes back from the result to the last question, and not before the first", () => {
+    const result = run(choose("gym"), next, choose("shore"), next, choose("clean"), next);
+    expect(back(result).step).toBe(finderQuestions.length - 1);
+    expect(back(initialFinderState)).toBe(initialFinderState);
+    expect(next(result)).toBe(result);
+  });
+
+  it("restart clears the answers and counts as a move", () => {
+    const result = run(choose("gym"), next, choose("shore"), next, choose("clean"), next);
+    const fresh = restart(result);
+    expect(fresh.step).toBe(0);
+    expect(fresh.answers).toEqual({});
+    expect(fresh.moves).toBe(result.moves + 1);
+  });
+
+  it("counts every step change once", () => {
+    const state = run(choose("gym"), next, next, choose("shore"), next, back, back);
+    expect(state.moves).toBe(4);
   });
 });

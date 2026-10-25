@@ -1,6 +1,6 @@
 /**
  * POST /api/subscribe
- * Body: { email: string, source?: string }   e.g. source "footer" or "email_capture"
+ * Body: { email: string, source?: string }   e.g. source "footer" or "popup"
  * 200:  { ok: true }
  * 400:  { ok: false, error: "invalid-email" } for a missing, malformed or too long
  *       address, and for a body that is not a JSON object
