@@ -149,7 +149,7 @@ export const products: Product[] = [
     name: "Discovery Set",
     kind: "discovery-set",
     contents: "Six 3 g mini sticks, one of each scent",
-    tagline: "All six scents. Find your direction.",
+    tagline: "All six scents, 3 g each.",
     description:
       "Six 3 g mini sticks, one of each scent. Wear a different one each day and see which fits. Then pick your full-size stick.",
     badges: ["new"],
@@ -167,7 +167,7 @@ export const products: Product[] = [
     kind: "pouch",
     tagline: "Canvas. Keeps your sticks together.",
     description:
-      "A canvas pouch for your CORVANE sticks. It keeps them together in a gym bag, a backpack or a washbag. Plain canvas, nothing more than it needs.",
+      "A canvas pouch for your CORVANE sticks. It keeps them together in a gym bag, a backpack or a washbag. Plain canvas, nothing more than it needs. Sticks sold separately.",
     badges: [],
     featuredRank: 8,
     releasedAt: LAUNCH_DATE,
@@ -181,7 +181,7 @@ export const products: Product[] = [
     slug: "e-gift-card",
     name: "E-gift card",
     kind: "gift-card",
-    tagline: "Let them pick the direction.",
+    tagline: "They pick the scent.",
     description:
       "A digital gift card, delivered by email. They choose the scent, you skip the guessing. No shipping, no wrapping.",
     badges: [],

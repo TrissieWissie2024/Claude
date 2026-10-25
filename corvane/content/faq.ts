@@ -63,7 +63,7 @@ export const faq: FaqItem[] = [
     category: "product",
     question: "What is in it?",
     answer:
-      "A plant-based wax base with jojoba and coconut oil, plus fragrance. Alcohol-free. The full INCI list per scent follows from the manufacturer before launch and will be on each product page. If your skin is sensitive, try a small area first.",
+      "A plant-based wax base with jojoba and coconut oil, plus fragrance. Alcohol-free. The full INCI list per scent will be on each product page before the shop goes live. If your skin is sensitive, try a small area first.",
   },
   {
     id: "heat",
@@ -139,7 +139,7 @@ export const faq: FaqItem[] = [
     id: "guarantee",
     category: "returns",
     question: `What is the ${facts.guaranteeDays}-day guarantee?`,
-    answer: `Something extra, separate from your legal right of withdrawal. If a CORVANE product is not right for you, get in touch within ${facts.guaranteeDays} days of delivery and we will sort it out. The conditions are on the Shipping & Returns page.`,
+    answer: `A voluntary extra, separate from your legal right of withdrawal. Not the right scent? Email us within ${facts.guaranteeDays} days of delivery and send it back, opened or not. We refund what you paid for it or swap it for another scent. Return postage is yours. One claim per item. E-gift cards excluded.`,
     onHome: true,
   },
   {
@@ -154,14 +154,14 @@ export const faq: FaqItem[] = [
     id: "subscribe-and-save",
     category: "subscription",
     question: "How does Subscribe & save work?",
-    answer: `Choose your sticks, pick a delivery every ${intervalList} months, and save ${facts.subscriptionPercent}% on every delivery. Bundle prices still apply, then the discount comes off each set. Each delivery is billed when it ships. Recurring billing is connected at launch; until then no payment is taken.`,
+    answer: `Choose your sticks, pick a delivery every ${intervalList} months, and save ${facts.subscriptionPercent}% on every delivery. Bundle prices still apply, then the discount comes off each set. Each delivery is billed when it ships. Recurring billing is connected when the shop goes live; until then no payment is taken.`,
     onHome: true,
   },
   {
-    id: "pause-or-cancel",
+    id: "cancel-subscription",
     category: "subscription",
-    question: "Can I pause or cancel my subscription?",
+    question: "Can I cancel my subscription?",
     answer:
-      "Yes. Once subscriptions go live at launch, you can pause or cancel any time before your next delivery. No fee, no minimum term.",
+      "Yes. When subscriptions go live, you can cancel any time before your next delivery. No fee, no minimum term.",
   },
 ];

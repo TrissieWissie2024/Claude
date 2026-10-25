@@ -3,6 +3,7 @@ import type { NavLink } from "@/lib/types";
 
 import { cartCopy } from "./cart";
 import type { ScentSlug } from "./finder";
+import { legalReviewNotice } from "./legal";
 import { offers } from "./offers";
 import { shipping } from "./shipping";
 import { facts, site } from "./site";
@@ -75,9 +76,9 @@ const about = {
   sections: [
     {
       id: "origin",
-      heading: "From the North Sea coast",
+      heading: "Where it started",
       body: [
-        "CORVANE started on the North Sea coast. Wide beaches, cold water, wind from every side. Weather you wear a coat for.",
+        "Wide beaches, cold water, wind from every side. Weather you wear a coat for.",
         "The scents come from there. Sea salt and bergamot on a clear morning. Driftwood and a fire after dark. Black tea in a harbour café while it rains.",
       ],
     },
@@ -137,9 +138,9 @@ const contact = {
     description: "Questions about an order, a scent or a subscription. Send CORVANE a message.",
   } satisfies PageMeta,
   h1: "Contact",
-  intro: "Questions about an order, a scent or a subscription. Send a message and we answer on working days.",
+  intro: "Questions about an order, a scent or a subscription. Email us and we answer on working days.",
   /** Rendered as: before + <a href="mailto:email">email</a> + after. */
-  emailLine: { before: "Or email ", email, after: "." },
+  emailLine: { before: "Email ", email, after: "." },
   /** Shown above the form. The form posts to the /api/contact stub. */
   demoNotice: "Demo form: messages are not sent anywhere.",
   form: {
@@ -160,8 +161,8 @@ const contact = {
       messageRequired: "Write a message.",
     },
     success: {
-      heading: "Message received",
-      body: `Thanks. This form is a demo, so your message was not sent and nobody will reply. To reach us, email ${email}.`,
+      heading: "Not sent: this is a demo form",
+      body: `Your message was not sent and nobody will reply. To reach us, email ${email}.`,
     },
     error: `That did not go through. This form is a demo, so nothing was sent. Try again, or email ${email}.`,
   },
@@ -243,8 +244,9 @@ const shippingReturns = {
     title: "Shipping & Returns",
     description: `Shipping to ${facts.countryNames}, delivery times, your ${withdrawalDays}-day right of withdrawal and the separate ${guaranteeDays}-day guarantee.`,
   } satisfies PageMeta,
-  /** Contains the statutory withdrawal text: show legalReviewNotice from content/legal.ts at the top. */
+  /** Contains the statutory withdrawal text, so it shows the legal review notice at the top. */
   showLegalReviewNotice: true,
+  reviewNotice: legalReviewNotice,
   h1: "Shipping & Returns",
   intro: "Where we ship, what it costs, when it arrives and how returns work.",
   tocLabel: "On this page",
@@ -366,7 +368,7 @@ const shippingReturns = {
     conditions: {
       heading: "Conditions",
       items: [
-        `Email ${email} within ${guaranteeDays} days of delivery, with your order number and the product.`,
+        `Email ${email} within ${guaranteeDays} days of delivery, with your order number and the product you are returning.`,
         "Send the product back. Opened is fine.",
         "Applies to sticks, mini sticks, the Discovery Set and the Travel Pouch bought in this shop. Not to e-gift cards.",
         "One claim per item. You pay the cost of return shipping.",

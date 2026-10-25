@@ -1,5 +1,6 @@
 import { VANE_CENTER, VANE_PATH } from "@/components/brand/VaneIcon";
 import { WORDMARK_HEIGHT, WORDMARK_PATH, WORDMARK_WIDTH } from "@/components/brand/Wordmark";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
 import { MINI_STICK, StickArt, useSvgId, type StickGeometry } from "./StickRender";
@@ -48,6 +49,7 @@ export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, classNam
   const wmWidth = 150;
   const wmScale = wmWidth / WORDMARK_WIDTH;
   const wmHeight = WORDMARK_HEIGHT * wmScale;
+  const lid = site.renders.discoverySetLid;
 
   return (
     <svg
@@ -56,7 +58,7 @@ export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, classNam
       className={cn("block", className ?? "h-full w-auto")}
       {...(decorative
         ? { "aria-hidden": true, focusable: false }
-        : { role: "img", "aria-label": `Discovery Set: six 3 g mini sticks, ${six.map((s) => s.name).join(", ")}` })}
+        : { role: "img", "aria-label": site.renders.discoverySet(six.map((s) => s.name).join(", ")) })}
     >
       <defs>
         <linearGradient id={`${id}-box`} x1="0" y1="0" x2="1" y2="1">
@@ -106,10 +108,11 @@ export function DiscoverySetRender({ scents = DEFAULT_DISCOVERY_SCENTS, classNam
           letterSpacing="2.6"
           fill="#B9C4C9"
         >
-          DISCOVERY SET
+          {lid.title.toUpperCase()}
         </text>
         <text x="0" y={-12 + wmHeight + 40} textAnchor="middle" className="font-sans" fontSize="7" letterSpacing="1.6" fill="#B9C4C9" fillOpacity="0.75">
-          SIX 3 G MINI STICKS
+          {/* Words in capitals, the unit in lower case: "3 g", never "3 G". */}
+          {`${lid.contents.toUpperCase()} · ${lid.size}`}
         </text>
       </g>
 

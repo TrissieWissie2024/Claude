@@ -6,6 +6,7 @@ import { useRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { MotionStyles } from "@/components/ui/MotionStyles";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
 /**
@@ -42,7 +43,7 @@ export interface SheetProps {
   headerExtra?: ReactNode;
   /** Sticky area under the scrolling body (e.g. totals and the checkout button). */
   footer?: ReactNode;
-  /** Accessible name of the close button. Default "Close". */
+  /** Accessible name of the close button. Default site.ui.close ("Close"). */
   closeLabel?: string;
   /** Padding around the body. Default true. */
   padded?: boolean;
@@ -83,7 +84,7 @@ export function Sheet({
   hideDescription = false,
   headerExtra,
   footer,
-  closeLabel = "Close",
+  closeLabel = site.ui.close,
   padded = true,
   tone = "light",
   className,

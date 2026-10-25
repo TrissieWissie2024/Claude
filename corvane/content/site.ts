@@ -340,6 +340,35 @@ export const site = {
     demoNotice: "Demo store. No orders are shipped and no payment is taken.",
   },
 
+  /**
+   * Accessible names of the SVG renders and the print inside them
+   * (docs/PLAN.md §13: text that visitors see or hear lives in content/).
+   */
+  renders: {
+    stick: (name: string) => `${name} solid cologne stick`,
+    stickOpen: (name: string) => `${name} solid cologne stick with the cap off`,
+    /** `names` arrives joined, e.g. "North Swell, Drift & Ember and Lantern Smoke". */
+    group: (names: string) => `${names} solid cologne sticks`,
+    discoverySet: (names: string) => `Discovery Set: six 3 g mini sticks, ${names}`,
+    /** Print on the Discovery Set lid. The render sets the words in capitals; the unit stays lower case ("3 g"). */
+    discoverySetLid: { title: "Discovery Set", contents: "Six mini sticks", size: "3 g" },
+    pouch: "Travel Pouch: stitched canvas pouch, shown with three sticks (sold separately)",
+    giftCard: "CORVANE e-gift card",
+    giftCardWithAmount: (amount: string) => `CORVANE e-gift card, ${amount}`,
+    /** Print on the card; the render sets it in capitals. */
+    giftCardPrint: "E-gift card",
+  },
+
+  /** Labels of the UI primitives (components/ui). */
+  ui: {
+    close: "Close",
+    previousPrice: "Previous price",
+    currentPrice: "Current price",
+    /** Accessible name of a star rating; `average` arrives formatted ("4.6"). */
+    rating: (average: string, count: number) =>
+      `Rated ${average} out of 5, based on ${count === 1 ? "1 review" : `${count} reviews`}`,
+  },
+
   /** Polite live-region messages announced by the cart provider. */
   cartAnnouncements: {
     added: (name: string) => `Added to cart: ${name}`,

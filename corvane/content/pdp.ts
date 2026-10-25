@@ -30,13 +30,14 @@ export interface TrustItem {
 }
 
 const transitLine = joinList(facts.transit.map((entry) => entry.text));
+const paymentLine = joinList(site.paymentMethods.map((method) => method.label));
 
 const trustItems: TrustItem[] = [
   {
     id: "secure-payment",
     icon: "lock",
     title: "Secure payment",
-    text: "iDEAL, Bancontact, cards, PayPal, Apple Pay",
+    text: paymentLine,
   },
   {
     id: "free-shipping",
@@ -48,8 +49,8 @@ const trustItems: TrustItem[] = [
     id: "guarantee",
     icon: "shield-check",
     title: `${facts.guaranteeDays}-day guarantee`,
-    text: "How it works",
-    href: "/shipping-returns",
+    text: "Opened or not. See the conditions.",
+    href: "/shipping-returns#guarantee",
   },
 ];
 
@@ -145,10 +146,10 @@ export const pdp = {
     subscriptionSavings: (amount: string) => `Save ${amount} on every delivery`,
     /**
      * Honest about the demo: recurring billing is not connected yet.
-     * Pausing and cancelling must be available when billing goes live (docs/TODO-LAUNCH.md).
+     * Cancelling before the next delivery must be available when billing goes live (D28, docs/TODO-LAUNCH.md).
      */
     subscriptionNote:
-      "Pause or cancel any time before your next delivery. Recurring billing is connected at launch; until then no payment is taken.",
+      "Cancel any time before your next delivery. Recurring billing is connected when the shop goes live; until then no payment is taken.",
   },
 
   addToCart: {
@@ -216,8 +217,7 @@ export const pdp = {
     ingredients: {
       title: "Ingredients",
       base: "Plant-based wax base with jojoba and coconut oil. Alcohol-free.",
-      inciPlaceholder:
-        "Full INCI list per scent: follows from the manufacturer and will be listed here before launch.",
+      inciPlaceholder: "Full INCI list per scent: added here before the shop goes live.",
       isPlaceholder: true,
       note: "Contains fragrance. If your skin is sensitive, try a small area first.",
     },
@@ -229,8 +229,9 @@ export const pdp = {
           : `Shipping from ${facts.shippingRate}, free from ${facts.freeShippingFrom}.`,
         `Order on a working day before ${facts.cutoff} (${facts.timeZoneLabel}) and it ships the same day.`,
         `Delivery takes ${transitLine}.`,
-        `You have the statutory right to withdraw from your purchase within ${facts.withdrawalDays} days of delivery.`,
-        `On top of that, every order comes with a ${facts.guaranteeDays}-day guarantee.`,
+        // Pre-contract information: the sealed-hygiene exception only holds if customers are told before ordering (D28).
+        `You can withdraw from your purchase within ${facts.withdrawalDays} days of delivery. Sticks and mini sticks are delivered sealed: once you break the seal, the right of withdrawal no longer applies to that item.`,
+        `Separately, sticks, the Discovery Set and the Travel Pouch come with a ${facts.guaranteeDays}-day guarantee, opened or not.`,
       ],
       link: { label: "Shipping & Returns", href: "/shipping-returns" },
       giftCard: "E-gift cards are delivered by email. There is nothing to ship.",
@@ -247,7 +248,7 @@ export const pdp = {
     heading: "Reviews",
     empty: {
       heading: "No reviews yet",
-      body: "CORVANE is new. Reviews from verified buyers will appear here once they come in.",
+      body: "CORVANE is new. Reviews from verified buyers appear here as they come in.",
     },
   },
 
@@ -262,18 +263,19 @@ export const pdp = {
     next: "Next image",
     thumbnail: (index: number, total: number) => `Show image ${index} of ${total}`,
     slides: {
-      packshot: (name: string) => `${name}, product render`,
+      packshot: (name: string) => name,
       inHand: (name: string) => `${name} in the hand`,
       notes: (name: string) => `${name}, notes`,
-      lifestyle: (name: string) => `${name}, lifestyle`,
+      lifestyle: (name: string) => `${name} in use`,
     },
     /**
      * Placeholder labels for photos that are not supplied yet. PhotoSlot shows
      * them as "PHOTO: <label>"; use `withPrefix` where the prefix is not added.
+     * Lifestyle slots use the scene label from content/assets.ts when there is one.
      */
     placeholders: {
       inHand: (name: string) => `${name} in hand, for scale`,
-      lifestyle: (name: string) => `${name}, lifestyle`,
+      lifestyle: (name: string) => `${name} in use`,
     },
     photoPrefix: "PHOTO:",
     withPrefix: (label: string) => `PHOTO: ${label}`,
@@ -297,8 +299,8 @@ export const pdp = {
 
   travelPouch: {
     lines: [
-      "Canvas pouch for your CORVANE sticks.",
-      `Free with ${facts.freePouchMinSticks} sticks or more (one per order).`,
+      "Canvas pouch for your CORVANE sticks. Sticks sold separately.",
+      `Free with ${facts.freePouchMinSticks} or more sticks (one per order).`,
     ],
     freeNote: "Free Travel Pouch (one per order)",
     oneTimeOnly: "One-time purchase.",

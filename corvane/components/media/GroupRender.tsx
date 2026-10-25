@@ -1,3 +1,4 @@
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
 import { FULL_STICK, StickArt, useSvgId } from "./StickRender";
@@ -27,11 +28,16 @@ export interface GroupRenderProps {
   className?: string;
 }
 
-/** Placement of each stick: x, base y, scale, variant. Back sticks first, so the front one overlaps. */
+/**
+ * Placement of each stick: x, base y, scale, variant. Back sticks first, so the
+ * front one overlaps both (about 5 units each side; the trio spans -74.8 to
+ * 75.6) and hides their inner rim lights. The back sticks are dimmed towards
+ * deep, so they read as further away rather than as a smaller size.
+ */
 const LAYOUT = [
-  { slot: 0, x: -57, y: -16, scale: 0.86, variant: "closed" },
-  { slot: 2, x: 59, y: -24, scale: 0.82, variant: "closed" },
-  { slot: 1, x: 2, y: 4, scale: 1, variant: "open" },
+  { slot: 0, x: -49, y: -16, scale: 0.86, variant: "closed", back: true },
+  { slot: 2, x: 51, y: -24, scale: 0.82, variant: "closed", back: true },
+  { slot: 1, x: 2, y: 4, scale: 1, variant: "open", back: false },
 ] as const;
 
 function joinNames(names: string[]): string {
@@ -42,7 +48,7 @@ function joinNames(names: string[]): string {
 export function GroupRender({ scents, className }: GroupRenderProps) {
   const id = useSvgId("group");
   const trio = scents.slice(0, 3);
-  const label = `${joinNames(trio.map((scent) => scent.name))} solid cologne sticks`;
+  const label = site.renders.group(joinNames(trio.map((scent) => scent.name)));
 
   return (
     <svg
@@ -68,7 +74,7 @@ export function GroupRender({ scents, className }: GroupRenderProps) {
       <ellipse cx="0" cy="-140" rx="128" ry="160" fill={`url(#${id}-glow)`} />
       <ellipse cx="0" cy="2" rx="125" ry="16" fill={`url(#${id}-pool)`} />
 
-      {LAYOUT.map(({ slot, x, y, scale, variant }) => {
+      {LAYOUT.map(({ slot, x, y, scale, variant, back }) => {
         const scent = trio[slot];
         if (!scent) return null;
         return (
@@ -79,6 +85,7 @@ export function GroupRender({ scents, className }: GroupRenderProps) {
               variant={variant}
               geometry={FULL_STICK}
               rimLight
+              dim={back}
             />
           </g>
         );

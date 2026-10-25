@@ -25,7 +25,7 @@ Fase 2 van de brief. Dit plan is het contract voor de bouw: sitemap, mappen, com
 | `/api/checkout` | Route handler | Roept `commerce.createCheckout()` aan, geeft een URL terug |
 | `/sitemap.xml`, `/robots.txt` | `app/sitemap.ts`, `app/robots.ts` | |
 | OG-beelden | `app/opengraph-image.tsx`, `app/products/[slug]/opengraph-image.tsx` | Met `next/og` |
-| Favicon | `app/icon.svg`, `app/apple-icon.png` | Windvaan-icoon |
+| Favicon | `app/icon.svg`, `app/favicon.ico` (16, 32, 48 px), `app/apple-icon.png` | Windvaan-icoon |
 
 Navigatie desktop: Shop (`/collections/all`), Discovery Set (`/products/discovery-set`), Gift Cards (`/products/e-gift-card`), About, FAQ. Mobiel: hamburger links opent een menu (Radix Dialog als drawer van links) met dezelfde links en de Help-links. Header: hamburger links (alleen mobiel), logo in het midden, account en cart met teller rechts; op desktop staat de nav horizontaal. Sticky.
 
@@ -75,7 +75,7 @@ corvane/
     cn.ts                    classnames
   tests/e2e/                 Playwright-smoketests
   docs/                      Nederlandse documentatie
-  public/brand/              woordmerk en windvaan als losse SVG-bestanden
+  public/brand/              woordmerk en windvaan als losse SVG-bestanden, in ink en in fog
   public/images/             echte foto's later (zie ASSETS.md); nu leeg
   reference/                 screenshots van de referentie (in .gitignore)
 ```
@@ -160,6 +160,7 @@ De volgorde onder het productgrid is een eigen keuze (zie `docs/REFERENCE.md`).
 | `finder.ts` | quizvragen en scoretabel |
 | `assets.ts` | manifest voor echte foto's en video's (nu alles `null`) |
 | `pages.ts` | copy voor About, Contact, Account, Checkout, 404 |
+| `collection.ts` | copy voor de collectiepagina (kop, intro, familiefilter, lege staat) en de productcards ("From €25", quick-add) |
 | `legal.ts` | juridische teksten, per pagina in secties |
 
 ## 6. Datamodel
@@ -299,7 +300,7 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
   - een ingevulde `previousPrice`;
   - reviews in `reviews.ts`;
   - claims met `verified: true`.
-- Het wettelijke herroepingsrecht van 14 dagen is geen verkoopargument. Het staat alleen op `/shipping-returns` en in de Terms. De garantie van 30 dagen staat er altijd naast als iets aparts.
+- Het wettelijke herroepingsrecht van 14 dagen is geen verkoopargument: nooit in de trustrij, badges, USP's of de promobalk. Volledig staat het op `/shipping-returns` en in de Terms. Als neutrale informatie staat het ook in de FAQ, het garantieblok ("On top of your rights") en de accordion "Shipping & returns" op de productpagina; daar altijd met de uitzondering voor verzegelde sticks, want die geldt alleen als de klant het vóór het bestellen weet (D28). De garantie van 30 dagen staat er altijd naast als iets aparts.
 - Geen `Date.now()` of `new Date()` tijdens het renderen; gebruik `useNow()`.
 
 ## 14. Beeld (`content/assets.ts`, `docs/ASSETS.md`)

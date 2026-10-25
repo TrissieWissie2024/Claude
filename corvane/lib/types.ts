@@ -290,7 +290,10 @@ export interface ShippingQuote {
   amount: number;
   isFree: boolean;
   freeFrom: number;
-  /** Amount still needed for free shipping (0 once reached). */
+  /**
+   * Amount still needed for free shipping: 0 once reached, and 0 when nothing
+   * needs shipping. Hide a free-shipping progress bar when requiresShipping is false.
+   */
   remainingForFree: number;
 }
 

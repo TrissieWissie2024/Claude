@@ -7,6 +7,7 @@ import { useRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { MotionStyles } from "@/components/ui/MotionStyles";
 import { overlayClasses } from "@/components/ui/Sheet";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
 /**
@@ -34,7 +35,7 @@ export interface ModalProps {
   hideDescription?: boolean;
   headerExtra?: ReactNode;
   footer?: ReactNode;
-  /** Accessible name of the close button. Default "Close". */
+  /** Accessible name of the close button. Default site.ui.close ("Close"). */
   closeLabel?: string;
   padded?: boolean;
   /** "dark" renders on deep. */
@@ -64,7 +65,7 @@ export function Modal({
   hideDescription = false,
   headerExtra,
   footer,
-  closeLabel = "Close",
+  closeLabel = site.ui.close,
   padded = true,
   tone = "light",
   className,

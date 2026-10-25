@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { offers } from "@/content/offers";
 import { getActiveCampaign, getCountdown } from "@/lib/campaign";
+import { validateDiscountCode } from "@/lib/pricing";
 import type { Campaign } from "@/lib/types";
 
 const campaign: Campaign = {
@@ -102,14 +103,31 @@ describe("content/offers.ts campaign (brief §2.3)", () => {
     expect(source).not.toMatch(/Date\.now\(|new Date\(/);
   });
 
-  it("uses a code that exists in discountCodes and ends with the campaign", () => {
-    const code = offers.campaign.code;
+  it("names a code that works for as long as the bar promotes it", () => {
+    const { campaign } = offers;
+    const code = campaign.code;
     if (code === undefined) return;
     const discount = offers.discountCodes.find((candidate) => candidate.code === code);
     expect(discount).toBeDefined();
-    expect(discount?.source).toBe("campaign");
-    if (discount?.endsAt !== undefined) {
-      expect(Date.parse(discount.endsAt)).toBeLessThanOrEqual(Date.parse(offers.campaign.endsAt));
+    if (!discount) return;
+    expect(discount.source).toBe("campaign");
+    expect(discount.active).toBe(true);
+    // The code's own window must cover the campaign's: it may start earlier and end later, never the other way round.
+    if (discount.startsAt !== undefined) {
+      expect(campaign.startsAt, "a code with startsAt needs a campaign startsAt").toBeDefined();
+      expect(Date.parse(discount.startsAt)).toBeLessThanOrEqual(Date.parse(campaign.startsAt ?? ""));
+    }
+    if (discount.endsAt !== undefined) {
+      expect(Date.parse(discount.endsAt)).toBeGreaterThanOrEqual(Date.parse(campaign.endsAt));
+    }
+
+    // And in behaviour: wherever the bar shows, the code is accepted.
+    const end = Date.parse(campaign.endsAt);
+    const start = campaign.startsAt === undefined ? end - 7 * 86_400_000 : Date.parse(campaign.startsAt);
+    for (const at of [start, (start + end) / 2, end - 1]) {
+      const now = new Date(at);
+      expect(getActiveCampaign(now), now.toISOString()).not.toBeNull();
+      expect(validateDiscountCode(code, now).valid, now.toISOString()).toBe(true);
     }
   });
 });

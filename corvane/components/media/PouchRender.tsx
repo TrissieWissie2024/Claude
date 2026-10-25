@@ -1,4 +1,5 @@
 import { VANE_CENTER, VANE_PATH } from "@/components/brand/VaneIcon";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
 import { FULL_STICK, StickArt, useSvgId } from "./StickRender";
@@ -6,7 +7,8 @@ import { FULL_STICK, StickArt, useSvgId } from "./StickRender";
 /**
  * Travel Pouch packshot: a flat canvas pouch in sand, standing, with a kelp
  * binding along the open top, stitched seams, a small woven vane tab in the
- * side seam and three sticks standing in it (only their caps show).
+ * side seam and three sticks standing in it (only their caps show). The sticks
+ * are sold separately, and the accessible name says so.
  * Aspect 4 : 5 (viewBox 400 x 500), like the packshot photo slot.
  */
 
@@ -43,7 +45,7 @@ export function PouchRender({ className, decorative = false }: PouchRenderProps)
       className={cn("block", className ?? "h-full w-auto")}
       {...(decorative
         ? { "aria-hidden": true, focusable: false }
-        : { role: "img", "aria-label": "Travel Pouch: stitched canvas pouch with three sticks" })}
+        : { role: "img", "aria-label": site.renders.pouch })}
     >
       <defs>
         <linearGradient id={`${id}-canvas`} x1="0" y1="0" x2="1" y2="0">

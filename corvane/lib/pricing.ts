@@ -282,6 +282,29 @@ export function validateDiscountCode(
   return { valid: true, code: found };
 }
 
+/**
+ * Start (ms since the epoch) of the stretch of time around `now` in which every
+ * discount-code check gives the same answer: the latest startsAt or endsAt of
+ * any code or of the campaign at or before `now`, or 0 before the first one.
+ * Pricing at this instant equals pricing at `now`, so a client can run a 1 s
+ * clock and still only re-price when a code window opens or closes.
+ */
+export function discountWindowStart(now: Date, config: PricingConfig = defaultPricingConfig): number {
+  const at = now.getTime();
+  const { discountCodes, campaign } = config.offers;
+  const boundaries = [
+    ...discountCodes.flatMap((code) => [code.startsAt, code.endsAt]),
+    campaign.startsAt,
+    campaign.endsAt,
+  ];
+  let start = 0;
+  for (const iso of boundaries) {
+    const ms = parseInstant(iso);
+    if (ms !== null && ms <= at && ms > start) start = ms;
+  }
+  return start;
+}
+
 /* ------------------------------------------------------------------ */
 /* Shipping                                                            */
 /* ------------------------------------------------------------------ */
@@ -300,7 +323,9 @@ function findCountry(country: CountryCode | undefined, config: PricingConfig): S
  * Shipping for a country (PLAN §7 rule 7). `basis` is the value of the
  * shippable items (sticks, Discovery Set, pouch; no gift cards) after bundle,
  * subscription and free-pouch pricing but before the discount code (D14).
- * Unknown countries fall back to the default country.
+ * Unknown countries fall back to the default country. When nothing needs
+ * shipping (gift cards only, or an empty cart) isFree is false and
+ * remainingForFree is 0: there is no threshold to work towards.
  */
 export function quoteShipping(
   country: CountryCode | undefined,
@@ -318,7 +343,7 @@ export function quoteShipping(
     amount: requiresShipping && !isFree ? entry.rate : 0,
     isFree,
     freeFrom: entry.freeFrom,
-    remainingForFree: Math.max(0, entry.freeFrom - shippableBasis),
+    remainingForFree: requiresShipping ? Math.max(0, entry.freeFrom - shippableBasis) : 0,
   };
 }
 

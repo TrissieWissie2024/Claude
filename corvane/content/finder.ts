@@ -124,7 +124,7 @@ export const finder = {
     pickOne: "Pick one to continue.",
   },
   result: {
-    eyebrow: "Your direction",
+    eyebrow: "Your match",
     heading: (name: string) => `Your scent: ${name}`,
     /** One line per scent: why it fits the answers. Notes only, no claims. */
     why: {
@@ -139,7 +139,7 @@ export const finder = {
     addToCartWithPrice: (price: string) => `Add to cart – ${price}`,
     viewProduct: (name: string) => `View ${name}`,
     retake: "Start again",
-    discovery: "Not sure yet? The Discovery Set has all six.",
+    discovery: "Still between two? The Discovery Set has all six.",
     discoveryLink: { label: "See the Discovery Set", href: "/products/discovery-set" },
   },
 };

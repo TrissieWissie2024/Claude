@@ -24,7 +24,7 @@ export const cartCopy = {
 
   empty: {
     headline: "Your cart is empty",
-    line: "Six scents, one stick each. Start with the one that fits your day.",
+    line: "Six scents, each in a 15 g twist-up stick. Start with the one that fits your day.",
     cta: { label: "Shop the range", href: "/collections/all" },
     secondary: { label: "Try the Discovery Set", href: "/products/discovery-set" },
   },
@@ -58,6 +58,10 @@ export const cartCopy = {
     /** A set of sticks chosen on the product page, e.g. "Set of 3". */
     set: (count: number) => (count === 1 ? "1 stick" : `Set of ${count}`),
     scents: (names: string) => names,
+    /** A set with its scents, e.g. "Set of 3: North Swell and Dune Fig". */
+    setWithScents: (set: string, scents: string) => `${set}: ${scents}`,
+    /** One scent in a set, counted when it appears more than once, e.g. "2 × North Swell". */
+    scentCount: (name: string, count: number) => (count > 1 ? `${count} × ${name}` : name),
     plan: {
       oneTime: "One-time purchase",
       subscription: (count: number) => `Subscribe & save, every ${months(count)}`,

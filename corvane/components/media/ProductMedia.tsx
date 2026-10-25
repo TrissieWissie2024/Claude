@@ -82,8 +82,11 @@ export function ProductMedia({
   }
 
   if (variant !== "packshot") {
+    // Lifestyle slots name their scene from content/assets.ts ("North Swell: early gym session").
     const label =
-      variant === "in-hand" ? pdp.gallery.placeholders.inHand(product.name) : pdp.gallery.placeholders.lifestyle(product.name);
+      variant === "in-hand"
+        ? pdp.gallery.placeholders.inHand(product.name)
+        : (asset?.label ?? pdp.gallery.placeholders.lifestyle(product.name));
     return (
       <PhotoSlot
         assetKey={asset?.key}

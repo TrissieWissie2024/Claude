@@ -217,11 +217,11 @@ const productBriefs: Record<AssetProductSlug, ProductBriefs> = {
   "travel-pouch": {
     name: "Travel Pouch",
     packshot: {
-      alt: "The CORVANE Travel Pouch: a stitched canvas pouch with a kelp green hem and a small vane tab, holding three sticks",
+      alt: "The CORVANE Travel Pouch: a stitched canvas pouch with a kelp green hem and a small vane tab, shown holding three sticks (sold separately)",
       shot: `Pouch standing, three sticks peeking out of the top, vane tab visible. ${PACKSHOT_BRIEF}`,
     },
     inHand: {
-      alt: "A hand holding the canvas Travel Pouch with three sticks inside",
+      alt: "A hand holding the canvas Travel Pouch with three sticks inside (sticks sold separately)",
       shot: `Pouch held by its top hem, sticks visible. ${IN_HAND_BRIEF}`,
     },
     lifestyle: {

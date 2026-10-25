@@ -1,6 +1,7 @@
 import { useId } from "react";
 
 import { VANE_CENTER, VANE_GRID, VANE_PATH } from "@/components/brand/VaneIcon";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
 /**
@@ -10,9 +11,11 @@ import { cn } from "@/lib/cn";
  *
  * Drawing model: every part is painted in a flat base colour first (aluminium,
  * ring, engraving), then one cylindrical shading overlay runs over the whole
- * side, so tube, ring and engraving share the same light (soft key light from
- * the left, a faint reflected light on the right). The tops and seams are front
- * halves of ellipses, as seen from slightly above.
+ * side, so tube, ring and engraving share the same light (a broad, soft key
+ * light from the left; matte, so no specular stripe). The tops and seams are
+ * front halves of ellipses, as seen from slightly above. Edge strokes are
+ * clipped to the silhouette, so their ends never poke out past the tube. The
+ * closed cap top is the brightest plane: it is lit from above.
  *
  * Coordinates: the stick stands with the centre of its base at (0, 0) and
  * grows upwards (negative y). <StickArt> draws one stick in these local
@@ -75,9 +78,12 @@ export const MINI_STICK: StickGeometry = {
   knurl: false,
 };
 
-/** Base colours of the matte black anodised aluminium and the solid cologne. */
+/**
+ * Base colours of the matte black anodised aluminium, the laser-etched vane
+ * (bare aluminium, about 3.2 : 1 on ALU before shading) and the solid cologne.
+ */
 const ALU = "#202327";
-const ENGRAVING = "#41474e";
+const ENGRAVING = "#6a7178";
 const WAX = "#ECE5D5";
 
 /** An id from React useId() that is safe inside url(#...). */
@@ -128,6 +134,8 @@ export interface StickArtProps {
   rimLight?: boolean;
   /** Soft floor shadow under the base. */
   shadow?: boolean;
+  /** Tints the stick towards deep, so a stick further back reads as distance, not as a smaller product. */
+  dim?: boolean;
 }
 
 /** One stick in local coordinates (base centre at 0,0). Use inside an <svg>. */
@@ -138,6 +146,7 @@ export function StickArt({
   geometry: g = FULL_STICK,
   rimLight = false,
   shadow = true,
+  dim = false,
 }: StickArtProps) {
   const r = g.width / 2;
   const ry = g.ry;
@@ -155,7 +164,9 @@ export function StickArt({
   const s = g.engraveSize / VANE_GRID;
   const iconAt = (dy: number) =>
     `translate(${round(-VANE_CENTER.x * s)} ${round(g.engraveY - VANE_CENTER.y * s + dy)}) scale(${round(s * 1000) / 1000})`;
-  const lip = g.width / 110;
+  // Depth of the engraving's shadowed upper wall, in proportion to the icon so
+  // it reads at card size (about 1 px) and is not heavy at hero size.
+  const lip = round(g.engraveSize / 40);
 
   const ids = {
     shade: `${id}-shade`,
@@ -163,6 +174,9 @@ export function StickArt({
     rim: `${id}-rim`,
     sheen: `${id}-sheen`,
     top: `${id}-top`,
+    capTop: `${id}-captop`,
+    clip: `${id}-clip`,
+    engrave: `${id}-eng`,
     floor: `${id}-floor`,
     contact: `${id}-contact`,
     waxShade: `${id}-wax`,
@@ -175,16 +189,13 @@ export function StickArt({
       <defs>
         {/* Cylindrical shading over the whole side: key light left, reflected light right. */}
         <linearGradient id={ids.shade} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0" stopColor="#000" stopOpacity="0.62" />
-          <stop offset="0.07" stopColor="#000" stopOpacity="0.3" />
-          <stop offset="0.2" stopColor="#fff" stopOpacity="0.05" />
-          <stop offset="0.3" stopColor="#fff" stopOpacity="0.13" />
-          <stop offset="0.4" stopColor="#fff" stopOpacity="0.05" />
-          <stop offset="0.56" stopColor="#000" stopOpacity="0" />
-          <stop offset="0.78" stopColor="#000" stopOpacity="0.26" />
-          <stop offset="0.9" stopColor="#000" stopOpacity="0.46" />
-          <stop offset="0.955" stopColor="#000" stopOpacity="0.3" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.66" />
+          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
+          <stop offset="0.1" stopColor="#000" stopOpacity="0.2" />
+          <stop offset="0.3" stopColor="#fff" stopOpacity="0.08" />
+          <stop offset="0.5" stopColor="#000" stopOpacity="0" />
+          <stop offset="0.8" stopColor="#000" stopOpacity="0.34" />
+          <stop offset="0.93" stopColor="#000" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.58" />
         </linearGradient>
         {/* Top a touch brighter, occlusion towards the floor. */}
         <linearGradient id={ids.ao} x1="0" x2="0" y1="0" y2="1">
@@ -205,11 +216,26 @@ export function StickArt({
           <stop offset="0.95" stopColor="#D3E4EC" stopOpacity="0" />
           <stop offset="1" stopColor="#D3E4EC" stopOpacity="0.45" />
         </linearGradient>
+        {/* Wall face of the open tube. */}
         <linearGradient id={ids.top} x1="0" x2="1" y1="0" y2="1">
           <stop offset="0" stopColor="#40454b" />
           <stop offset="0.55" stopColor="#272a2f" />
           <stop offset="1" stopColor="#16181b" />
         </linearGradient>
+        {/* Closed cap top, lit from above: the brightest plane of the stick, so it reads as a solid lid. */}
+        <linearGradient id={ids.capTop} x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#5a6067" />
+          <stop offset="0.55" stopColor="#383c42" />
+          <stop offset="1" stopColor="#212428" />
+        </linearGradient>
+        {/* Silhouette (side plus top face), for clipping edge strokes. */}
+        <clipPath id={ids.clip}>
+          <path d={side} />
+          <ellipse cx="0" cy={sideTop} rx={r} ry={ry} />
+        </clipPath>
+        <clipPath id={ids.engrave}>
+          <path d={VANE_PATH} transform={iconAt(0)} />
+        </clipPath>
         <radialGradient id={ids.floor}>
           <stop offset="0" stopColor="#000" stopOpacity="0.3" />
           <stop offset="0.55" stopColor="#000" stopOpacity="0.12" />
@@ -246,7 +272,8 @@ export function StickArt({
 
       {shadow ? (
         <>
-          <ellipse cx="0" cy={round(ry * 0.6)} rx={round(r * 1.7)} ry={round(ry * 2)} fill={`url(#${ids.floor})`} />
+          {/* Falls a little to the right, away from the key light; stays inside the single-stick viewBox (x up to 52). */}
+          <ellipse cx={round(r * 0.12)} cy={round(ry * 0.6)} rx={round(r * 1.6)} ry={round(ry * 2)} fill={`url(#${ids.floor})`} />
           <ellipse cx="0" cy={round(ry * 0.35)} rx={round(r * 1.06)} ry={round(ry * 1.15)} fill={`url(#${ids.contact})`} />
         </>
       ) : null}
@@ -255,14 +282,22 @@ export function StickArt({
       <path d={side} fill={ALU} />
       <path d={band(g.ringTop, g.ringBottom, r, ry)} fill={ringColor} />
 
-      {/* Engraved vane: lit lower lip, shadowed upper lip, slightly lighter floor. */}
-      <g>
-        <path d={VANE_PATH} transform={iconAt(lip)} fill="#fff" fillOpacity="0.12" />
-        <path d={VANE_PATH} transform={iconAt(-lip * 0.8)} fill="#000" fillOpacity="0.5" />
-        <path d={VANE_PATH} transform={iconAt(0)} fill={ENGRAVING} />
+      {/* Engraved vane, etched to bare aluminium: inside the outline, a shadowed upper wall over the lighter floor. */}
+      <g clipPath={`url(#${ids.engrave})`}>
+        <path d={VANE_PATH} transform={iconAt(0)} fill="#000" fillOpacity="0.55" />
+        <path d={VANE_PATH} transform={iconAt(lip)} fill={ENGRAVING} />
       </g>
 
-      {g.knurl ? <path d={knurlPath(g)} stroke="#000" strokeOpacity="0.32" strokeWidth="0.55" fill="none" /> : null}
+      {g.knurl ? (
+        <path
+          d={knurlPath(g)}
+          clipPath={`url(#${ids.clip})`}
+          stroke="#000"
+          strokeOpacity="0.32"
+          strokeWidth="0.55"
+          fill="none"
+        />
+      ) : null}
 
       {/* Shading over everything on the side */}
       <path d={side} fill={`url(#${ids.shade})`} />
@@ -271,9 +306,11 @@ export function StickArt({
       <path d={band(g.ringTop, g.ringBottom, r, ry)} fill={`url(#${ids.sheen})`} />
 
       {/* Ring edges */}
-      <path d={frontArc(g.ringTop, r, ry)} stroke="#000" strokeOpacity="0.5" strokeWidth="0.7" fill="none" />
-      <path d={frontArc(g.ringBottom, r, ry)} stroke="#000" strokeOpacity="0.55" strokeWidth="0.7" fill="none" />
-      <path d={frontArc(g.ringTop + 0.9, r, ry)} stroke="#fff" strokeOpacity="0.12" strokeWidth="0.5" fill="none" />
+      <g clipPath={`url(#${ids.clip})`}>
+        <path d={frontArc(g.ringTop, r, ry)} stroke="#000" strokeOpacity="0.5" strokeWidth="0.7" fill="none" />
+        <path d={frontArc(g.ringBottom, r, ry)} stroke="#000" strokeOpacity="0.55" strokeWidth="0.7" fill="none" />
+        <path d={frontArc(g.ringTop + 0.9, r, ry)} stroke="#fff" strokeOpacity="0.12" strokeWidth="0.5" fill="none" />
+      </g>
 
       {open ? (
         <>
@@ -299,26 +336,47 @@ export function StickArt({
             fill="none"
           />
           {/* Cut edge of the tube catches the light */}
-          <path d={frontArc(g.seam, r, ry)} stroke="#fff" strokeOpacity="0.16" strokeWidth="0.8" fill="none" />
+          <path
+            d={frontArc(g.seam, r, ry)}
+            clipPath={`url(#${ids.clip})`}
+            stroke="#fff"
+            strokeOpacity="0.16"
+            strokeWidth="0.8"
+            fill="none"
+          />
         </>
       ) : (
         <>
-          {/* Cap top face with a fine bevel highlight */}
-          <ellipse cx="0" cy={g.top} rx={r} ry={ry} fill={`url(#${ids.top})`} />
-          <path d={frontArc(g.top, r, ry)} stroke="#fff" strokeOpacity="0.16" strokeWidth="0.7" fill="none" />
-          {/* Seam between cap and body */}
-          <path d={frontArc(g.seam - 0.9, r, ry)} stroke="#fff" strokeOpacity="0.06" strokeWidth="0.6" fill="none" />
-          <path d={frontArc(g.seam, r, ry)} stroke="#050607" strokeOpacity="0.95" strokeWidth="0.9" fill="none" />
-          <path d={frontArc(g.seam + 1, r, ry)} stroke="#fff" strokeOpacity="0.08" strokeWidth="0.6" fill="none" />
+          {/* Cap top face, lit from above, with a fine bevel highlight */}
+          <ellipse cx="0" cy={g.top} rx={r} ry={ry} fill={`url(#${ids.capTop})`} />
+          <g clipPath={`url(#${ids.clip})`}>
+            <path d={frontArc(g.top, r, ry)} stroke="#fff" strokeOpacity="0.16" strokeWidth="0.7" fill="none" />
+            {/* Seam between cap and body */}
+            <path d={frontArc(g.seam - 0.9, r, ry)} stroke="#fff" strokeOpacity="0.06" strokeWidth="0.6" fill="none" />
+            <path d={frontArc(g.seam, r, ry)} stroke="#050607" strokeOpacity="0.95" strokeWidth="0.9" fill="none" />
+            <path d={frontArc(g.seam + 1, r, ry)} stroke="#fff" strokeOpacity="0.08" strokeWidth="0.6" fill="none" />
+          </g>
         </>
       )}
+
+      {dim ? (
+        <rect
+          x={-r}
+          y={sideTop - ry}
+          width={g.width}
+          height={ry - sideTop + ry}
+          clipPath={`url(#${ids.clip})`}
+          fill="#0F2733"
+          fillOpacity="0.15"
+        />
+      ) : null}
 
       {rimLight ? (
         <>
           <path d={side} fill={`url(#${ids.rim})`} />
-          {/* Back edge of the cap; when open the pale cologne already reads on dark. */}
+          {/* A hint of the cap's back edge; when open the pale cologne already reads on dark. */}
           {open ? null : (
-            <path d={backArc(sideTop, r, ry)} stroke="#D3E4EC" strokeOpacity="0.55" strokeWidth="0.8" fill="none" />
+            <path d={backArc(sideTop, r, ry)} stroke="#D3E4EC" strokeOpacity="0.3" strokeWidth="0.6" fill="none" />
           )}
         </>
       ) : null}
@@ -348,7 +406,7 @@ export const STICK_VIEWBOX = "-52 -298 104 312";
 export function StickRender({ ringColor, name, className, variant = "closed", angle = 0, rimLight = false }: StickRenderProps) {
   const id = useSvgId("stick");
   const lean = Math.max(-8, Math.min(8, angle));
-  const label = name ? `${name} solid cologne stick${variant === "open" ? " with the cap off" : ""}` : null;
+  const label = name ? (variant === "open" ? site.renders.stickOpen(name) : site.renders.stick(name)) : null;
 
   return (
     <svg

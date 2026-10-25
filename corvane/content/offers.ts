@@ -1,4 +1,18 @@
-import type { OffersConfig } from "@/lib/types";
+import type { DiscountCode, OffersConfig } from "@/lib/types";
+
+/** The campaign code. The promo bar message is derived from it, so the two can never disagree. */
+const launchCode: DiscountCode = {
+  code: "LAUNCH15",
+  kind: "percent",
+  value: 15,
+  label: "15% off during launch week",
+  source: "campaign",
+  active: true,
+  startsAt: "2026-10-25T00:00:00+02:00",
+  endsAt: "2026-11-01T23:59:59+01:00",
+};
+
+const campaignName = "Launch week";
 
 /**
  * Prices, offers and codes. All amounts in euro cents, VAT included.
@@ -46,16 +60,7 @@ export const offers: OffersConfig = {
       source: "welcome",
       active: true,
     },
-    {
-      code: "LAUNCH15",
-      kind: "percent",
-      value: 15,
-      label: "15% off during launch week",
-      source: "campaign",
-      active: true,
-      startsAt: "2026-10-25T00:00:00+02:00",
-      endsAt: "2026-11-01T23:59:59+01:00",
-    },
+    launchCode,
   ],
 
   welcomeCode: "WELCOME10",
@@ -64,10 +69,11 @@ export const offers: OffersConfig = {
   // Must become a real, planned promotion before going live (docs/TODO-LAUNCH.md).
   campaign: {
     active: true,
-    name: "Launch week",
-    message: "Launch week: 15% off with code LAUNCH15",
+    name: campaignName,
+    // Names only what really ends: the code, with its conditions (D08, D09).
+    message: `${campaignName}: ${launchCode.value}% off with code ${launchCode.code}. Excludes gift cards.`,
     startsAt: "2026-10-25T00:00:00+02:00",
     endsAt: "2026-11-01T23:59:59+01:00",
-    code: "LAUNCH15",
+    code: launchCode.code,
   },
 };

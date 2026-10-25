@@ -8,7 +8,9 @@ import * as cartModule from "./cart";
 import { claims } from "./claims";
 import * as faqModule from "./faq";
 import * as finderModule from "./finder";
+import * as legalModule from "./legal";
 import * as offersModule from "./offers";
+import * as pagesModule from "./pages";
 import * as pdpModule from "./pdp";
 import * as productsModule from "./products";
 import * as reviewsModule from "./reviews";
@@ -254,6 +256,17 @@ describe("launch guards", () => {
 
   it("has no reviews", () => {
     expect(reviewsModule.reviews, "content/reviews.ts: reviews must be empty at launch").toEqual([]);
+  });
+
+  it("puts the exact legal review notice on every legal page and on /shipping-returns (brief §6)", () => {
+    const notice = "TODO: laten controleren";
+    expect(legalModule.legalReviewNotice).toBe(notice);
+    expect(Object.keys(legalModule.legal).sort()).toEqual(Object.keys(legalModule.legalRoutes).sort());
+    for (const [id, page] of Object.entries(legalModule.legal)) {
+      expect(page.reviewNotice, `content/legal.ts ${id}: reviewNotice`).toBe(notice);
+    }
+    expect(pagesModule.pages.shippingReturns.showLegalReviewNotice).toBe(true);
+    expect(pagesModule.pages.shippingReturns.reviewNotice, "content/pages.ts shippingReturns").toBe(notice);
   });
 
   it("has no verified claims", () => {

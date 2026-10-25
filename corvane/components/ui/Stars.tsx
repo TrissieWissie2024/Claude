@@ -1,3 +1,4 @@
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 import type { RatingSummary } from "@/lib/types";
 
@@ -23,7 +24,7 @@ const STAR_PATH =
   "M12 2.6l2.83 6.08 6.67.78-4.93 4.56 1.31 6.58L12 17.3l-5.88 3.3 1.31-6.58L2.5 9.46l6.67-.78L12 2.6z";
 
 function defaultLabel({ average, count }: RatingSummary): string {
-  return `Rated ${average.toFixed(1)} out of 5, based on ${count} ${count === 1 ? "review" : "reviews"}`;
+  return site.ui.rating(average.toFixed(1), count);
 }
 
 function StarRow({ className }: { className: string }) {

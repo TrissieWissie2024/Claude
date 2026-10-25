@@ -18,7 +18,7 @@ import { getLineAnalytics, track } from "@/lib/analytics";
 import { findProduct, getScentNames, MAX_LINE_QUANTITY, parseCartLine, parseCartLines } from "@/lib/catalog";
 import { useNow } from "@/lib/hooks/useNow";
 import { formatMoneyShort } from "@/lib/money";
-import { cartLineId, normalizeDiscountCode, priceCart, validateDiscountCode } from "@/lib/pricing";
+import { cartLineId, discountWindowStart, normalizeDiscountCode, priceCart, validateDiscountCode } from "@/lib/pricing";
 import { readJson, readStorage, storageKeys, writeJson } from "@/lib/storage";
 import type { CartLine, CountryCode, DiscountError, NewCartLine, PricingSummary, Product } from "@/lib/types";
 
@@ -52,6 +52,10 @@ export interface CartContextValue {
   /** Normalised (trimmed, upper case) code, or null. Kept even when it stops being valid; see pricing.discountError. */
   discountCode: string | null;
   country: CountryCode;
+  /**
+   * Re-priced within a second of a code window opening or closing. A checkout
+   * handler should still re-check the code with validateDiscountCode(code, new Date()).
+   */
   pricing: PricingSummary;
   /** Number of items; every stick counts one. 0 until hydrated. */
   itemCount: number;
@@ -92,8 +96,13 @@ interface StoredCart {
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Clock for discount-code windows (LAUNCH15 ends at a fixed time). */
-const PRICING_CLOCK_MS = 30_000;
+/**
+ * Clock for discount-code windows (LAUNCH15 ends at a fixed time). The same 1 s
+ * clock as the promo bar, so the code stops working in the same tick as the
+ * bar disappears (docs/PLAN.md §8). The cart only re-prices when a code window
+ * opens or closes (discountWindowStart), not on every tick.
+ */
+const PRICING_CLOCK_MS = 1000;
 
 /** Used for pricing before the clock runs; there are no lines then anyway. */
 const EPOCH = new Date(0);
@@ -120,12 +129,23 @@ function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
-/** Short customer-facing name of a line, e.g. "North Swell", "Set of 3, North Swell, Dune Fig and Iron Coast", "E-gift card, €50". */
+/** Each scent once, with its count: ["North Swell", "Dune Fig", "North Swell"] -> ["2 × North Swell", "Dune Fig"]. */
+function countScentNames(names: string[]): string[] {
+  const counts = new Map<string, number>();
+  for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1);
+  return [...counts].map(([name, count]) => cartCopy.line.scentCount(name, count));
+}
+
+/**
+ * Short customer-facing name of a line, e.g. "North Swell",
+ * "Set of 3: North Swell, Dune Fig and Iron Coast", "Set of 3: 2 × North Swell and Dune Fig",
+ * "E-gift card, €50".
+ */
 export function getCartLineName(line: CartLine | NewCartLine, products: readonly Product[]): string {
   switch (line.kind) {
     case "stick": {
-      const names = joinNames(getScentNames(products, line.scents));
-      return line.scents.length === 1 ? names : `${cartCopy.line.set(line.scents.length)}, ${names}`;
+      const names = joinNames(countScentNames(getScentNames(products, line.scents)));
+      return line.scents.length === 1 ? names : cartCopy.line.setWithScents(cartCopy.line.set(line.scents.length), names);
     }
     case "gift-card":
       return cartCopy.line.giftCard(formatMoneyShort(line.amount));
@@ -254,17 +274,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const { lines, discountCode, country } = state;
   const hydrated = state.loaded && now !== null;
+  // A number, so the memo below only re-runs when a code window opens or closes.
+  const pricingAt = now === null ? null : discountWindowStart(now);
 
   const pricing = useMemo(
     () =>
       priceCart({
         lines,
         // Without a clock a code cannot be checked; leave it out instead of reporting an error.
-        discountCode: now ? discountCode : null,
+        discountCode: pricingAt === null ? null : discountCode,
         country,
-        now: now ?? EPOCH,
+        now: pricingAt === null ? EPOCH : new Date(pricingAt),
       }),
-    [lines, discountCode, country, now],
+    [lines, discountCode, country, pricingAt],
   );
 
   const announce = useCallback((text: string) => {

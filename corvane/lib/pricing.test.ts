@@ -5,6 +5,7 @@ import {
   bundleUnitPrice,
   cartLineId,
   defaultPricingConfig,
+  discountWindowStart,
   getBundleTileQuote,
   groupSticks,
   priceCart,
@@ -345,6 +346,28 @@ describe("discount codes", () => {
     ).toEqual({ valid: false, error: "expired" });
   });
 
+  it("discountWindowStart snaps to the last code boundary, so pricing there equals pricing now", () => {
+    const start = Date.parse("2026-10-25T00:00:00+02:00");
+    const end = Date.parse("2026-11-01T23:59:59+01:00");
+    expect(discountWindowStart(new Date(start - 1))).toBe(0);
+    expect(discountWindowStart(new Date(start))).toBe(start);
+    expect(discountWindowStart(NOW)).toBe(start);
+    expect(discountWindowStart(new Date(end - 1))).toBe(start);
+    expect(discountWindowStart(new Date(end))).toBe(end);
+    expect(discountWindowStart(new Date("2027-01-01T00:00:00Z"))).toBe(end);
+
+    const instants = [start - 1, start, NOW.getTime(), end - 1000, end - 1, end, end + 30_000];
+    for (const at of instants) {
+      const now = new Date(at);
+      const snapped = new Date(discountWindowStart(now));
+      for (const code of ["LAUNCH15", "WELCOME10"]) {
+        expect(validateDiscountCode(code, snapped), `${code} at ${now.toISOString()}`).toEqual(
+          validateDiscountCode(code, now),
+        );
+      }
+    }
+  });
+
   it("rejects inactive codes", () => {
     const config: PricingConfig = {
       ...defaultPricingConfig,
@@ -429,13 +452,13 @@ describe("shipping (D14)", () => {
 
   it("a gift-card-only order has no shipping", () => {
     const summary = price([giftCard(5000, 2)]);
-    expect(summary.shipping).toMatchObject({ requiresShipping: false, amount: 0, isFree: false });
+    expect(summary.shipping).toMatchObject({ requiresShipping: false, amount: 0, isFree: false, remainingForFree: 0 });
     expect(summary.total).toBe(10000);
   });
 
   it("an empty cart has no shipping and costs nothing", () => {
     const summary = price([]);
-    expect(summary.shipping).toMatchObject({ requiresShipping: false, amount: 0, remainingForFree: 5000 });
+    expect(summary.shipping).toMatchObject({ requiresShipping: false, amount: 0, remainingForFree: 0 });
     expect(summary.total).toBe(0);
     expect(summary.itemCount).toBe(0);
   });

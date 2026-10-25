@@ -9,9 +9,13 @@ import { cn } from "@/lib/cn";
  * shape (nonzero), so the mark can be drawn at partial opacity without darker
  * overlaps (used for the engraving on the stick renders).
  *
- * Ink bounds: x 2.5 to 29.5, y 7 to 25.25 (visual centre 16, 16.1).
- * The same geometry is used in app/icon.svg, app/apple-icon.png and
- * public/brand/corvane-vane.svg.
+ * Like a real weather vane, the tail fin has more area than the arrowhead
+ * (about 46 against 26 square units): the tail is what turns it into the
+ * wind, and it keeps the mark from reading as a "next" arrow.
+ *
+ * Ink bounds: x 2.5 to 29.5, y 6 to 25.25 (centre 16, 15.625).
+ * The same geometry is used in public/brand/corvane-vane.svg (ink and fog),
+ * app/apple-icon.png, and, hinted for 16 px, in app/icon.svg and app/favicon.ico.
  */
 
 export const VANE_VIEWBOX = "0 0 32 32";
@@ -20,15 +24,15 @@ export const VANE_VIEWBOX = "0 0 32 32";
 export const VANE_GRID = 32;
 
 /** Visual centre of the mark on its grid, for centring it inside other shapes. */
-export const VANE_CENTER = { x: 16, y: 16.125 } as const;
+export const VANE_CENTER = { x: 16, y: 15.625 } as const;
 
 export const VANE_PATH =
   // Shaft
-  "M7.25 10.75H22V12.75H7.25Z" +
+  "M8 10.75H22V12.75H8Z" +
   // Arrowhead
-  "M20.5 7L29.5 11.75L20.5 16.5Z" +
-  // Tail fin (chevron)
-  "M2.5 7H6.25L11 11.75L6.25 16.5H2.5L7.25 11.75Z" +
+  "M21.5 8.5L29.5 11.75L21.5 15Z" +
+  // Tail fin (chevron), larger than the head
+  "M2.5 6H6.5L12 11.75L6.5 17.5H2.5L8 11.75Z" +
   // Post
   "M15 11.75H17V25.25H15Z" +
   // Pivot

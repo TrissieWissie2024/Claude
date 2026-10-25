@@ -171,8 +171,8 @@ export const home = {
     fallback: `Order on a working day before ${facts.cutoff} and it ships the same day`,
     shipsToday: `Order before ${facts.cutoff}, ships today`,
     shipsOn: (day: string) => `Ships ${day}`,
-    estimate: (date: string) => `Estimated delivery ${date}`,
-    estimateRange: (from: string, to: string) => `Estimated delivery ${from} to ${to}`,
+    estimate: (date: string) => `Estimated delivery: ${date}`,
+    estimateRange: (from: string, to: string) => `Estimated delivery: ${from} to ${to}`,
     deliveryTo: (country: string) => `Delivery to ${country}`,
     freeShipping: (amount: string) => `Free shipping from ${amount}`,
     freeShippingDefault: `Free shipping from ${facts.freeShippingFrom}`,
@@ -185,8 +185,8 @@ export const home = {
   productGrid: {
     id: "shop",
     label: "The range",
-    heading: "Six scents. Pick your direction.",
-    intro: "Each one in a 15 g twist-up stick. Not sure yet? The Discovery Set has all six.",
+    heading: "Six scents. Pick yours.",
+    intro: "From fresh to dark. Undecided? Start with the Discovery Set.",
     sort: {
       label: "Sort by",
       options: sortOptions,
@@ -200,7 +200,7 @@ export const home = {
     id: "how-it-works",
     label: "How it works",
     heading: "Twist. Swipe. Go.",
-    intro: "No glass. No spray. No fuss.",
+    intro: "From pocket to skin and back.",
     steps: howItWorksSteps,
   },
 
@@ -235,10 +235,10 @@ export const home = {
   reviews: {
     id: "reviews",
     label: "Reviews",
-    heading: "Reviews",
+    heading: "From verified buyers",
     empty: {
       heading: "No reviews yet",
-      body: "CORVANE has just launched. Reviews from verified buyers will appear here as they come in.",
+      body: "CORVANE is new. Reviews from verified buyers appear here as they come in.",
     },
     /** Only used once real reviews exist. */
     count: (count: number) => (count === 1 ? "1 review" : `${count} reviews`),
@@ -250,7 +250,7 @@ export const home = {
     id: "from-corvane",
     label: "Films",
     heading: "From CORVANE",
-    intro: "Short films we shot ourselves. Where the stick goes and how it is used.",
+    intro: "Where the stick goes and how it is used.",
     note: "Brand content, filmed by CORVANE.",
     slots: videoSlots,
     play: (title: string) => `Play video: ${title}`,
@@ -266,17 +266,17 @@ export const home = {
     id: "guarantee",
     label: "Guarantee",
     heading: `${guaranteeDays}-day guarantee`,
-    lead: `Not the right scent for you? Tell us within ${guaranteeDays} days of delivery, send it back and we refund it.`,
+    lead: `Not the right scent? Tell us within ${guaranteeDays} days of delivery. Opened or not, send it back.`,
     points: [
       {
         id: "what",
         title: "What it means",
-        text: "Opened or not, send the product back and we refund what you paid for it. Prefer another scent? We can swap it instead.",
+        text: "We refund what you paid for that product, or swap it for another scent.",
       },
       {
         id: "condition",
         title: "The condition",
-        text: `Email us with your order number within ${guaranteeDays} days of delivery, then send the product back. E-gift cards are not included.`,
+        text: `Email us your order number within ${guaranteeDays} days of delivery, then send it back. Return postage is yours. One claim per item. E-gift cards excluded.`,
       },
       {
         id: "rights",
@@ -299,7 +299,7 @@ export const home = {
   story: {
     id: "story",
     label: "Our story",
-    heading: "Started on the North Sea coast.",
+    heading: "Made where the wind turns.",
     paragraphs: [
       "CORVANE started on the North Sea coast. Wide beaches, cold water and a wind that keeps changing its mind. A weather vane turns with all of it and still points somewhere.",
       "The idea came from there: smell good without carrying a bottle. So we made cologne solid. A 15 g twist-up stick, alcohol-free, small enough for a pocket.",

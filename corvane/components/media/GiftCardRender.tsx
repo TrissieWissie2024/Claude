@@ -1,5 +1,6 @@
 import { VANE_CENTER, VANE_PATH } from "@/components/brand/VaneIcon";
 import { WORDMARK_HEIGHT, WORDMARK_PATH, WORDMARK_WIDTH } from "@/components/brand/Wordmark";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
 import { useSvgId } from "./StickRender";
@@ -23,7 +24,7 @@ export function GiftCardRender({ amount, className, decorative = false }: GiftCa
   const id = useSvgId("gift");
   const wmWidth = 132;
   const wmScale = wmWidth / WORDMARK_WIDTH;
-  const label = amount ? `CORVANE e-gift card, ${amount}` : "CORVANE e-gift card";
+  const label = amount ? site.renders.giftCardWithAmount(amount) : site.renders.giftCard;
 
   return (
     <svg
@@ -82,7 +83,7 @@ export function GiftCardRender({ amount, className, decorative = false }: GiftCa
           letterSpacing="2.2"
           fill="#B9C4C9"
         >
-          E-GIFT CARD
+          {site.renders.giftCardPrint.toUpperCase()}
         </text>
       </g>
     </svg>

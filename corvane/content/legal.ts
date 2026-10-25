@@ -29,6 +29,8 @@ export interface LegalSection {
 
 export interface LegalPage {
   title: string;
+  /** Shown at the top of the page until a lawyer has checked the text (brief §6). Always legalReviewNotice. */
+  reviewNotice: string;
   intro: string;
   /** ISO date (YYYY-MM-DD) of the last change. */
   updated: string;
@@ -115,6 +117,7 @@ const demoLine = "This is a demo store. No orders are processed, nothing ships a
 
 const privacy: LegalPage = {
   title: "Privacy Policy",
+  reviewNotice: legalReviewNotice,
   intro:
     "What personal data CORVANE collects, why, how long we keep it and what your rights are. The short version: we collect what we need to run the shop, and analytics only with your permission.",
   updated: UPDATED,
@@ -144,7 +147,7 @@ const privacy: LegalPage = {
     {
       heading: "Reviews",
       body: [
-        "At launch we plan to work with a review app (placeholder). After delivery, buyers may get one email asking for a review. Only verified buyers are invited. Legal basis: our legitimate interest in showing genuine reviews. You can object any time, and we will not ask again. (Legal check: confirm the basis for review invitations.)",
+        "When the shop goes live, we plan to work with a review app (placeholder). After delivery, buyers may get one email asking for a review. Only verified buyers are invited. Legal basis: our legitimate interest in showing genuine reviews. You can object any time, and we will not ask again. (Legal check: confirm the basis for review invitations.)",
       ],
     },
     {
@@ -168,7 +171,7 @@ const privacy: LegalPage = {
     {
       heading: "Outside the European Economic Area",
       body: [
-        "Some providers may process data outside the European Economic Area. We only allow that with appropriate safeguards, such as the European Commission's standard contractual clauses. (Placeholder: list per provider before launch.)",
+        "Some providers may process data outside the European Economic Area. We only allow that with appropriate safeguards, such as the European Commission's standard contractual clauses. (Placeholder: list per provider before the shop goes live.)",
       ],
     },
     {
@@ -210,6 +213,7 @@ const privacy: LegalPage = {
 
 const terms: LegalPage = {
   title: "Terms & Conditions",
+  reviewNotice: legalReviewNotice,
   intro:
     "The terms for buying from CORVANE. They apply to every order placed on this site. Your statutory rights as a consumer always apply as well; nothing here limits them.",
   updated: UPDATED,
@@ -260,9 +264,9 @@ const terms: LegalPage = {
       body: [
         `With Subscribe & save you get ${offers.subscription.discountPercent}% off every delivery. You choose a delivery every ${intervals} months.`,
         "Each delivery is billed when it ships.",
-        "You can pause or cancel any time before your next delivery, online and as easily as you signed up. No fee, no minimum term. (Legal check: confirm the cancellation flow before launch.)",
+        "You can cancel any time before your next delivery, online and as easily as you signed up. No fee, no minimum term. (Legal check: confirm the cancellation flow before the shop goes live.)",
         `The right of withdrawal for a subscription starts after the first delivery (see article 10).`,
-        "Recurring billing is connected at launch. Until then, no payment is taken.",
+        "Recurring billing is connected when the shop goes live. Until then, no payment is taken.",
       ],
     },
     {
@@ -330,7 +334,7 @@ const terms: LegalPage = {
         "An e-gift card is valid for (placeholder: term) from the date of purchase. (Legal check: confirm the minimum term for NL and BE.)",
         "You can use it for products in this shop, not for other gift cards. It cannot be exchanged for cash. Any balance stays on the card.",
         "Discount codes do not apply to the purchase of a gift card.",
-        "Redeeming a gift card at checkout becomes available at launch.",
+        "Redeeming a gift card at checkout becomes available when the shop goes live.",
       ],
     },
     {
@@ -368,6 +372,7 @@ const terms: LegalPage = {
 
 const cookies: LegalPage = {
   title: "Cookie Policy",
+  reviewNotice: legalReviewNotice,
   intro:
     "What this site stores on your device and why. By default, only what the shop needs to work. No analytics without your permission.",
   updated: UPDATED,
@@ -376,7 +381,7 @@ const cookies: LegalPage = {
       heading: "What we store by default",
       body: [
         "The shop uses your browser's local storage, which works much like a cookie, for functional data only. It stays on your device and is not sent to us.",
-        `Cart (${storageKeys.cart}): the products in your cart, your discount code and your delivery country.`,
+        `Cart (${storageKeys.cart}): the products in your cart and your discount code.`,
         `Country (${storageKeys.country}): the delivery country you picked.`,
         `Sign-up window (${storageKeys.emailCaptureLastShown} and ${storageKeys.emailCaptureSubscribed}): when the sign-up window last opened by itself and whether you signed up, so it does not keep coming back.`,
         `Consent choice (${storageKeys.consent}): your answer to the analytics question, so we do not ask again. Only used when analytics is switched on.`,
@@ -397,7 +402,7 @@ const cookies: LegalPage = {
       heading: "No advertising cookies",
       body: [
         "We do not use advertising cookies, social media pixels or tracking for third parties.",
-        "At launch, the payment provider's checkout may set its own functional cookies to complete your payment (placeholder).",
+        "Once the shop is live, the payment provider's checkout may set its own functional cookies to complete your payment (placeholder).",
       ],
     },
     {
@@ -419,6 +424,7 @@ const cookies: LegalPage = {
 
 const legalNotice: LegalPage = {
   title: "Legal notice",
+  reviewNotice: legalReviewNotice,
   intro: "Who runs this site and how to reach us.",
   updated: UPDATED,
   sections: [
@@ -441,7 +447,7 @@ const legalNotice: LegalPage = {
       heading: "Text and images",
       body: [
         "All text, product renders and designs on this site were made for CORVANE. Do not reuse them without permission.",
-        "Product images are renders and placeholders. Photos follow before launch.",
+        "Product images are renders and placeholders. Photos follow before the shop goes live.",
       ],
     },
     {

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatMoneyShort } from "@/lib/money";
 import type { ProductBase } from "@/lib/types";
@@ -69,12 +70,12 @@ export function Price({
       {prefix ? <span className={cn("font-normal", soft)}>{prefix}</span> : null}
       {showPrevious ? (
         <s className={cn("font-normal", soft)}>
-          <VisuallyHidden>{labels?.previous ?? "Previous price"} </VisuallyHidden>
+          <VisuallyHidden>{labels?.previous ?? site.ui.previousPrice} </VisuallyHidden>
           {money(previousPrice.amount)}
         </s>
       ) : null}
       <span className="font-semibold">
-        {showPrevious ? <VisuallyHidden>{labels?.current ?? "Current price"} </VisuallyHidden> : null}
+        {showPrevious ? <VisuallyHidden>{labels?.current ?? site.ui.currentPrice} </VisuallyHidden> : null}
         {money(amount)}
       </span>
       {perUnit ? <span className={cn("text-[0.8125em] font-normal", soft)}>{perUnit}</span> : null}
