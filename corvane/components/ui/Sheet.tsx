@@ -15,6 +15,11 @@ import { cn } from "@/lib/cn";
  * the page behind is inert and does not scroll.
  * Slides in from `side` only with motion allowed. z-index 60 (PLAN §10).
  *
+ * Short windows (under 30rem high: a phone in landscape, 200% zoom on a
+ * laptop, or a large default font size): the whole sheet scrolls as one, with
+ * the header kept at the top, instead of a fixed footer leaving only a sliver
+ * of scrolling body (WCAG 1.4.4, 1.4.10).
+ *
  * Controlled (`open` + `onOpenChange`) or uncontrolled (`trigger`, optional
  * `defaultOpen`).
  */
@@ -125,6 +130,7 @@ export function Sheet({
           onCloseAutoFocus={handleCloseAutoFocus}
           className={cn(
             "fixed inset-y-0 z-60 flex h-dvh max-h-dvh flex-col overflow-hidden shadow-lift outline-none",
+            "[@media(max-height:30rem)]:scroll-pt-16 [@media(max-height:30rem)]:overflow-y-auto [@media(max-height:30rem)]:overscroll-contain",
             dark ? "focus-on-dark bg-deep text-fog" : "bg-fog text-ink",
             widths[size],
             sideClasses[side],
@@ -134,7 +140,8 @@ export function Sheet({
           <div
             className={cn(
               "flex min-h-16 shrink-0 items-center gap-3 border-b px-5 py-3 md:px-6",
-              dark ? "border-line-on-deep" : "border-line",
+              "[@media(max-height:30rem)]:sticky [@media(max-height:30rem)]:top-0 [@media(max-height:30rem)]:z-10",
+              dark ? "border-line-on-deep bg-deep" : "border-line bg-fog",
             )}
           >
             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -170,6 +177,7 @@ export function Sheet({
           <div
             className={cn(
               "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+              "[@media(max-height:30rem)]:flex-none [@media(max-height:30rem)]:overflow-visible",
               padded && "px-5 py-5 md:px-6",
               bodyClassName,
             )}

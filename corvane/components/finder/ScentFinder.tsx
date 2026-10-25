@@ -37,7 +37,8 @@ export function ScentFinder({ tone = "deep", id = home.scentFinder.id, className
   return (
     <section id={id} aria-labelledby={headingId} className={cn("relative isolate overflow-hidden", t.section, className)}>
       {t.glow ? <div aria-hidden="true" className={cn("pointer-events-none absolute inset-0 -z-10", t.glow)} /> : null}
-      <Container className="grid gap-10 py-20 md:gap-12 md:py-28 lg:grid-cols-12 lg:gap-x-8 lg:py-32">
+      {/* grid-cols-1 (minmax(0, 1fr)): with large text the column never grows past the screen. */}
+      <Container className="grid grid-cols-1 gap-10 py-20 md:gap-12 md:py-28 lg:grid-cols-12 lg:gap-x-8 lg:py-32">
         <SectionHeading
           id={headingId}
           eyebrow={copy.label}

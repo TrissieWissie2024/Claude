@@ -58,7 +58,8 @@ function EmptyState({ onNavigate }: { onNavigate: () => void }) {
         href={copy.secondary.href}
         variant="ghost"
         size="sm"
-        className="mt-3 underline decoration-ink/25 underline-offset-[3px] hover:decoration-ink"
+        // ::before: a 44 px tall touch target, same look.
+        className="mt-3 underline decoration-ink/25 underline-offset-[3px] before:absolute before:inset-x-0 before:-inset-y-1 hover:decoration-ink"
         onClick={onNavigate}
       >
         {copy.secondary.label}

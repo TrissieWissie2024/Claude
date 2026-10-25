@@ -26,9 +26,12 @@ import { site } from "@/content/site";
  *    name is in the copyright line).
  */
 
-/** 44 px tall targets; the link lists have no gap, so the 44 px pitch is the rhythm. */
+/**
+ * 44 px tall targets; the link lists have no gap, so the 44 px pitch is the rhythm. At least
+ * 44 px wide too, so a short label ("FAQ") is still a 44 x 44 touch target.
+ */
 const linkClass =
-  "inline-flex min-h-11 items-center text-[15px] leading-6 text-fog underline-offset-4 decoration-fog/40 hover:underline";
+  "inline-flex min-h-11 min-w-11 items-center text-[15px] leading-6 text-fog underline-offset-4 decoration-fog/40 hover:underline";
 
 export function Footer() {
   const { footer, newsletter, company } = site;

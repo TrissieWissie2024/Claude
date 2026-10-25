@@ -157,7 +157,15 @@ interface UpsellCardProps {
 
 function AddButton({ label, onAdd }: { label: string; onAdd: () => void }) {
   return (
-    <Button data-upsell-add="" variant="outline" size="sm" aria-label={label} onClick={onAdd} className="h-8 shrink-0 px-3.5">
+    // The ::before grows the small button to a 44 px tall touch target without moving it.
+    <Button
+      data-upsell-add=""
+      variant="outline"
+      size="sm"
+      aria-label={label}
+      onClick={onAdd}
+      className="h-8 shrink-0 px-3.5 before:absolute before:-inset-x-1 before:-inset-y-1.5"
+    >
       {cartCopy.upsell.add}
     </Button>
   );

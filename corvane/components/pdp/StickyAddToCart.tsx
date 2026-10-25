@@ -21,8 +21,10 @@ import { cn } from "@/lib/cn";
  * - While visible: document.body.dataset.stickyAtc = "true" (the email pill
  *   hides itself and does not open on its own, PLAN §10), the body gets a
  *   bottom padding of the bar's height (so the end of the footer can always
- *   be scrolled clear of the bar) and a `corvane:sticky-atc` window event
- *   with `{ visible: boolean }` is dispatched on every change. Both are
+ *   be scrolled clear of the bar), <html> gets a scroll-padding-bottom of the
+ *   bar's height plus a margin (so an element that gets keyboard focus is
+ *   scrolled in above the bar, never under it) and a `corvane:sticky-atc` window event
+ *   with `{ visible: boolean }` is dispatched on every change. All of these are
  *   removed when the bar hides or unmounts (also when Activity hides the
  *   route). Several bars at once (a hidden previous route) are counted, so
  *   one hiding never clears the flag of another.
@@ -62,15 +64,23 @@ export interface StickyAtcEventDetail {
 /** Heights of the bars that are visible right now, by registration. */
 const visibleBars = new Map<symbol, number>();
 
+/** Space kept clear above the bar when the browser scrolls a focused element into view. */
+const FOCUS_CLEARANCE_PX = 12;
+
 function syncBody(): void {
   const body = document.body;
+  const root = document.documentElement;
   const visible = visibleBars.size > 0;
   if (visible) {
+    const height = Math.max(...visibleBars.values());
     body.dataset.stickyAtc = "true";
-    body.style.paddingBottom = `${Math.max(...visibleBars.values())}px`;
+    body.style.paddingBottom = `${height}px`;
+    // Keyboard focus scrolled in from below stops above the bar, not under it (WCAG 2.4.11).
+    root.style.scrollPaddingBottom = `${height + FOCUS_CLEARANCE_PX}px`;
   } else {
     delete body.dataset.stickyAtc;
     body.style.removeProperty("padding-bottom");
+    root.style.removeProperty("scroll-padding-bottom");
   }
   window.dispatchEvent(new CustomEvent<StickyAtcEventDetail>(STICKY_ATC_EVENT, { detail: { visible } }));
 }
@@ -186,8 +196,13 @@ export function StickyAddToCart({
         visible ? "visible translate-y-0" : "invisible translate-y-full",
       )}
     >
-      <div className="mx-auto flex max-w-[1240px] items-center gap-3 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-8">
-        <div className="min-w-0 flex-1">
+      {/*
+        One row. With a large default font size the text column would drop under 4.5rem, so the
+        row wraps: the text takes the full width and the button moves under it (at 16 px it never
+        wraps, down to 320 px).
+      */}
+      <div className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-3 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-8">
+        <div className="min-w-[4.5rem] flex-1">
           <p className="flex items-center gap-2 font-serif text-base leading-5 text-ink">
             {dots.length > 0 ? (
               <span aria-hidden="true" className="flex shrink-0 items-center gap-1">
@@ -200,7 +215,8 @@ export function StickyAddToCart({
                 ))}
               </span>
             ) : null}
-            <span aria-hidden={titleLabel ? true : undefined} className="truncate">
+            {/* Wraps between words instead of truncating: a 320 px screen or large text never cuts the name off. */}
+            <span aria-hidden={titleLabel ? true : undefined} className="min-w-0">
               {title}
             </span>
             {titleLabel ? <span className="sr-only">{titleLabel}</span> : null}
@@ -217,7 +233,7 @@ export function StickyAddToCart({
           </p>
         </div>
         {/* px-4 (not 6): the summary keeps one line next to the full label at 390 px. */}
-        <Button variant="primary" size="md" onClick={onAdd} className="px-4!">
+        <Button variant="primary" size="md" onClick={onAdd} className="ml-auto px-4!">
           <AddToCartLabel price={price} />
         </Button>
       </div>

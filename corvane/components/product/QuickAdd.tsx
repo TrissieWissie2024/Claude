@@ -3,7 +3,7 @@
 import { Check, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { useCart } from "@/components/cart/CartProvider";
+import { useCartActions } from "@/components/cart/CartProvider";
 import { Button, type ButtonSize, type ButtonVariant } from "@/components/ui/Button";
 import { productCard } from "@/content/collection";
 import { home } from "@/content/home";
@@ -55,7 +55,7 @@ export interface QuickAddProps {
 }
 
 export function QuickAdd({ product, variant = "outline", size = "sm", fullWidth = false, className }: QuickAddProps) {
-  const { addLine } = useCart();
+  const { addLine } = useCartActions();
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 

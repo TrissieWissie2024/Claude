@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
-import { useCart } from "@/components/cart/CartProvider";
+import { useCartActions } from "@/components/cart/CartProvider";
 import { Button } from "@/components/ui/Button";
 import { pdp } from "@/content/pdp";
 import { getProductAnalytics, track } from "@/lib/analytics";
@@ -73,7 +73,7 @@ export function selectionParts(size: BundleSize, plan: PurchasePlan): string[] {
 
 export function ProductConfigurator({ product, sticks, children, className }: ProductConfiguratorProps) {
   const state = usePdpState();
-  const { addLine } = useCart();
+  const { addLine } = useCartActions();
   const buttonRef = useRef<HTMLDivElement>(null);
 
   useTrackViewItem(product);

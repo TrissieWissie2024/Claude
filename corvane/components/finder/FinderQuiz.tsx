@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Check, CircleAlert, RotateCcw } from "lucide-rea
 import Link from "next/link";
 import { Fragment, useEffect, useId, useReducer, useRef, type Ref } from "react";
 
-import { useCart } from "@/components/cart/CartProvider";
+import { useCartActions } from "@/components/cart/CartProvider";
 import { useCatalog } from "@/components/catalog/CatalogProvider";
 import { StickRender } from "@/components/media/StickRender";
 import { Button } from "@/components/ui/Button";
@@ -87,7 +87,7 @@ export function FinderQuiz({ tone = "deep", className }: FinderQuizProps) {
   const t = finderTones[tone];
   const [state, dispatch] = useReducer(reduceFinder, initialFinderState);
   const { findStick, sticks } = useCatalog();
-  const { addLine } = useCart();
+  const { addLine } = useCartActions();
   const panelRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusOnMove = useRef(false);
@@ -176,7 +176,8 @@ export function FinderQuiz({ tone = "deep", className }: FinderQuizProps) {
 
 function ProgressBar({ filled, total, t }: { filled: number; total: number; t: FinderToneClasses }) {
   return (
-    <span aria-hidden="true" className="flex w-20 shrink-0 gap-1.5 sm:w-24">
+    // May shrink (to 3rem), so with large text the step label keeps its room.
+    <span aria-hidden="true" className="flex w-20 min-w-12 shrink gap-1.5 sm:w-24">
       {Array.from({ length: total }, (_, index) => (
         <span
           key={index}

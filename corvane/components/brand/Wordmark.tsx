@@ -1,3 +1,5 @@
+import type { ComponentPropsWithoutRef } from "react";
+
 import { cn } from "@/lib/cn";
 
 /**
@@ -11,7 +13,8 @@ import { cn } from "@/lib/cn";
  * on an installed or loaded font. The cap height is 100 units; the viewBox is
  * the exact ink bounding box (round letters overshoot it slightly), so the mark
  * sits flush in its box: size it by height and the width follows.
- * The same path data is used in public/brand/corvane-wordmark.svg.
+ * The same path data is used in public/brand/corvane-wordmark.svg. On the
+ * page it is defined once (WordmarkDefs) and referenced with <use>.
  */
 
 /** viewBox width and height of the wordmark (ink bounds). */
@@ -48,7 +51,41 @@ export interface WordmarkProps {
   decorative?: boolean;
 }
 
-/** Inline SVG wordmark in currentColor. */
+/**
+ * Id of the one copy of the wordmark path in the document (WordmarkDefs, in
+ * app/layout.tsx). Every on-page wordmark (header, footer, mobile menu, the
+ * print on the Discovery Set box and the gift card) draws it with
+ * <use href="#corvane-wordmark-path">, so the 6.8 KB of path data is in the
+ * HTML (and the RSC payload) once instead of once per use (phase 8). <use>
+ * renders the path in the user units of the <svg> or transform around it,
+ * exactly as an inline <path>, and inherits its fill.
+ */
+export const WORDMARK_PATH_ID = "corvane-wordmark-path";
+
+/** The shared wordmark path. Rendered once per document, early in <body> (app/layout.tsx). */
+export function WordmarkDefs() {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width="0"
+      height="0"
+      className="pointer-events-none absolute size-0 overflow-hidden"
+    >
+      <defs>
+        {/* No fill here: each <use> passes its own (currentColor or a print colour). */}
+        <path id={WORDMARK_PATH_ID} d={WORDMARK_PATH} />
+      </defs>
+    </svg>
+  );
+}
+
+/** A reference to the shared wordmark path (see WORDMARK_PATH_ID), for use inside an <svg>. */
+export function WordmarkUse(props: Omit<ComponentPropsWithoutRef<"use">, "href">) {
+  return <use href={`#${WORDMARK_PATH_ID}`} {...props} />;
+}
+
+/** Inline SVG wordmark in currentColor. Needs WordmarkDefs in the document (app/layout.tsx). */
 export function Wordmark({ className, title = "CORVANE", decorative = false }: WordmarkProps) {
   return (
     <svg
@@ -58,7 +95,7 @@ export function Wordmark({ className, title = "CORVANE", decorative = false }: W
       className={cn("max-w-full shrink-0", className ?? "h-5 w-auto")}
       {...(decorative ? { "aria-hidden": true, focusable: false } : { role: "img", "aria-label": title })}
     >
-      <path d={WORDMARK_PATH} />
+      <WordmarkUse />
     </svg>
   );
 }

@@ -79,11 +79,15 @@ const sizes: Record<ButtonSize, string> = {
   lg: "h-14 px-8 text-base",
 };
 
-/** Square icon buttons. sm is 44px, the smallest touch target used on the site (dialog close buttons). */
+/**
+ * Square icon buttons. sm is 44px, the smallest touch target used on the site (dialog close buttons).
+ * In px, not rem: the icons are px too, and with a large default font size (e.g. 24 or 32 px)
+ * rem-sized buttons grew past the 64 px header and pushed into the wordmark on a phone.
+ */
 const iconOnlySizes: Record<ButtonSize, string> = {
-  sm: "size-11",
-  md: "size-12",
-  lg: "size-14",
+  sm: "size-[44px]",
+  md: "size-[48px]",
+  lg: "size-[56px]",
 };
 
 /** Class names of a button, for elements that cannot use <Button> (e.g. a styled <summary>). */

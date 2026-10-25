@@ -1,5 +1,5 @@
 import { VANE_CENTER, VANE_PATH } from "@/components/brand/VaneIcon";
-import { WORDMARK_HEIGHT, WORDMARK_PATH, WORDMARK_WIDTH } from "@/components/brand/Wordmark";
+import { WORDMARK_HEIGHT, WORDMARK_WIDTH, WordmarkUse } from "@/components/brand/Wordmark";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
@@ -74,7 +74,7 @@ export function GiftCardRender({ amount, className, decorative = false, textless
             {amount}
           </text>
         ) : null}
-        <path d={WORDMARK_PATH} fill="#F7F5F1" transform={`translate(-136 ${62}) scale(${wmScale})`} />
+        <WordmarkUse fill="#F7F5F1" transform={`translate(-136 ${62}) scale(${wmScale})`} />
         {textless ? null : (
           <text
             x="136"

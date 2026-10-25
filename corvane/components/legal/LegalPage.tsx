@@ -186,8 +186,12 @@ function Contents({ sections, numbered, collapsible }: ContentsProps) {
         </details>
       ) : null}
 
-      {/* lg+: a sticky list that scrolls on its own when it is taller than the window. */}
-      <div className="hidden lg:sticky lg:top-[calc(var(--header-height)+2rem)] lg:-mx-2 lg:block lg:max-h-[calc(100dvh-var(--header-height)-4rem)] lg:overflow-y-auto lg:overscroll-contain lg:px-2 lg:pb-2">
+      {/*
+        lg+: a sticky list that scrolls on its own when it is taller than the window. While the
+        email pill shows (data-email-pill-inset on <html>), the list ends above it, so a focused
+        entry at the bottom of the list is never under the pill (WCAG 2.4.11).
+      */}
+      <div className="hidden lg:sticky lg:top-[calc(var(--header-height)+2rem)] lg:-mx-2 lg:block lg:max-h-[calc(100dvh-var(--header-height)-4rem)] lg:overflow-y-auto lg:overscroll-contain lg:px-2 lg:pb-2 lg:[html[data-email-pill-inset]_&]:max-h-[calc(100dvh-var(--header-height)-9rem)]">
         <p className="label-caps text-ink-soft">{legalUi.contentsLabel}</p>
         <ol className="mt-4 border-l border-line">
           {sections.map((section, index) => (

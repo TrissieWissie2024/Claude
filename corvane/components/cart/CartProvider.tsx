@@ -2,8 +2,10 @@
 
 import {
   createContext,
+  startTransition,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
@@ -81,6 +83,27 @@ export interface CartContextValue {
   /** Removes all lines and the code; keeps the country. */
   clear: () => void;
 }
+
+/**
+ * The cart's actions only: stable functions that never change identity. For
+ * components that add to the cart or open it but do not show its contents
+ * (quick add, the product configurators, the scent finder): with
+ * useCartActions() they do not re-render when the cart loads from storage
+ * after hydration or changes, which keeps that first update small (phase 8).
+ */
+export type CartActions = Pick<
+  CartContextValue,
+  | "openCart"
+  | "closeCart"
+  | "setOpen"
+  | "addLine"
+  | "setQuantity"
+  | "removeLine"
+  | "applyDiscountCode"
+  | "clearDiscountCode"
+  | "setCountry"
+  | "clear"
+>;
 
 interface CartState {
   /** True once storage has been read. */
@@ -262,6 +285,7 @@ function createCartStore(products: readonly Product[]): CartStore {
 /* ------------------------------------------------------------------ */
 
 const CartContext = createContext<CartContextValue | null>(null);
+const CartActionsContext = createContext<CartActions | null>(null);
 
 interface Announcement {
   id: number;
@@ -271,8 +295,29 @@ interface Announcement {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products } = useCatalog();
   const [store] = useState(() => createCartStore(products));
-  const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
-  const now = useNow(PRICING_CLOCK_MS);
+
+  /*
+   * The stored cart and the clock are taken into account only once `ready`
+   * is set, in a transition right after mount (phase 8). Until then the
+   * provider keeps its server values, so subscribing to storage and the clock
+   * after hydration does not change the context. Otherwise that change, which
+   * useSyncExternalStore makes synchronous, reached Suspense content that was
+   * still waiting to hydrate (the product page sits in one) and forced React
+   * to hydrate all of it in one blocking task. As a transition it is applied
+   * after that content has hydrated, in small, interruptible steps.
+   */
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => startTransition(() => setReady(true)), 0);
+    return () => clearTimeout(timer);
+  }, []);
+  const state = useSyncExternalStore(
+    store.subscribe,
+    ready ? store.getSnapshot : store.getServerSnapshot,
+    store.getServerSnapshot,
+  );
+  const clock = useNow(PRICING_CLOCK_MS);
+  const now = ready ? clock : null;
   const [isOpen, setOpen] = useState(false);
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
 
@@ -441,14 +486,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     ],
   );
 
+  // Every callback above is stable, so this object is created once.
+  const actions = useMemo<CartActions>(
+    () => ({
+      openCart,
+      closeCart,
+      setOpen,
+      addLine,
+      setQuantity,
+      removeLine,
+      applyDiscountCode,
+      clearDiscountCode,
+      setCountry,
+      clear,
+    }),
+    [openCart, closeCart, addLine, setQuantity, removeLine, applyDiscountCode, clearDiscountCode, setCountry, clear],
+  );
+
   return (
-    <CartContext.Provider value={value}>
-      {children}
-      {/* Polite announcements for cart changes. aria-live keeps it audible while a modal dialog hides the rest of the page. */}
-      <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
-        {announcement ? <span key={announcement.id}>{announcement.text}</span> : null}
-      </div>
-    </CartContext.Provider>
+    <CartActionsContext.Provider value={actions}>
+      <CartContext.Provider value={value}>
+        {children}
+        {/* Polite announcements for cart changes. aria-live keeps it audible while a modal dialog hides the rest of the page. */}
+        <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
+          {announcement ? <span key={announcement.id}>{announcement.text}</span> : null}
+        </div>
+      </CartContext.Provider>
+    </CartActionsContext.Provider>
   );
 }
 
@@ -456,5 +520,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 export function useCart(): CartContextValue {
   const value = useContext(CartContext);
   if (!value) throw new Error("useCart() must be used inside <CartProvider>.");
+  return value;
+}
+
+/**
+ * The cart's actions without its state (see CartActions): the component does
+ * not re-render when the cart changes. Throws when used outside <CartProvider>.
+ */
+export function useCartActions(): CartActions {
+  const value = useContext(CartActionsContext);
+  if (!value) throw new Error("useCartActions() must be used inside <CartProvider>.");
   return value;
 }

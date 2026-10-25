@@ -8,14 +8,15 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { faq } from "@/content/faq";
 import { pages } from "@/content/pages";
+import { pageMetadata } from "@/lib/seo";
 
 const copy = pages.faq;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: copy.meta.title,
   description: copy.meta.description,
-  alternates: { canonical: "/faq" },
-};
+  path: "/faq",
+});
 
 /** Categories that have questions, in the order of pages.faq.categories. */
 const groups = copy.categories

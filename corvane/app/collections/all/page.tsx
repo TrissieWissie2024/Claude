@@ -28,13 +28,14 @@ import {
 } from "@/lib/catalog";
 import { commerce } from "@/lib/commerce";
 import { formatMoney } from "@/lib/money";
+import { pageMetadata } from "@/lib/seo";
 import type { Product, ScentFamily } from "@/lib/types";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: collection.meta.title,
   description: collection.meta.description,
-  alternates: { canonical: "/collections/all" },
-};
+  path: "/collections/all",
+});
 
 /**
  * Grid spans that complete every row in every sort order with the launch

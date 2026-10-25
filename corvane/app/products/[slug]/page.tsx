@@ -17,6 +17,7 @@ import { ProductGallery, type GallerySlide } from "@/components/pdp/ProductGalle
 import { ProductInfo, ScentProfile } from "@/components/pdp/ProductInfo";
 import { SimpleConfigurator } from "@/components/pdp/SimpleConfigurator";
 import { TrustRow } from "@/components/pdp/TrustRow";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Container } from "@/components/ui/Container";
 import { getProductImage } from "@/content/assets";
 import { faq } from "@/content/faq";
@@ -24,6 +25,7 @@ import { pdp } from "@/content/pdp";
 import { getSticks, isStick } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { commerce } from "@/lib/commerce";
+import { baseOpenGraph, brandOgImage, productMetadata, productPageJsonLd } from "@/lib/seo";
 import type { FaqItem, Product, StickProduct } from "@/lib/types";
 
 /**
@@ -65,12 +67,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/products/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const product = await commerce.getProduct(slug);
-  if (!product) return { title: pdp.notFound.title };
-  return {
-    title: product.seo.title,
-    description: product.seo.description,
-    alternates: { canonical: `/products/${product.slug}` },
-  };
+  // Unknown slug: the brand image, not this segment's opengraph-image (which 404s for it).
+  if (!product) return { title: pdp.notFound.title, openGraph: { ...baseOpenGraph, images: [brandOgImage] } };
+  // product.seo, canonical /products/<slug>, Open Graph with the product's own image (lib/seo.ts).
+  return productMetadata(product);
 }
 
 export default function ProductPage({ params }: PageProps<"/products/[slug]">) {
@@ -86,7 +86,13 @@ async function ProductView({ params }: Pick<PageProps<"/products/[slug]">, "para
   const product = await commerce.getProduct(slug);
   if (!product) notFound();
   const products = await commerce.getProducts();
-  return <ProductDetail product={product} products={products} />;
+  return (
+    <>
+      {/* Product (with its Offer) and BreadcrumbList. No rating or reviews until real ones exist (lib/seo.ts). */}
+      <JsonLd data={productPageJsonLd(product)} />
+      <ProductDetail product={product} products={products} />
+    </>
+  );
 }
 
 /* ------------------------------------------------------------------ */

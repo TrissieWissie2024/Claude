@@ -11,14 +11,15 @@ import { Flag } from "@/components/ui/Flag";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { pages } from "@/content/pages";
 import { cn } from "@/lib/cn";
+import { pageMetadata } from "@/lib/seo";
 
 const copy = pages.shippingReturns;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: copy.meta.title,
   description: copy.meta.description,
-  alternates: { canonical: "/shipping-returns" },
-};
+  path: "/shipping-returns",
+});
 
 /**
  * /shipping-returns (brief §6, docs/PLAN.md §1, §13). All copy comes from

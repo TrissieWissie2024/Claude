@@ -275,7 +275,8 @@ export function CartLine({ line, priced, readOnly = false, onRemove, className }
               type="button"
               aria-label={copy.removeItem(accessibleName)}
               onClick={() => (onRemove ? onRemove(line.id) : removeLine(line.id))}
-              className="-mr-1 rounded px-1 py-1 text-[13px] text-ink-soft underline decoration-ink/25 underline-offset-[3px] transition-colors hover:text-ink hover:decoration-ink"
+              // The ::before grows the 28 px text button to a 44 px touch target without moving it.
+              className="relative -mr-1 rounded px-1 py-1 text-[13px] text-ink-soft underline decoration-ink/25 underline-offset-[3px] transition-colors before:absolute before:-inset-x-1 before:-inset-y-2 hover:text-ink hover:decoration-ink"
             >
               {copy.remove}
             </button>

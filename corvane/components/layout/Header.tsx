@@ -31,7 +31,7 @@ export function Header() {
           <DesktopNav />
         </div>
 
-        <Link href="/" aria-label={site.header.homeLabel} className="flex items-center py-2">
+        <Link href="/" aria-label={site.header.homeLabel} className="flex min-h-11 items-center py-2">
           <Wordmark decorative className="h-[17px] w-auto lg:h-[21px]" />
         </Link>
 

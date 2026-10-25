@@ -1,5 +1,5 @@
 import { VANE_CENTER, VANE_PATH } from "@/components/brand/VaneIcon";
-import { WORDMARK_HEIGHT, WORDMARK_PATH, WORDMARK_WIDTH } from "@/components/brand/Wordmark";
+import { WORDMARK_HEIGHT, WORDMARK_WIDTH, WordmarkUse } from "@/components/brand/Wordmark";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 
@@ -105,11 +105,7 @@ export function DiscoverySetRender({
           fill="#F7F5F1"
           transform={`translate(${-VANE_CENTER.x} ${-46 - VANE_CENTER.y})`}
         />
-        <path
-          d={WORDMARK_PATH}
-          fill="#F7F5F1"
-          transform={`translate(${-wmWidth / 2} ${-12}) scale(${wmScale})`}
-        />
+        <WordmarkUse fill="#F7F5F1" transform={`translate(${-wmWidth / 2} ${-12}) scale(${wmScale})`} />
         {textless ? null : (
           <>
             <text

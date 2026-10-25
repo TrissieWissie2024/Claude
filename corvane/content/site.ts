@@ -263,9 +263,20 @@ export const site = {
     emailLabel: `${companyEmail} ${companyEmailNote}`,
   },
 
+  /**
+   * Analytics (brief §7, docs/PLAN.md §12). Off by default: no consent
+   * banner, no "Cookie settings" link in the footer and no third-party script.
+   * Both values come from the environment and are fixed at build time
+   * (NEXT_PUBLIC_ variables are inlined), so change them and rebuild:
+   * - NEXT_PUBLIC_ANALYTICS_ENABLED: "true" switches on the consent banner and
+   *   the footer link. Any other value, or unset, keeps analytics off.
+   * - NEXT_PUBLIC_GTM_ID: the Google Tag Manager container id, "GTM-XXXXXXX".
+   *   GTM loads only with analytics on, a valid id and the visitor's
+   *   "Accept analytics" (lib/analytics.ts shouldLoadAnalytics).
+   */
   analytics: {
-    enabled: false,
-    gtmId: "",
+    enabled: process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === "true",
+    gtmId: process.env.NEXT_PUBLIC_GTM_ID ?? "",
   },
 
   /** Floating pill and card modal (brief §2.8, docs/PLAN.md §10). */
@@ -373,14 +384,30 @@ export const site = {
     error: "That did not go through. Try again in a moment.",
   },
 
-  /** Only rendered when analytics.enabled is true. Accept and reject carry equal weight. */
+  /**
+   * components/consent/ConsentBanner, only rendered when analytics.enabled is
+   * true. Accept and reject carry equal weight (same style, same size).
+   */
   consentBanner: {
     title: "Cookies",
-    body: "We use functional storage to run the shop, such as your cart. With your permission we also use analytics to see how the site is used. Nothing loads until you choose.",
-    accept: "Accept analytics",
-    reject: "Reject analytics",
+    body: "We store a few things on your device to run the shop, like your cart. Analytics only runs if you accept it.",
+    /** Before the link at the end of the body: "Details in the Cookie Policy." */
+    linkBefore: "Details in the",
     linkLabel: "Cookie Policy",
     href: "/cookie-policy",
+    accept: "Accept analytics",
+    reject: "Reject analytics",
+    /** Shown when the banner is opened again from the footer. */
+    current: {
+      granted: "Current choice: analytics on.",
+      denied: "Current choice: analytics off.",
+    },
+    /** Announced to screen readers after a choice (the banner closes). */
+    saved: {
+      granted: "Analytics accepted. You can change this under Cookie settings in the footer.",
+      denied: "Analytics rejected. You can change this under Cookie settings in the footer.",
+    },
+    /** The footer button that opens the banner again. */
     settings: "Cookie settings",
   },
 

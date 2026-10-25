@@ -31,7 +31,8 @@ import {
 
 /**
  * Email capture: floating pill and card modal (brief §2.8 and §6.6,
- * docs/PLAN.md §10). Render once in app/layout.tsx, inside CartProvider.
+ * docs/PLAN.md §10). Mounted once, through EmailCaptureLoader in
+ * app/layout.tsx (inside CartProvider), after the page has settled.
  *
  * Pill (bottom left, fixed, z-45, clear of the safe area):
  * - Always opens the modal. A small close button hides it for the rest of
@@ -56,8 +57,9 @@ import {
  *   not fall back to the start of the document.
  *
  * Auto-open, at most once per page load:
- * - After site.emailCapture.delayMs (8 s), or on desktop exit intent (a fine
- *   pointer leaving the top of the window).
+ * - After site.emailCapture.delayMs (8 s, counted from the start of the page
+ *   load), or on desktop exit intent (a fine pointer leaving the top of the
+ *   window).
  * - Only when storage works (test write), the visitor has not signed up and
  *   the last auto-open is missing or at least cooldownDays (7) old. The
  *   timestamp is stored at the moment it opens; if that write fails, it does
@@ -124,21 +126,23 @@ function EmailPill({ subscribed, onOpen, onDismiss, openRef, className }: EmailP
       className={cn(
         "fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-[calc(1rem+env(safe-area-inset-left,0px))] z-45",
         "lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] lg:left-[calc(1.5rem+env(safe-area-inset-left,0px))]",
+        // Never wider than the screen (large text): the label wraps and the close button stays in view.
+        "max-w-[calc(100vw-2rem-env(safe-area-inset-left,0px))] lg:max-w-[calc(100vw-3rem-env(safe-area-inset-left,0px))]",
         "motion-safe:animate-[corvane-pill-in_420ms_cubic-bezier(0.32,0.72,0,1)_both] print:hidden",
         className,
       )}
     >
       <PillMotion />
-      <div className="flex items-center rounded-full border border-line bg-fog text-ink shadow-lift">
+      <div className="flex min-w-0 items-center rounded-full border border-line bg-fog text-ink shadow-lift">
         <button
           ref={openRef}
           type="button"
           onClick={onOpen}
           aria-haspopup="dialog"
-          className="flex h-11 items-center gap-2 rounded-full pr-3.5 pl-2 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors hover:bg-ink/[0.05] focus-visible:outline-offset-[-3px]"
+          className="flex min-h-11 min-w-0 items-center gap-2 rounded-full py-1 pr-3.5 pl-2 text-left text-[0.8125rem] leading-tight font-semibold transition-colors hover:bg-ink/[0.05] focus-visible:outline-offset-[-3px]"
         >
           <PillCards />
-          <span>{subscribed ? copy.pillSubscribedLabel : copy.pillLabel}</span>
+          <span className="min-w-0">{subscribed ? copy.pillSubscribedLabel : copy.pillLabel}</span>
           {subscribed ? null : <span className="sr-only"> {copy.pillLabelSuffix}</span>}
         </button>
         <span aria-hidden="true" className="h-5 w-px bg-line" />
@@ -146,7 +150,7 @@ function EmailPill({ subscribed, onOpen, onDismiss, openRef, className }: EmailP
           type="button"
           onClick={onDismiss}
           aria-label={copy.pillDismiss}
-          className="flex size-11 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/[0.05] hover:text-ink focus-visible:outline-offset-[-3px]"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/[0.05] hover:text-ink focus-visible:outline-offset-[-3px]"
         >
           <X aria-hidden="true" className="size-4" strokeWidth={2} />
         </button>
@@ -267,7 +271,9 @@ export function EmailCapture() {
       if (event.relatedTarget === null && event.clientY <= 0) attempt();
     }
 
-    const timer = setTimeout(attempt, site.emailCapture.delayMs);
+    // Counted from the start of the page load (performance.now()), not from this mount: the
+    // component is mounted lazily once the page has settled (EmailCaptureLoader).
+    const timer = setTimeout(attempt, Math.max(0, site.emailCapture.delayMs - performance.now()));
     if (window.matchMedia(EXIT_INTENT_QUERY).matches) document.addEventListener("mouseout", onMouseOut);
     return finish;
   }, []);

@@ -6,14 +6,15 @@ import { ArrowRightIcon } from "@/components/home/icons";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { pages } from "@/content/pages";
+import { pageMetadata } from "@/lib/seo";
 
 const copy = pages.contact;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: copy.meta.title,
   description: copy.meta.description,
-  alternates: { canonical: "/contact" },
-};
+  path: "/contact",
+});
 
 /**
  * /contact (brief §6, docs/PLAN.md §1): heading, intro, the email address and

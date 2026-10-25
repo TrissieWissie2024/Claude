@@ -35,7 +35,12 @@ import { QuickAdd } from "./QuickAdd";
  *   and QuickAdd. A card narrower than 14.5rem (two columns on a phone, three on a small tablet) stacks
  *   the price above a full-width QuickAdd, so every card in a row ends the
  *   same way ("From €25" and "Choose amount" do not fit side by side in a
- *   170 px card). The card is a size container for that (container query). For sticks the line is `mood` (when to wear it), because the
+ *   170 px card). The card is a size container for that (container query).
+ *   A card narrower than 8rem (only with large text, e.g. a 24 or 32 px
+ *   default font size on a phone; at 16 px the narrowest card is 8.4rem, on a
+ *   320 px screen) moves the notes label off the media into the details,
+ *   where it can wrap, so it is never cut off by the fixed 4:5 box
+ *   (WCAG 1.4.4). Only one of the two labels is displayed at a time. For sticks the line is `mood` (when to wear it), because the
  *   label on the media already says what it smells of; the tagline stays on
  *   the product page. Other products show their tagline. Stars only with real
  *   reviews (getRatingSummary is null at launch).
@@ -120,6 +125,7 @@ export function ProductCard({
       />
 
       <div className="order-3 flex flex-1 flex-col">
+        {isStick(product) ? <NotesLabel stick={product} placement="details" /> : null}
         {rating ? <Stars rating={rating} className="mt-2" /> : null}
         <p className="mt-1.5 text-sm leading-snug text-ink-soft md:text-[0.9375rem]">
           {isStick(product) ? product.mood : product.tagline}
@@ -183,7 +189,7 @@ function CardMedia({
         />
       )}
 
-      {stick ? <NotesLabel stick={stick} /> : null}
+      {stick ? <NotesLabel stick={stick} placement="media" /> : null}
 
       {product.badges.length > 0 ? (
         <div className="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1.5 md:top-3.5 md:right-3.5">
@@ -205,10 +211,38 @@ function capitalise(note: string): string {
   return note.charAt(0).toUpperCase() + note.slice(1);
 }
 
-function NotesLabel({ stick }: { stick: StickProduct }) {
+function NotesLabel({ stick, placement }: { stick: StickProduct; placement: "media" | "details" }) {
   const notes = getCardNotes(stick).map(capitalise);
+
+  if (placement === "details") {
+    // Large-text fallback below a card width of 8rem: in the flow under the name, free to wrap.
+    // Hidden (display: none) otherwise.
+    return (
+      <div className="mt-2 hidden break-words @max-[8rem]:block">
+        <p className="label-caps flex flex-wrap items-center gap-1 text-ink-soft">
+          <span
+            aria-hidden="true"
+            className="inline-block size-1.5 shrink-0 rounded-full ring-1 ring-ink-soft/60"
+            style={{ backgroundColor: stick.ringColor }}
+          />
+          <span className="min-w-0">{stick.family}</span>
+        </p>
+        <p className="mt-1 text-xs leading-snug text-ink">
+          <span className="sr-only">{productCard.notesLabel}: </span>
+          {notes.join(", ")}
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="absolute right-2 bottom-2 w-[62%] rounded-[10px] bg-fog px-2 py-2 shadow-[0_1px_2px_rgb(16_20_24/0.08)] md:right-3 md:bottom-3 md:w-[54%] md:px-3 md:py-2.5 xl:px-3.5 xl:py-3">
+    <div
+      className={cn(
+        "absolute right-2 bottom-2 w-[62%] rounded-[10px] bg-fog px-2 py-2 shadow-[0_1px_2px_rgb(16_20_24/0.08)] md:right-3 md:bottom-3 md:w-[54%] md:px-3 md:py-2.5 xl:px-3.5 xl:py-3",
+        // Below 8rem (large text only, see ProductCard) the label moves to the details.
+        "@max-[8rem]:hidden",
+      )}
+    >
       {/*
         The ring-colour dot ties the label to the stick (on phones the six tubes differ only by
         their ring). The label is narrow on phones, so "AROMATIC" plus the dot must fit: below md

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { ScentFinder } from "@/components/finder/ScentFinder";
 import { DeliveryBar } from "@/components/home/DeliveryBar";
 import { FaqSection, faqItemsFor } from "@/components/home/FaqSection";
@@ -9,7 +11,21 @@ import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { SolidVsSpray } from "@/components/home/SolidVsSpray";
 import { StoryTeaser } from "@/components/home/StoryTeaser";
 import { VideoRow } from "@/components/home/VideoRow";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { home } from "@/content/home";
+import { site } from "@/content/site";
 import { commerce } from "@/lib/commerce";
+import { homeJsonLd, pageMetadata } from "@/lib/seo";
+
+/**
+ * The root template ("%s | CORVANE") does not apply to a page in the root
+ * segment, so the title is absolute: "CORVANE | Solid cologne in a twist-up stick".
+ */
+export const metadata: Metadata = pageMetadata({
+  title: { absolute: `${site.name} | ${home.meta.title}` },
+  description: home.meta.description,
+  path: "/",
+});
 
 /**
  * Homepage (brief §6, docs/PLAN.md §4). A server component, fully static:
@@ -31,6 +47,8 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* Organization and WebSite (lib/seo.ts). No sameAs while the social links are placeholders. */}
+      <JsonLd data={homeJsonLd()} />
       <Hero products={products} />
       <DeliveryBar />
       <ProductGridSection catalog={products} />

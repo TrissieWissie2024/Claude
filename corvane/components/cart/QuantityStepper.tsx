@@ -28,8 +28,17 @@ export interface QuantityStepperProps {
   className?: string;
 }
 
+/**
+ * sm draws 36 px buttons; a ::before 4 px wider on every side makes each touch
+ * target 44 x 44 px (the value between them keeps the two apart).
+ */
 const sizes = {
-  sm: { box: "h-9", button: "size-9", value: "min-w-7 text-sm", icon: "size-3.5" },
+  sm: {
+    box: "h-9",
+    button: "relative size-9 before:absolute before:-inset-1 before:rounded-full",
+    value: "min-w-7 text-sm",
+    icon: "size-3.5",
+  },
   md: { box: "h-11", button: "size-11", value: "min-w-9 text-[15px]", icon: "size-4" },
 } as const;
 

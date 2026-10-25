@@ -1,146 +1,75 @@
 "use client";
 
-import { ArrowRight, Menu } from "lucide-react";
-import Link from "next/link";
+import { Menu } from "lucide-react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { VaneIcon } from "@/components/brand/VaneIcon";
-import { Wordmark } from "@/components/brand/Wordmark";
-import { useCatalog } from "@/components/catalog/CatalogProvider";
-import { isCurrentPage } from "@/components/layout/header/nav";
 import { DESKTOP_QUERY, useMediaQuery } from "@/components/layout/promo/useMediaQuery";
-import { DiscoverySetRender } from "@/components/media/DiscoverySetRender";
 import { Button } from "@/components/ui/Button";
-import { Sheet } from "@/components/ui/Sheet";
-import { offers } from "@/content/offers";
 import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/money";
+import { useAfterLoad, useLatch } from "@/lib/hooks/useAfterLoad";
+
+/** The sheet (Radix Dialog, links, Discovery Set card) in a chunk of its own. */
+const MobileNavSheet = dynamic(
+  () => import("@/components/layout/MobileNavSheet").then((module) => module.MobileNavSheet),
+  { ssr: false },
+);
 
 /**
- * Mobile menu (< lg): the hamburger button and a Sheet from the left with the
- * main links (site.nav) in large serif, the help links (site.helpLinks), a
- * Discovery Set card (site.header.menuFeature; name, tagline and price from
- * the catalog and offers) and the tagline, stacked from the top. Radix
- * provides the focus trap, Esc, overlay click and focus return to the hamburger.
+ * Mobile menu (< lg): the hamburger button, server-rendered, and the menu
+ * sheet (components/layout/MobileNavSheet), whose code loads once the page
+ * has settled (useAfterLoad: loaded and idle, or the first interaction; a
+ * tap on the button is one) or when the button is used before that. So the
+ * dialog code is not part of the initial JavaScript (phase 8).
+ *
+ * The button is a plain button with aria-haspopup="dialog" and aria-expanded
+ * (what Radix's Dialog.Trigger set before); closing the sheet returns focus
+ * to it.
  *
  * Open state is remembered together with the pathname it was opened on, so
  * the menu closes by itself on any route change (link, back button) without
  * an effect, and also when the viewport grows to lg (the button is hidden there).
  */
-function MenuFeature({ onNavigate }: { onNavigate: () => void }) {
-  const { findProduct, sticks } = useCatalog();
-  const feature = site.header.menuFeature;
-  const product = findProduct(feature.productSlug);
-  if (!product) return null;
-
-  return (
-    <Link
-      href={feature.href}
-      onClick={onNavigate}
-      className="group mt-8 flex items-center gap-4 rounded-card bg-sand py-3 pr-4 pl-3"
-    >
-      <span aria-hidden="true" className="flex h-[5.5rem] w-[4.4rem] shrink-0 items-center justify-center">
-        <DiscoverySetRender
-          decorative
-          className="h-full w-auto"
-          scents={sticks.map((stick) => ({ name: stick.name, ringColor: stick.ringColor }))}
-        />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="label-caps block text-ink-soft">{feature.eyebrow}</span>
-        <span className="mt-1 block font-serif text-xl leading-tight font-semibold tracking-[-0.015em] text-ink decoration-1 underline-offset-4 group-hover:underline">
-          {product.name}
-        </span>
-        <span className="mt-0.5 block text-[13px] leading-snug text-ink-soft">{product.tagline}</span>
-        <span className="tabular mt-1.5 block text-sm font-semibold text-ink">
-          {formatMoney(offers.prices.discoverySet)}
-        </span>
-      </span>
-      <ArrowRight
-        aria-hidden="true"
-        className="size-4 shrink-0 text-ink motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-0.5"
-        strokeWidth={1.75}
-      />
-    </Link>
-  );
-}
-
 export function MobileNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const desktop = useMediaQuery(DESKTOP_QUERY, false);
   const [openedOn, setOpenedOn] = useState<string | null>(null);
   const open = openedOn !== null && openedOn === pathname && !desktop;
   const close = () => setOpenedOn(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const settled = useAfterLoad();
+  const needed = useLatch(open);
 
   return (
-    <Sheet
-      side="left"
-      size="sm"
-      open={open}
-      onOpenChange={(next) => setOpenedOn(next ? pathname : null)}
-      trigger={
-        <Button variant="ghost" iconOnly aria-label={site.header.openMenu} className={cn("lg:hidden", className)}>
-          <Menu aria-hidden="true" className="size-[22px]" strokeWidth={1.5} />
-        </Button>
-      }
-      title={site.header.menuTitle}
-      hideTitle
-      headerExtra={<Wordmark decorative className="h-[15px] w-auto" />}
-      closeLabel={site.header.closeMenu}
-      bodyClassName="flex flex-col"
-    >
-      <nav aria-label={site.header.mainNavLabel}>
-        <ul className="-mt-1 flex flex-col">
-          {site.nav.map((link) => {
-            const current = isCurrentPage(pathname, link.href);
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={close}
-                  aria-current={current ? "page" : undefined}
-                  className="flex items-center gap-3 py-2 font-serif text-[2rem] leading-[1.15] font-semibold tracking-[-0.015em] text-ink"
-                >
-                  {link.label}
-                  {current ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-signal" /> : null}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      <nav aria-label={site.header.helpNavLabel} className="mt-8 border-t border-line pt-5">
-        <ul className="flex flex-col">
-          {site.helpLinks.map((link) => {
-            const current = isCurrentPage(pathname, link.href);
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={close}
-                  aria-current={current ? "page" : undefined}
-                  className={cn(
-                    "inline-flex min-h-11 items-center text-[15px] transition-colors",
-                    current ? "font-medium text-ink" : "text-ink-soft hover:text-ink",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      <MenuFeature onNavigate={close} />
-
-      <p className="mt-8 flex items-center gap-2.5 pb-2 text-sm text-ink-soft">
-        <VaneIcon className="size-5 text-ink" />
-        {site.tagline}
-      </p>
-    </Sheet>
+    <>
+      <Button
+        ref={buttonRef}
+        variant="ghost"
+        iconOnly
+        aria-label={site.header.openMenu}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpenedOn(pathname)}
+        className={cn("lg:hidden", className)}
+      >
+        <Menu aria-hidden="true" className="size-[22px]" strokeWidth={1.5} />
+      </Button>
+      {settled || needed ? (
+        <MobileNavSheet
+          open={open}
+          onOpenChange={(next) => setOpenedOn(next ? pathname : null)}
+          onNavigate={close}
+          onCloseAutoFocus={(event) => {
+            const button = buttonRef.current;
+            if (!button?.isConnected || button.getClientRects().length === 0) return;
+            event.preventDefault();
+            button.focus({ preventScroll: true });
+          }}
+        />
+      ) : null}
+    </>
   );
 }

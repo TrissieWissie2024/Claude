@@ -3,7 +3,7 @@
 import { Mail } from "lucide-react";
 import { useId, useRef, useState, type ReactNode } from "react";
 
-import { useCart } from "@/components/cart/CartProvider";
+import { useCart, useCartActions } from "@/components/cart/CartProvider";
 import { QuantityStepper } from "@/components/cart/QuantityStepper";
 import { Button } from "@/components/ui/Button";
 import { offers } from "@/content/offers";
@@ -125,7 +125,7 @@ function GiftCardConfigurator({
   children,
   className,
 }: SimpleConfiguratorProps & { product: GiftCardProduct }) {
-  const { addLine } = useCart();
+  const { addLine } = useCartActions();
   const buttonRef = useRef<HTMLDivElement>(null);
   const name = useId();
   const amounts = offers.giftCardDenominations;
