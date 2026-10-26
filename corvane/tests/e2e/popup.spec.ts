@@ -158,7 +158,16 @@ test("without working storage it never opens on its own; the pill still opens it
   await expect(popup(page)).toBeVisible();
 });
 
-test("once the 7-day cooldown has passed it opens on its own again", async ({ page }) => {
+test("once the 7-day cooldown has passed it opens on its own again", async ({
+  page,
+  browser,
+  baseURL,
+  viewport,
+  userAgent,
+  deviceScaleFactor,
+  isMobile,
+  hasTouch,
+}) => {
   await page.clock.install({ time: START });
   await page.goto("/");
   await page.clock.runFor(copy.delayMs);
@@ -173,12 +182,31 @@ test("once the 7-day cooldown has passed it opens on its own again", async ({ pa
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expectCaptureMountedAndQuiet(page);
 
-  // A minute past 7 days: it opens once more. The capture is mounted first (the pill shows), so
-  // its timer is armed before the clock moves on.
-  await page.clock.fastForward(2 * 60_000);
-  await page.reload();
-  await page.mouse.wheel(0, 400);
-  await expect(pill(page)).toBeVisible();
-  await page.clock.runFor(copy.delayMs + 1000);
-  await expect(popup(page)).toBeVisible();
+  // A minute past 7 days, the visitor comes back: it opens once more. This visit gets a context of
+  // its own with the same storage and a clock installed at that moment. A browser restarts
+  // performance.now() with every page load, but Playwright's clock keeps counting it across
+  // reloads (about 7 days here), so after a reload the 8-second timer, which counts from the page
+  // load, would already be due when the capture mounts, and the popup would open before the pill
+  // could show.
+  const later = await browser.newContext({
+    baseURL,
+    viewport,
+    userAgent,
+    deviceScaleFactor,
+    isMobile,
+    hasTouch,
+    storageState: await page.context().storageState(),
+  });
+  try {
+    const back = await later.newPage();
+    await back.clock.install({ time: new Date(START.getTime() + copy.delayMs + 7 * DAY_MS + 60_000) });
+    await back.goto("/");
+    // The capture is mounted first (the pill shows), so its timer is armed before the clock moves on.
+    await back.mouse.wheel(0, 400);
+    await expect(pill(back)).toBeVisible();
+    await back.clock.runFor(copy.delayMs + 1000);
+    await expect(popup(back)).toBeVisible();
+  } finally {
+    await later.close();
+  }
 });
