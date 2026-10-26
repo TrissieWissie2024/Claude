@@ -48,7 +48,7 @@ export const metadata: Metadata = pageMetadata({
 export default function ShippingReturnsPage() {
   return (
     <Container className="pt-8 pb-20 md:pt-10 md:pb-28 lg:pt-12 lg:pb-32">
-      <LegalNotice text={copy.reviewNotice} />
+      {copy.showLegalReviewNotice ? <LegalNotice text={copy.reviewNotice} /> : null}
 
       <SectionHeading
         level={1}

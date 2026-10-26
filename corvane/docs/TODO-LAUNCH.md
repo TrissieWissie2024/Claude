@@ -192,7 +192,7 @@ Een paar launchtests falen bewust zodra content verandert zonder het bewijs dat 
 
 - [ ] **De zichtbare meldingen "TODO: laten controleren" weghalen na de controle**
   - **Waarom:** de melding hoort bij een concept (brief §6). Na de controle zegt hij iets wat niet meer klopt.
-  - **Waar:** dit is een codewijziging. `<LegalNotice />` staat in `components/legal/LegalPage.tsx` en `app/shipping-returns/page.tsx`. De vlag `pages.shippingReturns.showLegalReviewNotice` in `content/pages.ts` wordt nu door geen component gelezen. De launchtest "puts the exact legal review notice on every legal page and on /shipping-returns" in `content/content-guard.test.ts` moet mee, net als `reviewNotice` in `content/legal.ts`.
+  - **Waar:** `<LegalNotice />` staat in `components/legal/LegalPage.tsx` (alle juridische pagina's; dat is een codewijziging) en in `app/shipping-returns/page.tsx`, waar de vlag `pages.shippingReturns.showLegalReviewNotice` in `content/pages.ts` hem aan- of uitzet. De launchtest "puts the exact legal review notice on every legal page and on /shipping-returns" in `content/content-guard.test.ts` moet mee, net als `reviewNotice` in `content/legal.ts`.
   - **Klaar als:** geen pagina de melding nog toont, `npm test` slaagt en dit pas gebeurd is nadat de jurist klaar is.
 
 ## 8. Aanbod en kortingscodes

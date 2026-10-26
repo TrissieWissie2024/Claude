@@ -178,7 +178,7 @@ Elke beeldplek heeft een vaste sleutel, een pad, een verhouding en een pixelmaat
 
 1. Maak het beeld volgens de shotlist in `docs/ASSETS.md`. Foto's zijn WebP in 4:5 (1600 × 2000 px). Video's zijn MP4 (H.264) in 9:16 (1080 × 1920 px) met een WebP-posterframe.
 2. Zet het bestand op het `path` onder `public/`, bijvoorbeeld `public/images/products/north-swell/packshot.webp`. De mappen `public/images/` en `public/videos/` bestaan nog niet; maak ze aan bij het eerste bestand.
-3. Zet `src` op hetzelfde pad. Voor een video vul je ook `poster`.
+3. Voeg in `content/assets.ts` de sleutel van de plek toe aan `SUPPLIED` (productfoto's, scènes, video's; de poster gaat mee). Bij `hero.group` en `story.coast` zet je `src` zelf op hetzelfde pad.
 4. Klopt de foto niet met de `alt`-tekst, pas die dan aan.
 
 Komt het beeld van een CDN, zet dan de volledige URL in `src` en voeg het domein toe aan `images.remotePatterns` in `next.config.ts`; `next/image` weigert anders externe URL's. Gebruik alleen eigen beeld (brief §5).

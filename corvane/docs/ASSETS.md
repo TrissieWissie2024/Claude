@@ -14,7 +14,7 @@ Zolang een plek leeg is (`src: null`), toont de site de SVG-render van het produ
 
 1. Exporteer het bestand volgens §2 op de pixelmaat uit de tabel.
 2. Zet het in `public/` op het pad uit de tabel. Het pad `/images/hero/group.webp` is dus het bestand `public/images/hero/group.webp`. De mappen `public/images/` en `public/videos/` bestaan nog niet; maak ze aan.
-3. Zet in `content/assets.ts` `src` op hetzelfde pad. Bij een video zet je ook `poster` op `posterPath`.
+3. Voeg in `content/assets.ts` de sleutel van de plek toe aan `SUPPLIED` (zie hieronder). Bij `hero.group`, `hero.group.desktop` en `story.coast` zet je `src` zelf op hetzelfde pad.
 4. Klopt de foto niet meer met de alt-tekst, pas dan `alt` aan in `content/assets.ts`. Alt-teksten zijn Engels, net als de rest van de sitecopy.
 5. Draai `npm test`, `npm run lint` en `npm run typecheck`. De content guard (`content/content-guard.test.ts`) leest ook `content/assets.ts`, dus een alt-tekst met een uitroepteken of een prestatieclaim laat de test falen.
 
@@ -26,17 +26,10 @@ Verder verandert er niets. De componenten kiezen zelf:
 | `PhotoSlot` (`components/media/PhotoSlot.tsx`) | `hero.group`, `story.coast`, en op About `story.coast` en `products.north-swell.inHand` | hero: `GroupRender`; andere: placeholder | `next/image` |
 | `VideoSlot` (`components/media/VideoSlot.tsx`) | `ugc.1` tot `ugc.4` (rij "From CORVANE" op home) | placeholder | `<video>` met bediening, `muted`, `playsInline`, `preload="none"` en poster. Speelt nooit vanzelf af |
 
-**Waar `src` staat.** Bij `hero.group`, de desktopuitsnede `hero.group.desktop` en `story.coast` staat `src: null` letterlijk in het manifest; daar vul je het pad in. De andere plekken maakt een hulpfunctie: `productImage()` (alle productfoto's), `lifestyleImage()` (de vier scènes) en `ugcVideo()` (de vier video's). Die zetten `src` (en bij video `poster`) voor alle plekken van die soort tegelijk op `null`. Per plek invullen kan daar dus nog niet. Lever je per stuk aan, voeg dan eenmalig een lijst met aangeleverde sleutels toe en gebruik die in de drie hulpfuncties:
+**Waar `src` staat.** Bij `hero.group`, de desktopuitsnede `hero.group.desktop` en `story.coast` staat `src: null` letterlijk in het manifest; daar vul je het pad in. De andere plekken (alle productfoto's, de vier scènes en de vier video's) maakt een hulpfunctie. Die kijkt in de lijst `SUPPLIED` bovenaan die functies: staat de sleutel van een plek erin, dan krijgt die plek zijn `path` als `src` (en bij video ook zijn poster). Een foto aanleveren is dus: bestand op `path` zetten en de sleutel toevoegen, bijvoorbeeld:
 
 ```ts
-/** Keys whose file is in public/ (docs/ASSETS.md). */
-const SUPPLIED = new Set<AssetKey>(["products.north-swell.packshot"]);
-
-// in productImage(), lifestyleImage() and ugcVideo(), with `key` the key of that slot
-// (for example `products.${slug}.${shot}`):
-src: SUPPLIED.has(key) ? path : null,
-// and in ugcVideo():
-poster: SUPPLIED.has(key) ? posterPath : null,
+const SUPPLIED: ReadonlySet<string> = new Set<string>(["products.north-swell.packshot", "ugc.1"]);
 ```
 
 Zet `src` pas als het bestand er echt staat. Een pad zonder bestand geeft een kapotte afbeelding.

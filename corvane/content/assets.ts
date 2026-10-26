@@ -11,9 +11,12 @@
  * - `src: null` means "not supplied yet". The site then shows the SVG product
  *   render (packshots) or a placeholder in the same aspect ratio with the label
  *   "PHOTO: ..." or "VIDEO: ...".
- * - To supply a file: export it at the listed size, put it at `path` and set
- *   `src` to the same string (or to a full CDN URL). Videos also need `poster`.
- *   Nothing else changes: PhotoSlot, VideoSlot and ProductMedia pick it up.
+ * - To supply a file: export it at the listed size and put it at `path`. Then
+ *   add the slot's key to SUPPLIED below (product photos, lifestyle scenes,
+ *   videos), or set `src` to the same string where it is written out literally
+ *   (hero, story). A full CDN URL also works for `src`. Videos also get their
+ *   poster this way. Nothing else changes: PhotoSlot, VideoSlot and
+ *   ProductMedia pick it up.
  * - Formats: photos as WebP (quality about 80, sRGB, under about 400 KB);
  *   videos as MP4 (H.264, yuv420p, 30 fps, AAC audio or none) with a WebP
  *   poster frame at the same size.
@@ -245,9 +248,21 @@ const productBriefs: Record<AssetProductSlug, ProductBriefs> = {
   },
 };
 
+/**
+ * Keys of the slots whose file is in public/ (e.g. "products.north-swell.packshot",
+ * "lifestyle.gym", "ugc.1"). Add a key only once the file is really there:
+ * a path without a file gives a broken image. Empty at launch.
+ */
+const SUPPLIED: ReadonlySet<string> = new Set<string>([]);
+
+function suppliedSrc(key: string, path: string): string | null {
+  return SUPPLIED.has(key) ? path : null;
+}
+
 function productImage(slug: AssetProductSlug, shot: ProductShot, file: string, label: string, alt: string, brief: string): ImageAsset {
+  const key = `products.${slug}.${shot}` as const;
   const path = `/images/products/${slug}/${file}.webp`;
-  return { kind: "image", key: `products.${slug}.${shot}`, path, src: null, ...PORTRAIT, label, alt, shot: brief };
+  return { kind: "image", key, path, src: suppliedSrc(key, path), ...PORTRAIT, label, alt, shot: brief };
 }
 
 function productImages(slug: AssetProductSlug): ProductImageSet {
@@ -267,7 +282,9 @@ function productImages(slug: AssetProductSlug): ProductImageSet {
 /* ------------------------------------------------------------------ */
 
 function lifestyleImage(scene: LifestyleScene, label: string, alt: string, shot: string): ImageAsset {
-  return { kind: "image", key: `lifestyle.${scene}`, path: `/images/lifestyle/${scene}.webp`, src: null, ...PORTRAIT, label, alt, shot };
+  const key = `lifestyle.${scene}` as const;
+  const path = `/images/lifestyle/${scene}.webp`;
+  return { kind: "image", key, path, src: suppliedSrc(key, path), ...PORTRAIT, label, alt, shot };
 }
 
 /* ------------------------------------------------------------------ */
@@ -276,17 +293,18 @@ function lifestyleImage(scene: LifestyleScene, label: string, alt: string, shot:
 
 function ugcVideo(index: 1 | 2 | 3 | 4, label: string, alt: string, duration: string, shot: string): VideoAsset {
   const file: VideoAssetId = `ugc-0${index}`;
+  const key = `ugc.${index}` as const;
   return {
     kind: "video",
-    key: `ugc.${index}`,
+    key,
     id: file,
     index,
     label,
     alt,
     path: `/videos/${file}.mp4`,
-    src: null,
+    src: suppliedSrc(key, `/videos/${file}.mp4`),
     posterPath: `/videos/${file}-poster.webp`,
-    poster: null,
+    poster: suppliedSrc(key, `/videos/${file}-poster.webp`),
     ...VERTICAL,
     duration,
     shot,
