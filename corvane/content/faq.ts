@@ -49,6 +49,8 @@ export const faq: FaqItem[] = [
     answer:
       "It depends on your skin, the weather and how much you apply. We are still testing this properly and will publish the results once they are in. Until then we would rather say nothing than guess.",
     onProduct: true,
+    // Once "longevity" in content/claims.ts is verified, its faqAnswer replaces this answer (lib/claims.ts).
+    claim: "longevity",
   },
   {
     id: "which-scent",
@@ -77,8 +79,11 @@ export const faq: FaqItem[] = [
     id: "travel",
     category: "product",
     question: "Can I take it when I travel?",
+    // Facts and the caveat only: no travel or hand-luggage claim until "carry-on" in content/claims.ts is verified.
     answer:
-      "It is a 15 g solid in a small aluminium tube, so it packs easily. Security rules differ per airport and change over time, so check the current rules for your trip before you fly.",
+      "It is a 15 g solid stick in an aluminium tube. Security rules for solid cosmetics differ per airport and change over time, so check the current rules for your trip.",
+    // Once "carry-on" in content/claims.ts is verified, its faqAnswer replaces this answer (lib/claims.ts).
+    claim: "carry-on",
   },
 
   /* Ordering --------------------------------------------------------- */

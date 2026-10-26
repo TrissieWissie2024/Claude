@@ -162,7 +162,7 @@ De volgorde onder het productgrid is een eigen keuze (zie `docs/REFERENCE.md`).
 | `shipping.ts` | landen, tarieven, gratis-grens, cut-off, tijdzone, feestdagen, levertijden |
 | `reviews.ts` | lege array met het `Review`-type |
 | `faq.ts` | vragen en antwoorden per categorie |
-| `claims.ts` | prestatieclaims, allemaal `verified: false` |
+| `claims.ts` | prestatieclaims, allemaal `verified: false`; een geverifieerde claim verschijnt vanzelf in de accordion Details van de geuren en in het FAQ-antwoord dat ernaar linkt (D55) |
 | `finder.ts` | quizvragen en scoretabel |
 | `assets.ts` | manifest voor echte foto's en video's (nu alles `null`) |
 | `pages.ts` | copy voor About, Contact, Account, Checkout, 404 |
@@ -266,7 +266,7 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
 
 **E-mailpopup** (`email/EmailCapture`):
 1. De pill linksonder opent altijd de modal. Hij verschijnt pas als de bezoeker de pagina 240 px heeft gescrold of de modal op die pagina open is geweest, zodat het eerste beeld van een pagina vrij blijft; daarna blijft hij op die pagina staan. Niet op `/checkout` en niet op productpagina's onder `lg` (daar hoort de onderrand bij de sticky add-to-cart, D51).
-2. Automatisch openen gebeurt na 8 seconden of bij exit-intent op desktop (`pointer: fine`, muis verlaat het venster aan de bovenkant). Alleen als `corvane:email-capture:last-shown` ontbreekt of ouder is dan 7 dagen, en nooit meer na aanmelden. Het tijdstip wordt opgeslagen bij automatisch openen. Werkt localStorage niet, dan opent de popup nooit vanzelf.
+2. Automatisch openen gebeurt na 8 seconden of bij exit-intent op desktop (`pointer: fine`, muis verlaat het venster aan de bovenkant). Alleen als `corvane:email-capture:last-shown` ontbreekt of ouder is dan 7 dagen, en nooit meer na aanmelden. Het tijdstip wordt opgeslagen bij automatisch openen, en ook als de bezoeker de popup zelf via de pill opent of de pill verbergt: wie de aanbieding zag of afsloeg, krijgt hem 7 dagen niet vanzelf (D55). Werkt localStorage niet, dan opent de popup nooit vanzelf.
 3. Vóór het kiezen staat er al: "Every card reveals the same reward: 10% off your first order." Het percentage en de code komen uit `offers.welcomeCode`. De voorwaarden staan erbij: one code per order, excludes gift cards.
 4. De kaarten zijn `<button>`s. Met reduced motion draaien ze niet om maar wisselen ze direct.
 5. Bij het e-mailveld staat waarvoor je je aanmeldt (CORVANE e-mails over nieuwe geuren en aanbiedingen, afmelden kan altijd, link naar de Privacy Policy). Er is geen vinkje; als er ooit een komt, staat het standaard uit.
@@ -306,7 +306,7 @@ Alle berekeningen gebruiken hele centen en gehele rekenkunde: `Math.round(cents 
   - klantaantallen, "X people viewing", "just bought" en voorraadmeldingen;
   - badges van derden.
 - Feiten in de copy: 15 g, alcoholvrij, twist-up, plantaardige wasbasis (jojoba en kokos), mat zwarte aluminium huls, smelt op huidtemperatuur (brief §4).
-- `content/content-guard.test.ts` (Vitest) scant alle tekst in `content/`, behalve `claims.ts`, op die verboden patronen. De test controleert ook:
+- `content/content-guard.test.ts` (Vitest) scant alle tekst in `content/`, behalve `claims.ts`, op die verboden patronen, op een lijst van namen van parfumhuizen, merken en parfums, en op de pilltekst van de referentie (D55). De test controleert ook:
   - badges anders dan `new`;
   - een ingevulde `previousPrice`;
   - reviews in `reviews.ts`;
@@ -334,13 +334,14 @@ De hero toont North Swell, Drift & Ember en Lantern Smoke. De render krijgt een 
 
 ## 15. Tests
 
-- **Vitest:** `lib/pricing.test.ts` (vaste waarden uit §7, toewijzing, codes, verzending, pouch), `lib/delivery.test.ts` (vrijdag 14:59 en 15:00, weekend, feestdagen, kerst, zomertijdwissel 25-10-2026 en 28-03-2027), `lib/campaign.test.ts` (vóór, op en na `endsAt`), `content/finder.test.ts`, `content/content-guard.test.ts`.
+- **Vitest:** `lib/pricing.test.ts` (vaste waarden uit §7, toewijzing, codes, verzending, pouch), `lib/delivery.test.ts` (vrijdag 14:59 en 15:00, weekend, feestdagen, kerst, zomertijdwissel 25-10-2026 en 28-03-2027), `lib/campaign.test.ts` (vóór, op en na `endsAt`), `content/finder.test.ts`, `content/content-guard.test.ts`, en sinds D55 componenttests in `components/` (`ReviewsSection`, `Price`, `VerifiedClaimsRow`, de afkoelperiode van de popup).
 - **Playwright** (`tests/e2e/`, op `next build && next start`):
   - de homepage laadt;
   - een product toevoegen werkt;
   - het cart-subtotaal klopt bij 1, 2, 3, 4 en 7 sticks (€24,95, €44,95, €59,95, €84,90, €144,85);
   - de campagnebalk is weg na `endsAt` (via `page.clock`);
-  - de popup opent maximaal één keer (8 s vooruitspoelen, sluiten, herladen, opnieuw vooruitspoelen);
+  - de popup opent maximaal één keer (8 s vooruitspoelen, sluiten, herladen, opnieuw vooruitspoelen); ook zelf openen en afslaan start de afkoelperiode, exit-intent opent hem op desktop, zonder opslag opent hij nooit vanzelf en na 7 dagen weer (D55);
+  - `WELCOME10` uit de popup haalt 10% af in de cart drawer en op `/checkout`;
   - er is geen horizontale scroll;
   - pill en sticky add-to-cart overlappen niet.
 

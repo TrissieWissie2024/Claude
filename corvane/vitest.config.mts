@@ -8,7 +8,8 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["lib/**/*.test.ts", "content/**/*.test.ts"],
+    // Components with logic that a rule of brief §2 depends on are tested too (rendered to static markup in node).
+    include: ["lib/**/*.test.ts", "content/**/*.test.ts", "components/**/*.test.{ts,tsx}"],
     environment: "node",
   },
 });

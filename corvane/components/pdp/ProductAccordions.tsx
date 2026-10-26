@@ -4,15 +4,17 @@ import type { ReactNode } from "react";
 import { Accordion, type AccordionItem } from "@/components/ui/Accordion";
 import { pdp } from "@/content/pdp";
 import { site } from "@/content/site";
+import { getVerifiedClaims } from "@/lib/claims";
 import { cn } from "@/lib/cn";
-import type { Product, StickProduct } from "@/lib/types";
+import type { Claim, Product, StickProduct } from "@/lib/types";
 
 /**
  * Accordions of the product page (brief §6, docs/PLAN.md §9), with the Radix
  * Accordion from components/ui (one open at a time, all closed at first):
  *
- * - Scent sticks: Details (the specifications from content/site.ts plus the
- *   ring colour), How to use, Ingredients (the INCI list is a placeholder,
+ * - Scent sticks: Details (the specifications from content/site.ts, the
+ *   ring colour and, once any exist, the verified performance claims in a
+ *   "Tested" row: VerifiedClaimsRow, brief §2.6), How to use, Ingredients (the INCI list is a placeholder,
  *   marked "To follow") and Shipping & returns (rates, cut-off and transit
  *   from content/shipping.ts, the 14-day right of withdrawal as a plain legal
  *   right with the exception for sealed sticks (D28), the 30-day guarantee as
@@ -117,18 +119,22 @@ function ToFollow({ children }: { children: ReactNode }) {
 /* Sticks and Discovery Set                                            */
 /* ------------------------------------------------------------------ */
 
+/** One row of the Details list: label column and value column. */
+const detailRow =
+  "grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] gap-4 py-2.5 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,9rem)_minmax(0,1fr)]";
+
 function StickDetails({ stick }: { stick: StickProduct }) {
   const ringName = pdp.ringColour.names[stick.slug];
   return (
     <dl className="flex flex-col divide-y divide-line">
       {site.specs.map((spec) => (
-        <div key={spec.id} className="grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] gap-4 py-2.5 first:pt-0 md:grid-cols-[minmax(0,9rem)_minmax(0,1fr)]">
+        <div key={spec.id} className={detailRow}>
           <dt className="font-medium text-ink">{spec.label}</dt>
           <dd>{spec.text}</dd>
         </div>
       ))}
       {ringName ? (
-        <div className="grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] gap-4 py-2.5 last:pb-0 md:grid-cols-[minmax(0,9rem)_minmax(0,1fr)]">
+        <div className={detailRow}>
           <dt className="font-medium text-ink">{pdp.ringColour.label}</dt>
           <dd className="flex items-center gap-2">
             <span
@@ -140,7 +146,36 @@ function StickDetails({ stick }: { stick: StickProduct }) {
           </dd>
         </div>
       ) : null}
+      <VerifiedClaimsRow />
     </dl>
+  );
+}
+
+export interface VerifiedClaimsRowProps {
+  /** Claim data. Defaults to content/claims.ts (via lib/claims.ts); only tests pass this. */
+  source?: readonly Claim[];
+}
+
+/**
+ * The verified performance claims as one row of the Details list (inside a
+ * <dl>), labelled "Tested". Only claims with `verified: true` pass
+ * getVerifiedClaims(), so at launch this renders nothing and the list looks
+ * as before. Setting a claim to true in content/claims.ts is all it takes.
+ */
+export function VerifiedClaimsRow({ source }: VerifiedClaimsRowProps) {
+  const verified = source ? getVerifiedClaims(source) : getVerifiedClaims();
+  if (verified.length === 0) return null;
+  return (
+    <div className={detailRow}>
+      <dt className="font-medium text-ink">{pdp.accordions.details.testedLabel}</dt>
+      <dd>
+        <ul role="list" className="flex flex-col gap-1">
+          {verified.map((claim) => (
+            <li key={claim.id}>{claim.text}</li>
+          ))}
+        </ul>
+      </dd>
+    </div>
   );
 }
 

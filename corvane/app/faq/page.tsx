@@ -8,6 +8,7 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { faq } from "@/content/faq";
 import { pages } from "@/content/pages";
+import { faqAnswer } from "@/lib/claims";
 import { pageMetadata } from "@/lib/seo";
 
 const copy = pages.faq;
@@ -25,7 +26,8 @@ const groups = copy.categories
 
 /**
  * /faq (docs/PLAN.md §1): every question in content/faq.ts, grouped by
- * category. One Radix Accordion per category (several answers can be open at
+ * category (answers through faqAnswer(), so a verified claim replaces the
+ * answer of the question linked to it). One Radix Accordion per category (several answers can be open at
  * once), with links to each category at the top and a contact block at the end.
  *
  * The category links are plain in-page anchors (<a href="#shipping">), so the
@@ -80,7 +82,7 @@ export default function FaqPage() {
                   items={group.items.map((item) => ({
                     id: item.id,
                     title: item.question,
-                    content: <p className="max-w-[34rem]">{item.answer}</p>,
+                    content: <p className="max-w-[34rem]">{faqAnswer(item)}</p>,
                   }))}
                 />
                 {link ? (

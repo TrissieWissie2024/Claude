@@ -287,22 +287,26 @@ export const site = {
     rewardCode: facts.welcomeCode,
     rewardLabel: facts.welcomeLabel,
     rewardConditions,
-    /** Honest: picking a card always gives the same reward. No chance, no prize draw. */
-    pillLabel: `Pick a card for ${facts.welcomePercent}% off`,
+    /**
+     * Honest: turning a card always gives the same reward. No chance, no prize
+     * draw. Own wording, never the reference's pill text (brief §2.1, §6.6);
+     * content/content-guard.test.ts blocks it.
+     */
+    pillLabel: `Turn a card for ${facts.welcomePercent}% off`,
     /** Screen reader text after the visible pill label, so the accessible name starts with it (WCAG 2.5.3). */
     pillLabelSuffix: "Every card gives the same reward.",
     /** Pill label after signing up: it opens the code again. */
     pillSubscribedLabel: `Your ${facts.welcomePercent}% code`,
     /** Small close button on the pill. Hides it for the rest of the visit. */
     pillDismiss: "Hide this offer",
-    title: "Pick a card",
+    title: "Three cards, one reward",
     /** Dialog title once a card is turned (the step is now: leave your email). */
     titleChosen: "Your reward",
     /** Dialog description, visible before a card is picked (brief §2.8). */
     sameRewardNote: `Every card reveals the same reward: ${facts.welcomeLabel}.`,
     /** Line under the cards before one is picked. */
     intro: "Turn any card, then leave your email to get the code.",
-    cardsLabel: "Choose a card",
+    cardsLabel: "Reward cards",
     /** Accessible name of a face-down card. */
     card: (index: number, total: number) => `Card ${index} of ${total}`,
     /** Accessible name of a turned card. */

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { claims } from "@/content/claims";
+import { faq } from "@/content/faq";
 import { offers } from "@/content/offers";
 import { reviews } from "@/content/reviews";
-import { getVerifiedClaim, getVerifiedClaims } from "@/lib/claims";
+import { faqAnswer, getVerifiedClaim, getVerifiedClaims } from "@/lib/claims";
 import { getRatingSummary, getReviews, hasReviews } from "@/lib/reviews";
 import type { Claim, Review } from "@/lib/types";
 
@@ -116,5 +117,38 @@ describe("claims and reviews helpers", () => {
     const loose = [{ id: "longevity", text: "x", verified: "true", evidence: "" }] as unknown as Claim[];
     expect(getVerifiedClaims(loose)).toEqual([]);
     expect(getVerifiedClaim("longevity", loose)).toBeNull();
+  });
+});
+
+describe("FAQ answers and verified claims (brief §2.6)", () => {
+  const linked = faq.filter((item) => item.claim !== undefined);
+
+  it("links the longevity and travel questions to their claims", () => {
+    expect(faq.find((item) => item.id === "how-long-does-it-last")?.claim).toBe("longevity");
+    expect(faq.find((item) => item.id === "travel")?.claim).toBe("carry-on");
+    for (const item of linked) expect(claims.map((claim) => claim.id)).toContain(item.claim);
+  });
+
+  it("shows each question's own answer at launch, never the claim", () => {
+    for (const item of faq) expect(faqAnswer(item)).toBe(item.answer);
+    for (const item of linked) {
+      const claim = claims.find((entry) => entry.id === item.claim);
+      expect(faqAnswer(item)).not.toBe(claim?.faqAnswer);
+      expect(faqAnswer(item)).not.toBe(claim?.text);
+    }
+  });
+
+  it("shows the claim's FAQ answer once that claim is verified, and its text when it has none", () => {
+    const longevity = linked.find((item) => item.claim === "longevity");
+    const travel = linked.find((item) => item.claim === "carry-on");
+    expect(longevity && travel).toBeTruthy();
+    const verified: Claim[] = claims.map((claim) => ({ ...claim, verified: true }));
+    const expected = verified.find((claim) => claim.id === "longevity");
+    expect(faqAnswer(longevity!, verified)).toBe(expected?.faqAnswer ?? expected?.text);
+    const withoutAnswer: Claim[] = verified.map((claim) => ({ ...claim, faqAnswer: undefined }));
+    expect(faqAnswer(travel!, withoutAnswer)).toBe(claims.find((claim) => claim.id === "carry-on")?.text);
+    // Another claim being verified changes nothing for this question.
+    const otherOnly: Claim[] = claims.map((claim) => ({ ...claim, verified: claim.id === "applications" }));
+    expect(faqAnswer(longevity!, otherOnly)).toBe(longevity!.answer);
   });
 });

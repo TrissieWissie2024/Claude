@@ -22,7 +22,7 @@ import {
   isDialogOpen,
   isEditingField,
   isPillDismissed,
-  markAutoOpened,
+  markShown,
   useBodyBlocksPill,
   useMounted,
   usePillDismissed,
@@ -37,7 +37,8 @@ import {
  * Pill (bottom left, fixed, z-45, clear of the safe area):
  * - Always opens the modal. A small close button hides it for the rest of
  *   the visit (sessionStorage) and also stops the popup from opening on its
- *   own in that visit.
+ *   own in that visit. Both count as having seen the offer: they store the
+ *   last-shown time, so the popup does not open on its own for cooldownDays.
  * - Appears once the visitor has scrolled the current page by
  *   PILL_REVEAL_SCROLL_Y, or after the modal was open on it, so the first
  *   view of a page (hero, product name, the first cards) is never covered
@@ -61,9 +62,9 @@ import {
  *   load), or on desktop exit intent (a fine pointer leaving the top of the
  *   window).
  * - Only when storage works (test write), the visitor has not signed up and
- *   the last auto-open is missing or at least cooldownDays (7) old. The
- *   timestamp is stored at the moment it opens; if that write fails, it does
- *   not open.
+ *   the offer was last shown (auto-open, opened from the pill, pill hidden)
+ *   at least cooldownDays (7) ago, or never. The timestamp is stored at the
+ *   moment it opens; if that write fails, it does not open.
  * - Never on /checkout, never while the cart drawer or another dialog is open,
  *   the sticky add-to-cart or a consent banner shows, the visitor is typing
  *   in a field, the pill was hidden, or the visitor already opened it.
@@ -259,7 +260,7 @@ export function EmailCapture() {
       if (blockedNow()) return;
       const now = Date.now();
       // Re-check (another tab may have shown it); the timestamp write doubles as the storage test.
-      if (!canAutoOpen(now) || !markAutoOpened(now)) {
+      if (!canAutoOpen(now) || !markShown(now)) {
         finish();
         return;
       }
@@ -280,8 +281,10 @@ export function EmailCapture() {
 
   if (!copy.enabled) return null;
 
+  /** The visitor sees the offer now, so the cooldown starts (brief §6.6: at most once per 7 days). */
   function openFromPill() {
     openedByVisitor.current = true;
+    markShown(Date.now());
     show(subscribed);
   }
 
@@ -295,8 +298,13 @@ export function EmailCapture() {
     handleOpenChange(false);
   }
 
-  /** The pill unmounts; keep keyboard users in the page instead of at the start of the document. */
+  /**
+   * Hiding the offer declines it: the cooldown starts, so it does not open on
+   * its own on a later visit within cooldownDays. The pill unmounts; keep
+   * keyboard users in the page instead of at the start of the document.
+   */
   function hidePill() {
+    markShown(Date.now());
     dismissPill();
     document.getElementById("main")?.focus({ preventScroll: true });
   }

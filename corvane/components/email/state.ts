@@ -9,10 +9,13 @@ import { readJson, removeStorage, storageKeys, writeJson, writeStorage } from "@
  * State helpers for the email capture (docs/PLAN.md §10, brief §2.8).
  *
  * - Auto-open rules: only when storage works (a test write succeeds), the
- *   visitor has not signed up and the last auto-open
+ *   visitor has not signed up and the last time the visitor saw the offer
  *   (storageKeys.emailCaptureLastShown, a timestamp in ms) is missing or at
  *   least `cooldownDays` old. The timestamp is written at the moment of an
- *   auto-open; when that write fails the popup does not open.
+ *   auto-open (when that write fails the popup does not open), and also when
+ *   the visitor opens the popup from the pill or hides the pill: whoever has
+ *   seen or declined the offer is not shown it on its own again within the
+ *   cooldown (brief §2.8, §6.6).
  * - Pill dismissal: sessionStorage, so it lasts for this visit only. Without
  *   sessionStorage it lasts until the page reloads.
  * - Body flags: the mobile sticky add-to-cart sets data-sticky-atc="true" and
@@ -52,7 +55,7 @@ function toTimestamp(value: unknown): number | null {
 }
 
 /**
- * True when the cooldown since the last auto-open has passed. A missing or
+ * True when the cooldown since the offer was last shown has passed. A missing or
  * unreadable value counts as "never shown". A timestamp in the future (a
  * clock that moved back) counts as recent, so the cap is never skipped.
  */
@@ -83,8 +86,12 @@ export function canAutoOpen(now: number): boolean {
   return isCooldownOver(readJson<unknown>(storageKeys.emailCaptureLastShown), now, site.emailCapture.cooldownDays);
 }
 
-/** Stores the moment of an auto-open. False when storage refused the write (then do not open). */
-export function markAutoOpened(now: number): boolean {
+/**
+ * Stores the moment the offer was shown: an auto-open, an opening from the
+ * pill, or hiding the pill. Starts the cooldown. False when storage refused
+ * the write (an auto-open then does not happen).
+ */
+export function markShown(now: number): boolean {
   return writeJson(storageKeys.emailCaptureLastShown, now);
 }
 

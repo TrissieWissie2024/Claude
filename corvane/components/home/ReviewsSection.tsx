@@ -13,11 +13,17 @@ import type { Review } from "@/lib/types";
  * - No reviews (launch): an honest empty state. The heading itself says it
  *   ("No reviews yet.", home.reviews.emptyTitle) with home.reviews.empty.body
  *   as the intro, in a shorter section: no card, no icon, no stars, no zero
- *   score, no count, no prompt to write one. "From verified buyers" (or the
- *   `heading` prop) waits for real reviews.
+ *   score, no count, no prompt to write one.
  * - With reviews: the rating summary (Stars + count) beside the heading and a
- *   list of review cards with stars, title, text, author, date, the
- *   verified-purchase label and the source.
+ *   list of review cards with stars, title, text, author, date and the source.
+ * - "Verified" is earned, never assumed (ACM; UCPD art. 7(6) and Annex I
+ *   point 23b). Only when home.reviews.verification says how purchases are
+ *   checked: the heading is "From verified buyers" if every review shown has
+ *   `verifiedPurchase: true`, and a review with that flag gets the "Verified
+ *   buyer" label. Otherwise the heading is the neutral home.reviews.heading,
+ *   no review is labelled and home.reviews.unverifiedNote says that reviews
+ *   are not checked against orders. The note or the verification text always
+ *   sits under the heading.
  *
  * Works on the homepage (all reviews) and on the product page
  * (`productSlug`, `headingLevel` 2 or 3). No hooks and no server-only APIs,
@@ -39,6 +45,10 @@ export interface ReviewsSectionProps {
   /** Section id (anchor). Default home.reviews.id ("reviews"). */
   id?: string;
   eyebrow?: string;
+  /**
+   * Heading with reviews. Default: derived from the data (see above). Never
+   * pass a heading that calls the reviews verified.
+   */
   heading?: string;
   /** Most reviews to show, newest first. Default 6. */
   limit?: number;
@@ -55,6 +65,11 @@ export interface ReviewsSectionProps {
    * this. Never pass invented reviews on a live page (brief §2.2).
    */
   source?: readonly Review[];
+  /**
+   * How purchases are checked. Defaults to home.reviews.verification; only
+   * tests and previews pass this.
+   */
+  verification?: string | null;
   className?: string;
 }
 
@@ -71,24 +86,38 @@ function formatReviewDate(isoDate: string): string {
   return Number.isNaN(date.getTime()) ? isoDate : dateFormat.format(date);
 }
 
+/**
+ * The heading with reviews: `custom` if given, "From verified buyers" only
+ * when purchases are checked and every review shown is a checked purchase,
+ * otherwise the neutral heading.
+ */
+export function reviewsHeading(shown: readonly Review[], checked: boolean, custom?: string): string {
+  if (custom) return custom;
+  const allVerified = checked && shown.length > 0 && shown.every((review) => review.verifiedPurchase === true);
+  return allVerified ? home.reviews.headingVerified : home.reviews.heading;
+}
+
 export function ReviewsSection({
   productSlug,
   headingLevel = 2,
   id = home.reviews.id,
   eyebrow = home.reviews.label,
-  heading = home.reviews.heading,
+  heading,
   limit = 6,
   divider = false,
   variant = "section",
   emptyHeading,
   emptyBody,
   source,
+  verification = home.reviews.verification,
   className,
 }: ReviewsSectionProps) {
   const copy = home.reviews;
   const reviews = source ? getReviews(productSlug, source) : getReviews(productSlug);
   const summary = source ? getRatingSummary(productSlug, source) : getRatingSummary(productSlug);
   const shown = reviews.slice(0, Math.max(0, limit));
+  const checked = verification !== null && verification.trim() !== "";
+  const title = reviewsHeading(shown, checked, heading);
   const headingId = `${id}-heading`;
   const SubHeading = `h${headingLevel + 1}` as "h3" | "h4";
 
@@ -147,7 +176,8 @@ export function ReviewsSection({
                 id={headingId}
                 level={headingLevel}
                 eyebrow={eyebrow}
-                title={heading}
+                title={title}
+                intro={checked ? verification : copy.unverifiedNote}
                 action={
                   <p className="flex items-center gap-3">
                     <Stars rating={summary} size="md" showCount={false} />
@@ -171,7 +201,7 @@ export function ReviewsSection({
                       <footer className="mt-6 flex flex-col gap-1 border-t border-line pt-4 text-sm">
                         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="font-semibold text-ink">{review.author}</span>
-                          {review.verifiedPurchase ? (
+                          {checked && review.verifiedPurchase ? (
                             <span className="label-caps rounded-full bg-sand px-2 py-0.5 text-[0.6875rem] text-ink">
                               {copy.verifiedBuyer}
                             </span>

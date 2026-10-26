@@ -264,19 +264,41 @@ export const home = {
   reviews: {
     id: "reviews",
     label: "Reviews",
-    heading: "From verified buyers",
+    /**
+     * Section heading with reviews, unless the verified heading applies. Says
+     * nothing about who wrote them (brief §2.2).
+     */
+    heading: "What reviewers say",
+    /**
+     * Section heading only when `verification` is set and every review shown
+     * has `verifiedPurchase: true` (components/home/ReviewsSection.tsx).
+     */
+    headingVerified: "From verified buyers",
+    /**
+     * How CORVANE checks that a review comes from someone who bought the
+     * product, shown under the heading whenever reviews show (UCPD art. 7(6)
+     * and Annex I point 23b). null until a review app checks purchases: then
+     * no review is called verified (no verified heading, no "Verified buyer"
+     * label) and `unverifiedNote` is shown instead. Write it as one or two
+     * plain sentences that describe the real check.
+     */
+    verification: null as string | null,
+    /** Under the heading while `verification` is null and reviews show. */
+    unverifiedNote: "Reviews are not checked against orders.",
     empty: {
       heading: "No reviews yet",
-      body: "CORVANE is new. Reviews from verified buyers appear here as they come in.",
+      /** Neutral until a review app checks purchases: no claim about who the reviewers are. */
+      body: "CORVANE is new. Reviews appear here as they come in.",
     },
     /** Only used once real reviews exist. */
     count: (count: number) => (count === 1 ? "1 review" : `${count} reviews`),
+    /** Label on one review: only with `verification` set and `verifiedPurchase: true`. */
     verifiedBuyer: "Verified buyer",
     /** Accessible name of the stars on one review. Only used once real reviews exist. */
     ratingLabel: (rating: number) => `Rated ${rating} out of 5`,
     /** Where a review was collected (Review.source), e.g. "Collected by judge.me". */
     source: (source: string) => `Collected by ${source}`,
-    /** Section heading while there are no reviews; "From verified buyers" waits for real ones. */
+    /** Section heading while there are no reviews. */
     emptyTitle: "No reviews yet.",
   },
 

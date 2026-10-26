@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { faq } from "@/content/faq";
 import { home } from "@/content/home";
+import { faqAnswer } from "@/lib/claims";
 import { cn } from "@/lib/cn";
 import type { FaqItem, NavLink } from "@/lib/types";
 
@@ -15,6 +16,9 @@ import { ArrowRightIcon } from "./icons";
  * components/ui. Homepage default: the questions marked `onHome` in
  * content/faq.ts and a link "All questions" to /faq. On the product page pass
  * the `onProduct` questions (see `faqItemsFor`), and an `id` if "faq" is taken.
+ *
+ * Answers go through faqAnswer() (lib/claims.ts): a question linked to a
+ * performance claim shows the claim only once it is verified (brief §2.6).
  *
  * Mobile: heading, questions, then the link. lg+: heading and link on the
  * left (4 columns), questions on the right (7 columns).
@@ -80,7 +84,7 @@ export function FaqSection({
           />
 
           <Accordion
-            items={items.map((item) => ({ id: item.id, title: item.question, content: <p>{item.answer}</p> }))}
+            items={items.map((item) => ({ id: item.id, title: item.question, content: <p>{faqAnswer(item)}</p> }))}
             headingLevel={headingLevel === 2 ? 3 : 4}
             className="lg:col-span-7 lg:col-start-6 lg:row-span-2"
           />

@@ -244,6 +244,11 @@ export const pdp = {
         "Matte black aluminium tube with an engraved vane",
         "A coloured ring per scent",
       ],
+      /**
+       * Label of the row with the verified performance claims (content/claims.ts
+       * via lib/claims.ts). The row only exists once a claim is verified.
+       */
+      testedLabel: "Tested",
     },
     howToUse: {
       title: "How to use",
@@ -290,7 +295,8 @@ export const pdp = {
     heading: "Reviews",
     empty: {
       heading: "No reviews yet",
-      body: "CORVANE is new. Reviews from verified buyers appear here as they come in.",
+      /** Neutral, like home.reviews.empty.body: no claim about who the reviewers are. */
+      body: "CORVANE is new. Reviews appear here as they come in.",
     },
   },
 
@@ -396,7 +402,7 @@ export const pdp = {
   ringColour: {
     label: "Ring colour",
     names: {
-      "north-swell": "Light blue",
+      "north-swell": "Sea blue",
       "drift-and-ember": "Burnt orange",
       "lantern-smoke": "Deep red",
       "iron-coast": "Steel grey",

@@ -359,6 +359,11 @@ export interface Claim {
   verified: boolean;
   /** How it will be or was substantiated. */
   evidence: string;
+  /**
+   * Answer to the FAQ question that asks about this claim (FaqItem.claim),
+   * shown instead of that question's answer once verified. Default: `text`.
+   */
+  faqAnswer?: string;
 }
 
 export type FaqCategory = "product" | "ordering" | "shipping" | "returns" | "subscription";
@@ -372,6 +377,11 @@ export interface FaqItem {
   onHome?: boolean;
   /** Shown on product pages. */
   onProduct?: boolean;
+  /**
+   * The performance claim this question asks about. Once that claim is
+   * verified, its answer replaces `answer` (faqAnswer() in lib/claims.ts).
+   */
+  claim?: ClaimId;
 }
 
 export interface NavLink {

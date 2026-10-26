@@ -173,7 +173,7 @@ function stickBriefs(name: string, ring: string, scene: { label: string; alt: st
 }
 
 const productBriefs: Record<AssetProductSlug, ProductBriefs> = {
-  "north-swell": stickBriefs("North Swell", "light blue", {
+  "north-swell": stickBriefs("North Swell", "sea blue", {
     label: "early gym session",
     alt: "The North Swell stick on a wooden bench in a gym changing room, next to a folded towel",
     shot: "Early morning gym changing room, cool daylight. Stick on a bench beside a towel and a water bottle without branding.",

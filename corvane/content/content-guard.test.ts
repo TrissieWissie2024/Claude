@@ -56,6 +56,105 @@ const HYPE_WORDS = [
   "obsessed",
 ];
 
+/**
+ * Perfume houses, designer brands and well-known perfumes (brief §2.5: no
+ * references to existing perfumes or brands). Not complete: a name that is
+ * not here still needs a human read. Payment methods (site.paymentMethods)
+ * and service providers named in the legal texts are not perfume brands and
+ * are not listed. Written as regex sources, matched on word boundaries.
+ */
+const PERFUME_BRANDS = [
+  "dior",
+  "chanel",
+  "creed",
+  "tom ford",
+  "armani",
+  "acqua di gi[oò]",
+  "versace",
+  "ysl",
+  "(yves )?saint laurent",
+  "hugo boss",
+  "boss bottled",
+  "paco rabanne",
+  "rabanne",
+  "jo malone",
+  "le labo",
+  "byredo",
+  "margiela",
+  "4711",
+  "guerlain",
+  "herm[eè]s",
+  "givenchy",
+  "prada",
+  "gucci",
+  "burberry",
+  "calvin klein",
+  "ck one",
+  "davidoff",
+  "cool water",
+  "montblanc",
+  "bvlgari",
+  "bulgari",
+  "lacoste",
+  "(jean paul )?gaultier",
+  "le male",
+  "azzaro",
+  "viktor (&|and) rolf",
+  "spicebomb",
+  "valentino",
+  "dolce (&|and) gabbana",
+  "d&g",
+  "light blue",
+  "issey miyake",
+  "kenzo",
+  "ralph lauren",
+  "tommy hilfiger",
+  "diptyque",
+  "penhaligon'?s?",
+  "kilian",
+  "amouage",
+  "parfums de marly",
+  "kurkdjian",
+  "baccarat rouge",
+  "xerjoff",
+  "nishane",
+  "initio",
+  "mancera",
+  "montale",
+  "lattafa",
+  "armaf",
+  "mugler",
+  "carolina herrera",
+  "narciso rodriguez",
+  "lanc[oô]me",
+  "est[eé]e lauder",
+  "cartier",
+  "abercrombie",
+  "hollister",
+  "old spice",
+  "lynx",
+  "sauvage",
+  "aventus",
+  "bleu de",
+  "invictus",
+  "(one|1) million",
+  "dylan blue",
+  "eros",
+  "fahrenheit",
+  "santal 33",
+  "black orchid",
+  "oud wood",
+  "tobacco vanille",
+  "jazz club",
+  "by the fireplace",
+  "molecule 0\\d",
+  "escentric",
+  "luna rossa",
+  "stronger with you",
+  "allure homme",
+  "[eé]go[iï]ste",
+];
+
 /** The banned list. Case-insensitive unless stated. */
 const RULES: Rule[] = [
   { name: "exclamation mark", pattern: /!/ },
@@ -64,11 +163,22 @@ const RULES: Rule[] = [
   { name: "emoji", pattern: /(?!©)\p{Extended_Pictographic}|\u{FE0F}/u },
   ...HYPE_WORDS.map((word) => ({ name: `hype word "${word}"`, pattern: new RegExp(`\\b${word}\\b`, "i") })),
 
-  // References to other perfumes or brands (brief §2.5).
+  // References to other perfumes or brands (brief §2.5): the phrasing, then the names.
   { name: "inspired by", pattern: /inspired by/i },
   { name: "smells like", pattern: /smells? like/i },
   { name: "dupe", pattern: /\bdupes?\b/i },
   { name: "alternative to", pattern: /alternative to/i },
+  { name: "for fans of", pattern: /\bfor fans of\b/i },
+  { name: "our answer to / take on", pattern: /\bour (answer|take|version|twist) (to|on|of)\b/i },
+  { name: "impression of", pattern: /\bimpression of\b/i },
+  { name: "reminiscent of", pattern: /\breminiscent of\b/i },
+  { name: "similar to", pattern: /\bsimilar to\b/i },
+  { name: "version of", pattern: /\bversion of\b/i },
+  { name: "clone or replica", pattern: /\b(clones?|replicas?)\b/i },
+  { name: "designer or iconic fragrance", pattern: /\b(designer|iconic|luxury|famous) (fragrance|scent|perfume|cologne)s?\b/i },
+  { name: "same notes as", pattern: /\bsame (notes|dna|accord) as\b/i },
+  { name: "fraction of the price", pattern: /\bfraction of the (price|cost)\b/i },
+  ...PERFUME_BRANDS.map((name) => ({ name: `perfume or brand name /${name}/`, pattern: new RegExp(`\\b${name}\\b`, "i") })),
 
   // Pheromone and attraction claims.
   { name: "pheromone", pattern: /pheromone/i },
@@ -77,6 +187,13 @@ const RULES: Rule[] = [
   { name: "compliment", pattern: /compliment/i },
   { name: "women will", pattern: /women will/i },
   { name: "turn heads", pattern: /turns? heads/i },
+  { name: "women love", pattern: /\b(women|girls|ladies|she) (love|loves|notice|notices|want|wants)\b/i },
+  { name: "she / her / ladies / girls", pattern: /\b(she|her|hers|ladies|girls?|girlfriend|wife)\b/i },
+  { name: "date night", pattern: /\bdate[- ]night\b/i },
+  { name: "sex appeal", pattern: /\bsex(ual)?\b|\bsex appeal\b/i },
+  { name: "get noticed", pattern: /\b(get|be|gets|getting) noticed\b/i },
+  { name: "magnet", pattern: /\bmagnet/i },
+  { name: "flirt", pattern: /\bflirt/i },
 
   // Fake scarcity and social proof (brief §2.2, §2.3).
   { name: "only X left", pattern: /\bonly (a few|\S+) (left|remaining)\b/i },
@@ -100,7 +217,27 @@ const RULES: Rule[] = [
   { name: "TSA", pattern: /\bTSA\b/i },
   { name: "leak-proof", pattern: /leak[- ]?proof/i },
   { name: "won't leak", pattern: /(won['’]t|will not|never) leak/i },
+  // Implied performance and travel claims (brief §2.6): the same claims in other words.
+  { name: "packs easily", pattern: /\bpacks? (easily|anywhere|flat)\b|\beasy to pack\b/i },
+  { name: "travel-friendly", pattern: /\btravel[- ]?(friendly|size[d]?|ready|proof|safe|approved)\b/i },
+  { name: "fly / flight", pattern: /\b(fly|flying|flights?)\b/i },
+  { name: "liquids bag", pattern: /\bliquids? (bag|rules?|limit)\b/i },
+  { name: "airport-safe", pattern: /\b(airport|security)[- ]?(safe|friendly|approved|proof)\b/i },
+  { name: "hrs", pattern: /\bhrs?\b/i },
+  { name: "N-hour", pattern: /\d+\s*[- ]?\s*hours?\b/i },
+  { name: "N uses", pattern: /\b\d+\s*(uses|swipes|wears)\b|\buses per\b/i },
+  { name: "lasting", pattern: /\blasting\b|\blast (for|up to|all|through)\b/i },
+  { name: "weeks of use", pattern: /\b(days?|weeks?|months?) (of use|of wear|per stick)\b/i },
+  { name: "spill-proof", pattern: /\b(spill|mess|leak)[- ]?(proof|free)\b/i },
+  { name: "no leaks", pattern: /\bno (leaks?|spills?|mess)\b/i },
+  { name: "sweat- or waterproof", pattern: /\b(sweat|water)[- ]?(proof|resistant)\b/i },
+  { name: "dermatologically tested", pattern: /dermatolog|hypoallergenic|\bclinically\b/i },
+  // The reference's own pill wording (brief §2.1, §6.6): CORVANE says it its own way.
+  { name: "reference pill wording", pattern: /\b(pick|choose) a card\b|\bwin a reward\b|\bkies een kaart\b|\bwin een beloning\b/i },
 ];
+
+/** ClaimId values are keys, not copy: `claim: "carry-on"` on a FAQ item is allowed. */
+const CLAIM_IDS = new Set<string>(claims.map((claim) => claim.id));
 
 /** Arguments used to call exported functions: strings first, then numbers. */
 const SAMPLE_ARGS: unknown[] = ["€10.00", "North Swell", 1, 2, 3];
@@ -114,6 +251,7 @@ interface Finding {
 }
 
 function checkString(file: string, path: string, value: string, findings: Finding[]) {
+  if (/\.claim$/.test(path) && CLAIM_IDS.has(value)) return;
   for (const rule of RULES) {
     if (rule.allowIn?.includes(file)) continue;
     if (rule.pattern.test(value)) findings.push({ file, path, value, rule: rule.name });
@@ -236,6 +374,28 @@ describe("content guard", () => {
       "Guaranteed compliments",
       "Fresh \u{1F30A}",
       "Fresh ↔ Warm",
+      // Phase 10 audit probes (brief §2.5, §2.6, §2.1).
+      "For fans of Aventus.",
+      "Our answer to Sauvage.",
+      "Bleu de Chanel, but solid.",
+      "A clone of a classic.",
+      "Reminiscent of a designer fragrance.",
+      "Women love it.",
+      "She will notice.",
+      "Built for date night.",
+      "Sex appeal in a stick.",
+      "Get noticed.",
+      "It packs easily.",
+      "Travel-friendly.",
+      "Fly with it.",
+      "Stays out of the liquids bag.",
+      "Airport-safe.",
+      "8 hrs on skin.",
+      "A 12-hour scent.",
+      "Around 150 uses.",
+      "Spill-proof.",
+      "No leaks, ever.",
+      "Pick a card, win a reward",
     ];
     for (const sample of samples) {
       const findings: Finding[] = [];
@@ -243,8 +403,22 @@ describe("content guard", () => {
       expect(findings.length, `expected a finding for ${JSON.stringify(sample)}`).toBeGreaterThan(0);
     }
     const clean: Finding[] = [];
-    checkString("content/sample.ts", "sample", "© 2026 CORVANE. Twist. Swipe. Go.", clean);
+    for (const sample of [
+      "© 2026 CORVANE. Twist. Swipe. Go.",
+      "Turn a card for 10% off",
+      "Check the current rules for your trip.",
+      "Travel Pouch",
+      "Other scents, here and there.",
+    ]) {
+      checkString("content/sample.ts", "sample", sample, clean);
+    }
     expect(clean).toEqual([]);
+    // A FAQ item's link to a claim is a key, not copy; the same word as copy is still caught.
+    checkString("content/faq.ts", "faq[0].claim", "carry-on", clean);
+    expect(clean).toEqual([]);
+    const asCopy: Finding[] = [];
+    checkString("content/faq.ts", "faq[0].answer", "carry-on", asCopy);
+    expect(asCopy.length).toBeGreaterThan(0);
   });
 });
 
